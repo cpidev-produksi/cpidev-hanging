@@ -34,6 +34,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Form Hanging
     Route::get('hanging-forms/{hangingForm}', [HangingFormController::class, 'show'])->name('hanging-forms.show');
+    Route::post('hanging-forms/{hangingForm}/finish', [HangingFormController::class, 'finish'])
+    ->name('hanging-forms.finish');
     Route::patch('hanging-cells/{hangingLineSet}', [HangingFormController::class, 'updateCell'])->name('hanging-cells.update');
 
     // Live Monitor

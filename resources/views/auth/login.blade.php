@@ -3,26 +3,408 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login - SlaughterHouse</title>
+    <title>Login — SlaughterHouse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css','resources/js/app.js'])
+    <style>
+        :root {
+            --bg: #0a0c0f;
+            --card: #111318;
+            --border: #1e2330;
+            --border-glow: #2e3a52;
+            --accent: #e85d2f;
+            --accent-soft: rgba(232, 93, 47, 0.12);
+            --accent2: #f5a623;
+            --text: #f0f2f5;
+            --muted: #6b7591;
+            --input-bg: #191d28;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            min-height: 100vh;
+            font-family: 'DM Sans', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Atmospheric background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 15% 80%, rgba(232,93,47,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 85% 10%, rgba(245,166,35,0.06) 0%, transparent 55%);
+            pointer-events: none;
+        }
+
+        /* Grid texture */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .login-wrap {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            width: 100%;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .brand-panel {
+            flex: 1;
+            padding: 48px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            animation: slideLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .brand-logo {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .brand-logo img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(232,93,47,0.3));
+        }
+        
+        .brand-logo-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+        
+        .brand-logo-text span {
+            color: var(--accent);
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent-soft);
+            border: 1px solid rgba(232,93,47,0.3);
+            border-radius: 100px;
+            padding: 5px 14px 5px 8px;
+            margin-bottom: 28px;
+            width: fit-content;
+        }
+        .brand-badge-dot {
+            width: 8px; height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .brand-badge span {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .brand-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.05;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+        .brand-title span {
+            color: var(--accent);
+        }
+
+        .brand-desc {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+            max-width: 300px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 36px;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .stat-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .stat-divider {
+            width: 1px;
+            height: 40px;
+            background: var(--border);
+            align-self: center;
+        }
+
+        /* Login Card */
+        .login-card {
+            width: 400px;
+            flex-shrink: 0;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 36px;
+            box-shadow:
+                0 0 0 1px var(--border),
+                0 30px 80px rgba(0,0,0,0.6),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+            animation: slideRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+            animation-delay: 0.1s;
+        }
+
+        .card-header {
+            margin-bottom: 32px;
+        }
+        .card-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .card-header p {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+        .input-wrap .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            width: 16px; height: 16px;
+            pointer-events: none;
+        }
+        .input-wrap input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px 12px 42px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-wrap input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(232,93,47,0.15);
+        }
+        .input-wrap input::placeholder { color: #3a4055; }
+
+        .btn-login {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent) 0%, #c94820 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 20px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.03em;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+            box-shadow: 0 4px 20px rgba(232,93,47,0.3);
+        }
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 30px rgba(232,93,47,0.4);
+        }
+        .btn-login:active { transform: translateY(0); }
+
+        .seed-hint {
+            margin-top: 24px;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.025);
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .seed-hint svg { color: var(--accent2); flex-shrink: 0; }
+        .seed-hint p {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        .seed-hint code {
+            font-family: 'Courier New', monospace;
+            color: var(--accent2);
+            background: rgba(245,166,35,0.1);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        @keyframes slideLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        @media (max-width: 768px) {
+            .brand-panel { display: none; }
+            .login-card { width: 100%; max-width: 400px; }
+            .login-wrap {
+                padding: 16px;
+                justify-content: center;
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .login-wrap {
+                max-width: 860px;
+                padding: 24px;
+            }
+            .brand-panel {
+                padding: 40px 24px;
+            }
+            .brand-title {
+                font-size: 40px;
+            }
+            .login-card {
+                width: 360px;
+                padding: 32px 28px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center">
-    <form method="POST" action="{{ route('login.post') }}" class="w-full max-w-md bg-white p-6 rounded-xl shadow">
-        @csrf
-        <h1 class="text-xl font-bold mb-1">Login</h1>
-        <p class="text-sm text-slate-500 mb-6">Masuk menggunakan username.</p>
-
-        <label class="block text-sm font-medium mb-1">Username</label>
-        <input name="username" value="{{ old('username') }}" class="w-full border rounded px-3 py-2 mb-4" />
-
-        <label class="block text-sm font-medium mb-1">Password</label>
-        <input type="password" name="password" class="w-full border rounded px-3 py-2 mb-6" />
-
-        <button class="w-full bg-slate-900 text-white rounded px-4 py-2 hover:bg-slate-800">Login</button>
-
-        <div class="mt-4 text-xs text-slate-500">
-            Default seed: <span class="font-mono">superadmin / superadmin123</span>
+<body>
+<div class="login-wrap">
+    <!-- Brand Panel -->
+    <div class="brand-panel">
+        <div class="brand-logo">
+            <img src="{{ asset('images/logo small.png') }}" alt="SlaughterHouse Logo">
         </div>
-    </form>
+        <div class="brand-badge">
+            <span class="brand-badge-dot"></span>
+            <span>System Active</span>
+        </div>
+        <h1 class="brand-title">Slaughter<span>House</span></h1>
+        <p class="brand-desc">Sistem operasional terpadu untuk kontrol dan monitoring seluruh aktivitas SlaughterHouse secara real-time.</p>
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-num">24</span>
+                <span class="stat-label">Projects</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-num">2</span>
+                <span class="stat-label">Live SH</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-num">12</span>
+                <span class="stat-label">Running</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Card -->
+    <div class="login-card">
+        <div class="card-header">
+            <h2>Selamat Datang</h2>
+            <p>Masuk menggunakan akun Anda untuk melanjutkan.</p>
+        </div>
+        <form method="POST" action="{{ route('login.post') }}">
+            @csrf
+            <div class="form-group">
+                <label>Username</label>
+                <div class="input-wrap">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <input type="text" name="username" value="{{ old('username') }}" placeholder="Masukkan username" autocomplete="username" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <div class="input-wrap">
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <input type="password" name="password" placeholder="Masukkan password" autocomplete="current-password" />
+                </div>
+            </div>
+            <button type="submit" class="btn-login">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                Masuk ke Dashboard
+            </button>
+        </form>
+        <div class="seed-hint">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p>Default seed: <code>superadmin</code> / <code>superadmin123</code></p>
+        </div>
+    </div>
+</div>
 </body>
 </html>

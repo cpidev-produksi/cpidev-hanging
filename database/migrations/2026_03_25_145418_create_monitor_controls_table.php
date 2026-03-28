@@ -18,12 +18,12 @@ return new class extends Migration
             $table->enum('shift', ['pagi','malam']);
             $table->decimal('size', 3, 1); // 1.2 - 1.5
 
-            $table->string('driver_name', 150);
+            $table->string('driver_name', 50);
 
             $table->foreignId('truck_id')->constrained('trucks')->cascadeOnDelete();
             $table->foreignId('farm_id')->constrained('farms')->cascadeOnDelete();
 
-            $table->decimal('farm_fee_amount', 14, 2)->default(0);
+            $table->integer('farm_fee_amount')->default(0);
 
             $table->enum('status', ['draft','running','done'])->default('draft');
 

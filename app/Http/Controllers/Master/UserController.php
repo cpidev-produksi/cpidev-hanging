@@ -23,10 +23,16 @@ class UserController extends Controller
     public function store(Request $request) {
         $data = $request->validate([
             'name' => ['required','string','max:150'],
-            'email' => ['nullable','email','max:150'],
+            'email' => ['required','email','max:150','unique:users,email'],
             'username' => ['required','string','max:50','unique:users,username'],
             'password' => ['required','string','min:6'],
             'role_id' => ['required','exists:roles,id'],
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'username.unique' => 'Username sudah terdaftar.',
+            'password.min' => 'Password minimal 6 karakter.',
         ]);
 
         $data['password'] = Hash::make($data['password']);
@@ -43,10 +49,16 @@ class UserController extends Controller
     public function update(Request $request, User $user) {
         $data = $request->validate([
             'name' => ['required','string','max:150'],
-            'email' => ['nullable','email','max:150'],
+            'email' => ['required','email','max:150','unique:users,email,'.$user->id],
             'username' => ['required','string','max:50','unique:users,username,'.$user->id],
             'password' => ['nullable','string','min:6'],
             'role_id' => ['required','exists:roles,id'],
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'username.unique' => 'Username sudah terdaftar.',
+            'password.min' => 'Password minimal 6 karakter.',
         ]);
 
         if (!empty($data['password'])) {

@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
             ['username' => 'superadmin'],
             [
                 'name' => 'Super Admin',
-                'email' => null,
+                'email' => 'superadmin@example.com',
                 'password' => Hash::make('superadmin123'),
                 'role_id' => $role?->id,
             ]

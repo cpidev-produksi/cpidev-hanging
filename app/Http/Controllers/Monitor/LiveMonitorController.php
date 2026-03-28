@@ -20,8 +20,7 @@ class LiveMonitorController extends Controller
         $active = MonitorControl::query()
             ->where('location', $location)
             ->where('status', 'running')
-            ->with(['truck.expedition','farm','hangingForm.lines.sets'])
-            ->latest()
+            ->with(['expedition','plateNumber','farm','hangingForm.lines.sets'])
             ->first();
 
         if (!$active || !$active->hangingForm) {
@@ -29,12 +28,15 @@ class LiveMonitorController extends Controller
         }
 
         $sets = $active->hangingForm->lines->flatMap->sets;
-        $totalAyam = (int) $sets->sum(fn ($s) => 50 - (int)$s->empty_count);
+
+        $totalAyam = (int) $sets->sum(function ($s) {
+            if ($s->empty_count === null) return 0;
+            return 50 - (int) $s->empty_count;
+        });
 
         return response()->json([
             'active' => true,
             'report_code' => $active->report_code,
-            'truck_no' => $active->truck->no_truck,
             'expedition_name' => $active->truck->expedition->name,
             'driver_name' => $active->driver_name,
             'size' => (float)$active->size,

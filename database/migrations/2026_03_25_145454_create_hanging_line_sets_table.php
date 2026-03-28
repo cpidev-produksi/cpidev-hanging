@@ -21,6 +21,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('hanging_line_sets');
+        Schema::table('hanging_line_sets', function (Blueprint $table) {
+            $table->unsignedTinyInteger('empty_count')->nullable(false)->default(0)->change();
+        });
     }
 };

@@ -22,9 +22,15 @@ class TruckController extends Controller
     public function store(Request $request) {
         $data = $request->validate([
             'no_truck' => ['required','string','max:50'],
-            'plate_number' => ['required','string','max:50'],
+            'plate_number' => ['required','string','max:50','unique:trucks,plate_number'],
             'expedition_id' => ['required','exists:expeditions,id'],
+        ], [
+            'no_truck.required' => 'No truk wajib diisi.',
+            'plate_number.required' => 'No polisi wajib diisi.',
+            'plate_number.unique' => 'No polisi sudah terdaftar (harus unik).',
+            'expedition_id.required' => 'Ekspedisi wajib dipilih.',
         ]);
+
         Truck::create($data);
         return redirect()->route('master.trucks.index')->with('status','Truk dibuat.');
     }
@@ -37,9 +43,15 @@ class TruckController extends Controller
     public function update(Request $request, Truck $truck) {
         $data = $request->validate([
             'no_truck' => ['required','string','max:50'],
-            'plate_number' => ['required','string','max:50'],
+            'plate_number' => ['required','string','max:50','unique:trucks,plate_number,'.$truck->id],
             'expedition_id' => ['required','exists:expeditions,id'],
+        ], [
+            'no_truck.required' => 'No truk wajib diisi.',
+            'plate_number.required' => 'No polisi wajib diisi.',
+            'plate_number.unique' => 'No polisi sudah terdaftar (harus unik).',
+            'expedition_id.required' => 'Ekspedisi wajib dipilih.',
         ]);
+
         $truck->update($data);
         return redirect()->route('master.trucks.index')->with('status','Truk diupdate.');
     }

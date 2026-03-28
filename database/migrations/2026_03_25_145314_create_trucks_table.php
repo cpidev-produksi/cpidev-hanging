@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('trucks', function (Blueprint $table) {
             $table->id();
             $table->string('no_truck', 50);
-            $table->string('plate_number', 50);
+            $table->string('plate_number', 10)->unique();
             $table->foreignId('expedition_id')->constrained('expeditions')->cascadeOnDelete();
             $table->timestamps();
         });
