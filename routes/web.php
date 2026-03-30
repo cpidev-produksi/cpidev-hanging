@@ -4,7 +4,6 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Master\ExpeditionController;
 use App\Http\Controllers\Master\FarmController;
-use App\Http\Controllers\Master\TruckController;
 use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\Monitor\LiveMonitorController;
 use App\Http\Controllers\Transaction\HangingFormController;
@@ -15,7 +14,7 @@ Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/', fn () => redirect()->route('dashboard'));
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -23,7 +22,6 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('master')->name('master.')->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('expeditions', ExpeditionController::class);
-        Route::resource('trucks', TruckController::class);
         Route::resource('farms', FarmController::class);
     });
 
@@ -35,7 +33,7 @@ Route::middleware(['auth'])->group(function () {
     // Form Hanging
     Route::get('hanging-forms/{hangingForm}', [HangingFormController::class, 'show'])->name('hanging-forms.show');
     Route::post('hanging-forms/{hangingForm}/finish', [HangingFormController::class, 'finish'])
-    ->name('hanging-forms.finish');
+        ->name('hanging-forms.finish');
     Route::patch('hanging-cells/{hangingLineSet}', [HangingFormController::class, 'updateCell'])->name('hanging-cells.update');
 
     // Live Monitor

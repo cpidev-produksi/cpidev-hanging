@@ -400,10 +400,10 @@
                 Masuk ke Dashboard
             </button>
         </form>
-        <div class="seed-hint">
+        {{-- <div class="seed-hint">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <p>Default seed: <code>superadmin</code> / <code>superadmin123</code></p>
-        </div>
+        </div> --}}
     </div>
 </div>
 </body>

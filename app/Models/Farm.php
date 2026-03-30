@@ -6,5 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Farm extends Model
 {
-    protected $fillable = ['name'];
+    protected $fillable = [
+        'name',
+        'address',
+        'city',
+        'vendor_code',
+        'area_category',
+        'distance'
+    ];
 }

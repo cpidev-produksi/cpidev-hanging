@@ -37,12 +37,14 @@ class LiveMonitorController extends Controller
         return response()->json([
             'active' => true,
             'report_code' => $active->report_code,
-            'expedition_name' => $active->truck->expedition->name,
-            'driver_name' => $active->driver_name,
-            'size' => (float)$active->size,
-            'farm_name' => $active->farm->name,
+            'expedition_name' => optional($active->expedition)->name,
+            'plate_number' => optional($active->plateNumber)->plate_number,
+            'driver_name' => optional($active->plateNumber)->driver_name,
+            'driver_phone' => optional($active->plateNumber)->driver_phone,
+            'size' => (float) $active->size,
+            'farm_name' => optional($active->farm)->name,
             'total_ayam' => $totalAyam,
-            'farm_fee_amount' => (float)$active->farm_fee_amount,
+            'farm_fee_amount' => (float) $active->farm_fee_amount,
         ]);
     }
 }

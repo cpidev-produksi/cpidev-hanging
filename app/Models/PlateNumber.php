@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PlateNumber extends Model
 {
-    protected $fillable = ['plate_number', 'expedition_id'];
+    protected $fillable = [
+        'plate_number',
+        'expedition_id',
+        'driver_name',
+        'driver_phone',
+    ];
 
     public function expedition(): BelongsTo
     {

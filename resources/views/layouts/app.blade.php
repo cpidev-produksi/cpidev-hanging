@@ -292,7 +292,6 @@
                 <div class="dropdown-menu" id="ddMasterMenu">
                     <a class="dropdown-item {{ request()->routeIs('master.users.*') ? 'active' : '' }}" href="{{ route('master.users.index') }}">Data User</a>
                     <a class="dropdown-item {{ request()->routeIs('master.expeditions.*') ? 'active' : '' }}" href="{{ route('master.expeditions.index') }}">Data Ekspedisi</a>
-                    <a class="dropdown-item {{ request()->routeIs('master.trucks.*') ? 'active' : '' }}" href="{{ route('master.trucks.index') }}">Data Truk</a>
                     <a class="dropdown-item {{ request()->routeIs('master.farms.*') ? 'active' : '' }}" href="{{ route('master.farms.index') }}">Data Farm</a>
                 </div>
             </div>

@@ -17,12 +17,12 @@ class MonitorControlController extends Controller
 {
     public function index()
     {
-        $items = \App\Models\MonitorControl::query()
+        $items = MonitorControl::query()
             ->with(['expedition', 'plateNumber', 'farm', 'hangingForm'])
             ->latest()
             ->paginate(20);
 
-        $runningLocations = \App\Models\MonitorControl::query()
+        $runningLocations = MonitorControl::query()
             ->where('status', 'running')
             ->pluck('location')
             ->unique()
@@ -40,7 +40,7 @@ class MonitorControlController extends Controller
             ->get();
 
         $farms = Farm::query()->orderBy('name')->get();
-        $sizes = [1.2, 1.3, 1.4, 1.5];
+        $sizes = ['1.10-1.20', '1.20-1.40', '1.40-1.60', '1.60-1.80', '1.80-2.00', '2.00-2.20', '2.20-2.40', '2.40-2.60', '2.60-2.80', '2.80-3.00'];
 
         return view('transaction.monitor_controls.create', compact('expeditions', 'farms', 'sizes'));
     }
@@ -52,7 +52,6 @@ class MonitorControlController extends Controller
             'process_date' => ['required', 'date'],
             'shift' => ['required', 'in:pagi,malam'],
             'size' => ['required', 'numeric', 'min:1.2', 'max:1.5'],
-            'driver_name' => ['required', 'string', 'max:150'],
 
             'expedition_id' => ['required', 'exists:expeditions,id'],
             'plate_number_id' => ['required', 'exists:plate_numbers,id'],
@@ -121,7 +120,6 @@ class MonitorControlController extends Controller
             'process_date' => ['required', 'date'],
             'shift' => ['required', 'in:pagi,malam'],
             'size' => ['required', 'numeric', 'min:1.2', 'max:1.5'],
-            'driver_name' => ['required', 'string', 'max:150'],
 
             'expedition_id' => ['required', 'exists:expeditions,id'],
             'plate_number_id' => ['required', 'exists:plate_numbers,id'],
@@ -162,7 +160,6 @@ class MonitorControlController extends Controller
             return back()->with('status', 'Sudah berjalan / selesai.');
         }
 
-        // tidak boleh ada running lain di lokasi yang sama
         $existsRunning = MonitorControl::query()
             ->where('location', $monitorControl->location)
             ->where('status', 'running')
@@ -200,7 +197,7 @@ class MonitorControlController extends Controller
                     HangingLineSet::create([
                         'hanging_line_id' => $line->id,
                         'set_no' => $setNo,
-                        'empty_count' => null, // default belum diinput -> ayam 0
+                        'empty_count' => null,
                     ]);
                 }
             }
@@ -222,7 +219,7 @@ class MonitorControlController extends Controller
     private function generateReportCode(string $location, string $processDate, string $shift): string
     {
         $date = date('Ymd', strtotime($processDate));
-        $shiftCode = strtoupper($shift); // PAGI / MALAM
+        $shiftCode = strtoupper($shift);
         $prefix = "{$location}-{$date}-{$shiftCode}-";
 
         $last = MonitorControl::query()

@@ -12,7 +12,6 @@ class MonitorControl extends Model
         'process_date',
         'shift',
         'size',
-        'driver_name',
         'farm_id',
         'farm_fee_amount',
         'status',

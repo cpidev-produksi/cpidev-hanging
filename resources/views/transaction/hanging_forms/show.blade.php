@@ -252,12 +252,6 @@
           </tr>
         @endforeach
         </tbody>
-
-        {{-- <tfoot>
-          <tr>
-            <td class="tfoot-title" colspan="{{ 3 + ($setCount*2) }}">Ringkasan</td>
-          </tr>
-        </tfoot> --}}
       </table>
     </div>
   </div>

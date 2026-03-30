@@ -13,7 +13,8 @@ class HangingFormController extends Controller
     public function show(HangingForm $hangingForm)
     {
         $hangingForm->load([
-            'monitorControl.truck.expedition',
+            'monitorControl.expedition',
+            'monitorControl.plateNumber',
             'monitorControl.farm',
             'lines.sets',
         ]);
@@ -50,7 +51,7 @@ class HangingFormController extends Controller
 
         return response()->json([
             'ok' => true,
-            'empty_count' => $hangingLineSet->empty_count, // bisa null
+            'empty_count' => $hangingLineSet->empty_count,
             'ayam' => $ayam,
         ]);
     }
