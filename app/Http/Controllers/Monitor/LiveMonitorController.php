@@ -23,28 +23,74 @@ class LiveMonitorController extends Controller
             ->with(['expedition','plateNumber','farm','hangingForm.lines.sets'])
             ->first();
 
+        // Counter harian (semua status, berdasarkan process_date hari ini)
+        $todayAyam = MonitorControl::query()
+            ->where('location', $location)
+            ->whereDate('process_date', date('Y-m-d'))
+            ->with(['hangingForm.lines.sets'])
+            ->get()
+            ->sum(function ($mc) {
+                if (!$mc->hangingForm) return 0;
+                $sets = $mc->hangingForm->lines->flatMap->sets;
+                return (int) $sets->sum(function ($s) {
+                    if ($s->empty_count === null) return 0;
+                    return 50 - (int)$s->empty_count;
+                });
+            });
+
+        $todayTruckCount = (int) MonitorControl::query()
+            ->where('location', $location)
+            ->whereDate('process_date', date('Y-m-d'))
+            ->count();
+
         if (!$active || !$active->hangingForm) {
-            return response()->json(['active' => false]);
+            return response()->json([
+                'active' => false,
+                'location' => $location,
+                'today_total_ayam' => (int) $todayAyam,
+                'today_truck_count' => $todayTruckCount,
+            ]);
         }
 
         $sets = $active->hangingForm->lines->flatMap->sets;
 
-        $totalAyam = (int) $sets->sum(function ($s) {
+        // $totalAyamRunning = (int) $sets->sum(function ($s) {
+        //     if ($s->empty_count === null) return 0;
+        //     return 50 - (int) $s->empty_count;
+        // });
+
+        $deadCount = (int) ($active->hangingForm->dead_count ?? 0);
+
+        $totalAyamShackle = (int) $sets->sum(function ($s) {
             if ($s->empty_count === null) return 0;
             return 50 - (int) $s->empty_count;
         });
 
+        $totalAyamBersih = max(0, $totalAyamShackle - $deadCount);
+
         return response()->json([
             'active' => true,
+            'location' => $location,
+
+            // header
             'report_code' => $active->report_code,
+
+            // main
+            'total_ayam_running' => $totalAyamBersih,
+            'dead_count' => $deadCount,
+            'total_ekor' => (int) ($active->total_chicken ?? 0),
+            'truck_no' => (int) ($active->truck_no ?? 0),
+
+            // sub main
             'expedition_name' => optional($active->expedition)->name,
-            'plate_number' => optional($active->plateNumber)->plate_number,
             'driver_name' => optional($active->plateNumber)->driver_name,
             'driver_phone' => optional($active->plateNumber)->driver_phone,
-            'size' => (float) $active->size,
+            'size' => (string) ($active->size ?? ''),
             'farm_name' => optional($active->farm)->name,
-            'total_ayam' => $totalAyam,
-            'farm_fee_amount' => (float) $active->farm_fee_amount,
+
+            // footer counters (hari ini)
+            'today_total_ayam' => (int) $todayAyam,
+            'today_truck_count' => $todayTruckCount,
         ]);
     }
 }

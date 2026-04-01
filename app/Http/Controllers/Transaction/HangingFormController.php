@@ -20,23 +20,36 @@ class HangingFormController extends Controller
         ]);
 
         $allSets = $hangingForm->lines->flatMap->sets;
+        $deadCount = (int) ($hangingForm->dead_count ?? 0);
 
-        $totalKosong = (int) $allSets->sum(fn ($s) => (int) ($s->empty_count ?? 0));
-        $totalAyam = (int) $allSets->sum(function ($s) {
+        $totalAyamShackle = (int) $allSets->sum(function ($s) {
             if ($s->empty_count === null) return 0;
             return 50 - (int)$s->empty_count;
         });
 
+        $totalAyamBersih = max(0, $totalAyamShackle - $deadCount);
+
+        $totalKosong = (int) $allSets->sum(fn ($s) => (int) ($s->empty_count ?? 0));
+
         return view('transaction.hanging_forms.show', [
             'form' => $hangingForm,
             'totalKosong' => $totalKosong,
-            'totalAyam' => $totalAyam,
-            'ayamMati' => 0,
+            'totalAyam' => $totalAyamBersih,
+            'ayamMati' => $deadCount,
         ]);
     }
 
     public function updateCell(Request $request, HangingLineSet $hangingLineSet)
     {
+        $hangingLineSet->load('line.form');
+
+        if (($hangingLineSet->line?->form?->status ?? null) === 'done') {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Form sudah DONE dan tidak bisa diubah.',
+            ], 422);
+        }
+
         $data = $request->validate([
             'empty_count' => ['nullable','integer','min:0','max:50'],
         ]);
@@ -58,6 +71,10 @@ class HangingFormController extends Controller
 
     public function finish(Request $request, HangingForm $hangingForm)
     {
+        if ($hangingForm->status === 'done') {
+            return back()->withErrors(['finish' => 'Form sudah DONE dan tidak bisa diselesaikan ulang.']);
+        }
+
         $data = $request->validate([
             'unloading_time' => ['nullable', 'date_format:H:i'],
             'finish_time' => ['nullable', 'date_format:H:i'],
@@ -77,7 +94,7 @@ class HangingFormController extends Controller
                 'status' => 'done',
             ]);
 
-            return redirect()->route('monitor-controls.index')->with('status', 'Proses selesai. Laporan tersimpan.');
+            return redirect()->route('hanging.landing')->with('status', 'Proses selesai. Laporan tersimpan.');
         });
     }
 }

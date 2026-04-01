@@ -29,6 +29,14 @@ class MonitorControlController extends Controller
             ->values()
             ->all();
 
+        $items = MonitorControl::query()
+            ->with(['expedition', 'plateNumber', 'farm', 'hangingForm'])
+            ->orderByDesc('process_date')
+            ->orderBy('location')
+            ->orderByRaw("FIELD(shift,'pagi','malam')")
+            ->orderBy('truck_no') // kecil ke besar
+            ->paginate(100);
+
         return view('transaction.monitor_controls.index', compact('items', 'runningLocations'));
     }
 
@@ -40,7 +48,11 @@ class MonitorControlController extends Controller
             ->get();
 
         $farms = Farm::query()->orderBy('name')->get();
-        $sizes = ['1.10-1.20', '1.20-1.40', '1.40-1.60', '1.60-1.80', '1.80-2.00', '2.00-2.20', '2.20-2.40', '2.40-2.60', '2.60-2.80', '2.80-3.00'];
+
+        $sizes = [
+            '1.10-1.20','1.20-1.40','1.40-1.60','1.60-1.80','1.80-2.00',
+            '2.00-2.20','2.20-2.40','2.40-2.60','2.60-2.80','2.80-3.00',
+        ];
 
         return view('transaction.monitor_controls.create', compact('expeditions', 'farms', 'sizes'));
     }
@@ -51,17 +63,30 @@ class MonitorControlController extends Controller
             'location' => ['required', 'in:SH01,SH02'],
             'process_date' => ['required', 'date'],
             'shift' => ['required', 'in:pagi,malam'],
-            'size' => ['required', 'numeric', 'min:1.2', 'max:1.5'],
+            'size' => ['required', 'string', 'max:20'],
 
             'expedition_id' => ['required', 'exists:expeditions,id'],
             'plate_number_id' => ['required', 'exists:plate_numbers,id'],
 
             'farm_id' => ['required', 'exists:farms,id'],
-            'farm_fee_amount' => ['required', 'numeric', 'min:0'],
+            // 'farm_fee_amount' => ['required', 'numeric', 'min:0'],
+
+            'seal_no' => ['nullable', 'string', 'max:50'],
+            'truck_arrival_time' => ['nullable', 'date_format:H:i'],
+            'catch_date' => ['nullable', 'date'],
+            'total_chicken' => ['nullable', 'integer', 'min:0'],
+            'total_kilo' => ['nullable', 'numeric', 'min:0'],
+            'abw' => ['nullable', 'numeric', 'min:0'],
+            'sppa_no' => ['nullable', 'string', 'max:50'],
+            'order_id' => ['nullable', 'string', 'max:100'],
+            'sppa_date' => ['nullable', 'date'],
         ], [
             'expedition_id.required' => 'Ekspedisi wajib dipilih.',
             'plate_number_id.required' => 'No Polisi wajib dipilih.',
+            'truck_arrival_time.date_format' => 'Format jam truk datang harus HH:MM.',
         ]);
+
+        // $data['farm_fee_amount'] = $data['total_chicken'] ?? 0;
 
         // plate number harus milik ekspedisi tsb
         $ok = PlateNumber::query()
@@ -75,15 +100,28 @@ class MonitorControlController extends Controller
                 ->withInput();
         }
 
-        $meta = $this->locationMeta($data['location']);
-        $data['set_count'] = $meta['set_count'];
-        $data['shackle_count'] = $meta['shackle_count'];
-        $data['status'] = 'draft';
-        $data['report_code'] = $this->generateReportCode($data['location'], $data['process_date'], $data['shift']);
+        return DB::transaction(function () use ($data) {
+            // hitung truck_no berikutnya berdasarkan location + process_date
+            $nextTruckNo = (int) MonitorControl::query()
+                ->where('location', $data['location'])
+                ->whereDate('process_date', $data['process_date'])
+                ->max('truck_no');
 
-        $monitor = MonitorControl::create($data);
+            $data['truck_no'] = $nextTruckNo + 1;
 
-        return redirect()->route('monitor-controls.index')->with('status', 'Kontrol monitor dibuat: ' . $monitor->report_code);
+            $meta = $this->locationMeta($data['location']);
+            $data['set_count'] = $meta['set_count'];
+            $data['shackle_count'] = $meta['shackle_count'];
+
+            $data['status'] = 'draft';
+            $data['report_code'] = $this->generateReportCode($data['location'], $data['process_date'], $data['shift']);
+
+            $monitor = MonitorControl::create($data);
+
+            return redirect()
+                ->route('monitor-controls.index')
+                ->with('status', 'Kontrol monitor dibuat: ' . $monitor->report_code);
+        });
     }
 
     public function edit(MonitorControl $monitorControl)
@@ -100,7 +138,11 @@ class MonitorControlController extends Controller
             ->get();
 
         $farms = Farm::query()->orderBy('name')->get();
-        $sizes = [1.2, 1.3, 1.4, 1.5];
+
+        $sizes = [
+            '1.10-1.20','1.20-1.40','1.40-1.60','1.60-1.80','1.80-2.00',
+            '2.00-2.20','2.20-2.40','2.40-2.60','2.60-2.80','2.80-3.00',
+        ];
 
         return view('transaction.monitor_controls.edit', [
             'monitor' => $monitorControl,
@@ -119,13 +161,23 @@ class MonitorControlController extends Controller
         $data = $request->validate([
             'process_date' => ['required', 'date'],
             'shift' => ['required', 'in:pagi,malam'],
-            'size' => ['required', 'numeric', 'min:1.2', 'max:1.5'],
+            'size' => ['required', 'string', 'max:20'],
 
             'expedition_id' => ['required', 'exists:expeditions,id'],
             'plate_number_id' => ['required', 'exists:plate_numbers,id'],
 
             'farm_id' => ['required', 'exists:farms,id'],
-            'farm_fee_amount' => ['required', 'numeric', 'min:0'],
+            // 'farm_fee_amount' => ['required', 'numeric', 'min:0'],
+
+            'seal_no' => ['nullable', 'string', 'max:50'],
+            'truck_arrival_time' => ['nullable', 'date_format:H:i'],
+            'catch_date' => ['nullable', 'date'],
+            'total_chicken' => ['nullable', 'integer', 'min:0'],
+            'total_kilo' => ['nullable', 'numeric', 'min:0'],
+            'abw' => ['nullable', 'numeric', 'min:0'],
+            'sppa_no' => ['nullable', 'string', 'max:50'],
+            'order_id' => ['nullable', 'string', 'max:100'],
+            'sppa_date' => ['nullable', 'date'],
         ]);
 
         $ok = PlateNumber::query()
@@ -139,6 +191,8 @@ class MonitorControlController extends Controller
                 ->withInput();
         }
 
+        // Kalau user ganti tanggal/lokasi via edit (lokasi tidak ada di form Anda saat ini),
+        // truck_no tetap (karena no urut di hari itu). Untuk MVP: kita biarkan.
         $monitorControl->update($data);
 
         return redirect()->route('monitor-controls.index')->with('status', 'Kontrol monitor diupdate.');
@@ -154,58 +208,9 @@ class MonitorControlController extends Controller
         return back()->with('status', 'Kontrol monitor dihapus.');
     }
 
-    public function start(MonitorControl $monitorControl)
-    {
-        if ($monitorControl->status !== 'draft') {
-            return back()->with('status', 'Sudah berjalan / selesai.');
-        }
-
-        $existsRunning = MonitorControl::query()
-            ->where('location', $monitorControl->location)
-            ->where('status', 'running')
-            ->exists();
-
-        if ($existsRunning) {
-            return back()->withErrors([
-                'start' => "Tidak bisa mulai. Masih ada proses RUNNING di lokasi {$monitorControl->location}. Selesaikan dulu proses tersebut.",
-            ]);
-        }
-
-        return DB::transaction(function () use ($monitorControl) {
-            $monitorControl->update(['status' => 'running']);
-
-            $form = HangingForm::create([
-                'monitor_control_id' => $monitorControl->id,
-                'status' => 'running',
-                'unloading_time' => null,
-                'finish_time' => null,
-            ]);
-
-            $shackleCount = (int) $monitorControl->shackle_count;
-            $setCount = (int) $monitorControl->set_count;
-
-            for ($i = 1; $i <= $shackleCount; $i++) {
-                $line = HangingLine::create([
-                    'hanging_form_id' => $form->id,
-                    'line_no' => $i,
-                    'shackle_label' => "{$i}-" . ($i + 1),
-                    'rule_min' => ($i - 1) * 50,
-                    'rule_max' => $i * 50,
-                ]);
-
-                for ($setNo = 1; $setNo <= $setCount; $setNo++) {
-                    HangingLineSet::create([
-                        'hanging_line_id' => $line->id,
-                        'set_no' => $setNo,
-                        'empty_count' => null,
-                    ]);
-                }
-            }
-
-            return redirect()->route('hanging-forms.show', $form)
-                ->with('status', 'Proses dimulai. Silakan input Form Hanging.');
-        });
-    }
+    // NOTE: start existing Anda masih boleh dipakai kalau mau,
+    // tapi untuk aturan "global running lock" + landing hanging,
+    // saya sarankan start dilakukan dari HangingController baru.
 
     private function locationMeta(string $location): array
     {
@@ -234,5 +239,81 @@ class MonitorControlController extends Controller
         }
 
         return $prefix . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function moveTruckNo(Request $request, MonitorControl $monitorControl)
+    {
+        // hanya boleh adjust kalau masih draft (atau running juga? saya sarankan: draft saja)
+        if ($monitorControl->status !== 'draft') {
+            return back()->withErrors(['move' => 'Hanya draft yang boleh diubah urutannya.']);
+        }
+
+        $data = $request->validate([
+            'direction' => ['required', 'in:up,down'],
+        ]);
+
+        return DB::transaction(function () use ($monitorControl, $data) {
+            $location = $monitorControl->location;
+            $date = $monitorControl->process_date->format('Y-m-d');
+
+            // ambil list draft pada lokasi + tanggal yang sama, urut truck_no
+            $list = MonitorControl::query()
+                ->where('location', $location)
+                ->whereDate('process_date', $date)
+                ->where('status', 'draft')
+                ->orderBy('truck_no')
+                ->lockForUpdate()
+                ->get();
+
+            // kalau truck_no null (data lama), normalize dulu
+            $i = 1;
+            foreach ($list as $mc) {
+                if (!$mc->truck_no) {
+                    $mc->truck_no = $i;
+                    $mc->save();
+                }
+                $i++;
+            }
+
+            $idx = $list->search(fn ($x) => $x->id === $monitorControl->id);
+            if ($idx === false) return back();
+
+            if ($data['direction'] === 'up' && $idx > 0) {
+                $a = $list[$idx - 1];
+                $b = $list[$idx];
+            } elseif ($data['direction'] === 'down' && $idx < ($list->count() - 1)) {
+                $a = $list[$idx];
+                $b = $list[$idx + 1];
+            } else {
+                return back(); // sudah paling atas/bawah
+            }
+
+            // swap truck_no
+            $tmp = $a->truck_no;
+            $a->truck_no = $b->truck_no;
+            $b->truck_no = $tmp;
+            $a->save();
+            $b->save();
+
+            // optional: renumber ulang supaya rapi (1..n)
+            $sorted = MonitorControl::query()
+                ->where('location', $location)
+                ->whereDate('process_date', $date)
+                ->where('status', 'draft')
+                ->orderBy('truck_no')
+                ->lockForUpdate()
+                ->get();
+
+            $n = 1;
+            foreach ($sorted as $mc) {
+                if ($mc->truck_no !== $n) {
+                    $mc->truck_no = $n;
+                    $mc->save();
+                }
+                $n++;
+            }
+
+            return back()->with('status', 'Urutan truk berhasil diubah.');
+        });
     }
 }

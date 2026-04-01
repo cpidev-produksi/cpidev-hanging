@@ -1,252 +1,313 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="hanging-page">
+<div class="sh-wrap">
 
-  {{-- Breadcrumb --}}
-  <div class="breadcrumb">
-    <a href="{{ route('monitor-controls.index') }}" class="breadcrumb-link">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 20h10"/><path d="M9 16v4"/><path d="M15 16v4"/>
+  {{-- ── BREADCRUMB ── --}}
+  <nav class="sh-breadcrumb">
+    <a href="{{ route('hanging.landing') }}" class="sh-bc-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/>
+        <path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>
       </svg>
-      Kontrol Monitor
+      Form Hanging Ayam
     </a>
-    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <polyline points="9 18 15 12 9 6"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/>
     </svg>
-    <span>Form Hanging Ayam</span>
-  </div>
+    <span>Detail</span>
+  </nav>
 
-  {{-- Header --}}
-  <div class="page-header">
-    <div class="page-title-group">
-      <div class="page-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>
+  @php
+    $mc       = $form->monitorControl;
+    $isDone   = $form->status === 'done';
+    $isDraft  = $form->status === 'draft';
+    $setCount = (int) $mc->set_count;
+  @endphp
+
+  {{-- ── PAGE HEADER ── --}}
+  <div class="sh-header">
+    <div class="sh-header-left">
+      <div class="sh-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/>
+          <path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>
         </svg>
       </div>
       <div>
-        <h1 class="page-title">Form Hanging Ayam</h1>
-        <p class="page-subtitle">
-          Report:
-          <code class="mono-chip">{{ $form->monitorControl->report_code }}</code>
+        <div class="sh-title-row">
+          <h1 class="sh-title">Form Hanging Ayam</h1>
+          <span class="sh-status sh-status-{{ $form->status }}">{{ strtoupper($form->status) }}</span>
+        </div>
+        <p class="sh-subtitle">
+          <span class="sh-chip">{{ $mc->report_code }}</span>
+          <span class="sh-sep">·</span>
+          <span>{{ $mc->location }}</span>
+          <span class="sh-sep">·</span>
+          <span>Truk <strong>#{{ $mc->truck_no }}</strong></span>
         </p>
       </div>
     </div>
 
-    <div class="header-actions">
-      <a href="{{ route('monitor-controls.index') }}" class="btn-secondary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    <div class="sh-header-actions">
+      <a href="{{ route('hanging.landing') }}" class="sh-btn-back">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
         Kembali
       </a>
+      @if($isDraft)
+        <form method="POST" action="{{ route('hanging.start', $form) }}" style="display:inline">
+          @csrf
+          <button type="submit" class="sh-btn-start"
+                  onclick="return confirm('Mulai proses hanging untuk truk ini?')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"/>
+            </svg>
+            Mulai
+          </button>
+        </form>
+      @endif
     </div>
   </div>
 
-  {{-- Finish Panel --}}
-  <div class="card card-pad mb-16">
-    <div class="card-title">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-      </svg>
-      Penyelesaian Proses
+  {{-- ── TOP SECTION: finish + info + summary ── --}}
+  <div class="sh-top-grid">
+
+    {{-- Finish Panel --}}
+    <div class="sh-card sh-finish-panel">
+      <div class="sh-card-label">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        Penyelesaian Proses
+      </div>
+
+      @if($isDone)
+        <div class="sh-done-banner">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/>
+            <polyline points="9 12 12 15 16 9"/>
+          </svg>
+          Form sudah <strong>DONE</strong> dan tidak dapat diubah lagi.
+        </div>
+      @endif
+
+      <form method="POST" action="{{ route('hanging-forms.finish', $form) }}" class="sh-finish-form">
+        @csrf
+        <div class="sh-finish-grid">
+          <div class="sh-form-group">
+            <label class="sh-label" for="unloading_time">Jam Bongkar</label>
+            <div class="sh-input-wrap @error('unloading_time') sh-has-error @enderror">
+              <span class="sh-input-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/>
+                  <path d="M12 7v6l3 2"/>
+                </svg>
+              </span>
+              <input type="time" id="unloading_time" name="unloading_time"
+                     value="{{ old('unloading_time', $form->unloading_time?->format('H:i')) }}"
+                     class="sh-input" @disabled($isDone)>
+            </div>
+            @error('unloading_time')<p class="sh-error">{{ $message }}</p>@enderror
+          </div>
+
+          <div class="sh-form-group">
+            <label class="sh-label" for="finish_time">Jam Selesai</label>
+            <div class="sh-input-wrap @error('finish_time') sh-has-error @enderror">
+              <span class="sh-input-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/>
+                  <path d="M12 7v6l3 2"/>
+                </svg>
+              </span>
+              <input type="time" id="finish_time" name="finish_time"
+                     value="{{ old('finish_time', $form->finish_time?->format('H:i')) }}"
+                     class="sh-input" @disabled($isDone)>
+            </div>
+            @error('finish_time')<p class="sh-error">{{ $message }}</p>@enderror
+          </div>
+        </div>
+
+        <div class="sh-finish-footer">
+          <button type="submit" class="sh-btn-finish" @disabled($isDone)
+                  onclick="return confirm('Selesaikan proses ini? Status akan menjadi DONE.')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Selesai
+          </button>
+        </div>
+      </form>
     </div>
 
-    <form method="POST" action="{{ route('hanging-forms.finish', $form) }}" class="finish-form">
-      @csrf
-
-      <div class="finish-grid">
-        <div class="form-group">
-          <label class="form-label" for="unloading_time">Jam Bongkar <span class="required">*</span></label>
-          <div class="input-wrapper @error('unloading_time') has-error @enderror">
-            <div class="input-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="9"/><path d="M12 7v6l3 2"/>
-              </svg>
-            </div>
-            <input type="time" id="unloading_time" name="unloading_time"
-                   value="{{ old('unloading_time', $form->unloading_time?->format('H:i')) }}"
-                   class="form-input">
-          </div>
-          @error('unloading_time')
-            <div class="form-error">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              {{ $message }}
-            </div>
-          @enderror
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="finish_time">Jam Selesai <span class="required">*</span></label>
-          <div class="input-wrapper @error('finish_time') has-error @enderror">
-            <div class="input-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="9"/><path d="M12 7v6l3 2"/>
-              </svg>
-            </div>
-            <input type="time" id="finish_time" name="finish_time"
-                   value="{{ old('finish_time', $form->finish_time?->format('H:i')) }}"
-                   class="form-input">
-          </div>
-          @error('finish_time')
-            <div class="form-error">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              {{ $message }}
-            </div>
-          @enderror
-        </div>
-      </div>
-
-      <div class="finish-actions">
-        <button type="submit"
-                onclick="return confirm('Selesaikan proses ini? Status akan menjadi DONE.')"
-                class="btn-submit btn-success">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          Selesai
-        </button>
-      </div>
-    </form>
-  </div>
-
-  {{-- Info Card --}}
-  <div class="info-grid">
-    <div class="card card-pad">
-      <div class="card-title">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    {{-- Info Card --}}
+    <div class="sh-card">
+      <div class="sh-card-label">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         Informasi Proses
       </div>
-
-      <div class="kv-grid">
-        <div class="kv">
-          <div class="k">Lokasi</div>
-          <div class="v">{{ $form->monitorControl->location }}</div>
-        </div>
-        <div class="kv">
-          <div class="k">Tanggal</div>
-          <div class="v">{{ $form->monitorControl->process_date->format('d/m/Y') }}</div>
-        </div>
-        <div class="kv">
-          <div class="k">Shift</div>
-          <div class="v uppercase">{{ $form->monitorControl->shift }}</div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="kv">
-          <div class="k">No Truk</div>
-          <div class="v">{{ $form->monitorControl->truck->no_truck }}</div>
-        </div>
-        <div class="kv">
-          <div class="k">No Polisi</div>
-          <div class="v mono">{{ $form->monitorControl->truck->plate_number }}</div>
-        </div>
-        <div class="kv">
-          <div class="k">Ekspedisi</div>
-          <div class="v">{{ $form->monitorControl->truck->expedition->name }}</div>
-        </div>
-
-        <div class="kv">
-          <div class="k">Sopir</div>
-          <div class="v">{{ $form->monitorControl->driver_name }}</div>
-        </div>
-        <div class="kv">
-          <div class="k">Farm</div>
-          <div class="v">{{ $form->monitorControl->farm->name }}</div>
-        </div>
-        <div class="kv">
-          <div class="k">Size</div>
-          <div class="v">{{ $form->monitorControl->size }}</div>
+      <div class="sh-kv-grid">
+        <div class="sh-kv"><div class="sh-k">Lokasi</div><div class="sh-v">{{ $mc->location }}</div></div>
+        <div class="sh-kv"><div class="sh-k">Tanggal</div><div class="sh-v">{{ $mc->process_date?->format('d/m/Y') }}</div></div>
+        <div class="sh-kv"><div class="sh-k">Shift</div><div class="sh-v sh-upper">{{ $mc->shift }}</div></div>
+        <div class="sh-kv-divider"></div>
+        <div class="sh-kv"><div class="sh-k">No Urut Truk</div><div class="sh-v">#{{ $mc->truck_no }}</div></div>
+        <div class="sh-kv"><div class="sh-k">Ekspedisi</div><div class="sh-v">{{ $mc->expedition?->name ?? '—' }}</div></div>
+        <div class="sh-kv"><div class="sh-k">No Polisi</div><div class="sh-v sh-mono">{{ $mc->plateNumber?->plate_number ?? '—' }}</div></div>
+        <div class="sh-kv"><div class="sh-k">Farm</div><div class="sh-v">{{ $mc->farm?->name ?? '—' }}</div></div>
+        <div class="sh-kv"><div class="sh-k">Size</div><div class="sh-v">{{ $mc->size ?? '—' }}</div></div>
+        <div class="sh-kv"><div class="sh-k">No Segel</div><div class="sh-v sh-mono">{{ $mc->seal_no ?? '—' }}</div></div>
+        <div class="sh-kv-divider"></div>
+        <div class="sh-kv"><div class="sh-k">Jam Truk Datang</div><div class="sh-v">{{ $mc->truck_arrival_time ? date('H:i', strtotime($mc->truck_arrival_time)) : '—' }}</div></div>
+        <div class="sh-kv"><div class="sh-k">Tgl Tangkap</div><div class="sh-v">{{ $mc->catch_date?->format('d/m/Y') ?? '—' }}</div></div>
+        <div class="sh-kv"><div class="sh-k">SPPA</div><div class="sh-v">{{ $mc->sppa_no ?? '—' }}</div></div>
+        <div class="sh-kv"><div class="sh-k">Order ID</div><div class="sh-v sh-mono">{{ $mc->order_id ?? '—' }}</div></div>
+        <div class="sh-kv"><div class="sh-k">Tanggal SPPA</div><div class="sh-v">{{ $mc->sppa_date?->format('d/m/Y') ?? '—' }}</div></div>
+        <div class="sh-kv sh-kv-full">
+          <div class="sh-k">Total</div>
+          <div class="sh-v">{{ $mc->total_chicken ?? 0 }} ekor · {{ number_format((float)($mc->total_kilo ?? 0), 2) }} kg · ABW {{ number_format((float)($mc->abw ?? 0), 2) }}</div>
         </div>
       </div>
     </div>
 
-    <div class="card card-pad summary-card">
-      <div class="card-title">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 6-7"/>
+    {{-- Summary Card --}}
+    <div class="sh-card sh-summary-card">
+      <div class="sh-card-label">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"><path d="M3 3v18h18"/>
+          <path d="M7 14l3-3 4 4 6-7"/>
         </svg>
         Ringkasan
       </div>
 
-      <div class="summary-line">
-        Total Shackle Kosong:
-        <span id="total-kosong" class="summary-value">{{ $totalKosong }}</span>
-        <span class="summary-unit">Pcs</span>
-      </div>
-      <div class="summary-line">
-        Jumlah Ayam Mati:
-        <span class="summary-value">{{ $ayamMati }}</span>
-        <span class="summary-unit">Ekor</span>
-      </div>
-      <div class="summary-line">
-        Jumlah Ayam Diterima:
-        <span id="total-ayam" class="summary-value">{{ $totalAyam }}</span>
-        <span class="summary-unit">Ekor</span>
+      <div class="sh-summary-list">
+        <div class="sh-summary-row">
+          <span class="sh-summary-key">Total Shackle Kosong</span>
+          <span class="sh-summary-val">
+            <span id="total-kosong" class="sh-summary-num">{{ $totalKosong }}</span>
+            <span class="sh-summary-unit">Pcs</span>
+          </span>
+        </div>
+        <div class="sh-summary-row">
+          <span class="sh-summary-key">Jumlah Ayam Mati</span>
+          <span class="sh-summary-val">
+            <span class="sh-summary-num">{{ (int)($form->dead_count ?? 0) }}</span>
+            <span class="sh-summary-unit">Ekor</span>
+          </span>
+        </div>
+        <div class="sh-summary-row">
+          <span class="sh-summary-key">Jumlah Ayam Retur</span>
+          <span class="sh-summary-val">
+            <span class="sh-summary-num">{{ (int)($form->retur_count ?? 0) }}</span>
+            <span class="sh-summary-unit">Ekor</span>
+        </div>
+        <div class="sh-summary-row">
+          <span class="sh-summary-key">Total berat retur</span>
+          <span class="sh-summary-val">
+            <span class="sh-summary-num">{{ number_format((float)($form->retur_total_kg ?? 0), 2) }}</span>
+            <span class="sh-summary-unit">Kg</span>
+          </span>
+        </div>
+        <div class="sh-summary-row sh-summary-highlight">
+          <span class="sh-summary-key">Jumlah Ayam Diterima</span>
+          <span class="sh-summary-val">
+            <span id="total-ayam" class="sh-summary-num">{{ $totalAyam }}</span>
+            <span class="sh-summary-unit">Ekor</span>
+          </span>
+        </div>
+
+        {{-- <div class="summary-line">
+          Ayam Retur:
+          <span class="summary-value">{{ (int)($form->retur_count ?? 0) }}</span>
+          <span class="summary-unit">Ekor</span>
+        </div>
+
+        <div class="summary-line">
+          Total Berat Retur:
+          <span class="summary-value">{{ number_format((float)($form->retur_total_kg ?? 0), 2) }}</span>
+          <span class="summary-unit">Kg</span>
+        </div>
+
+        <a href="{{ route('retur-mati.edit', $form) }}" class="btn-secondary">Ayam Retur & Mati</a> --}}
       </div>
     </div>
   </div>
 
-  @php
-    $setCount = (int) $form->monitorControl->set_count;
-  @endphp
+  {{-- ── TABLE CARD ── --}}
+  <div class="sh-card sh-table-card">
+    <div class="sh-card-label sh-card-label-pad">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M3 9h18M9 21V9"/>
+      </svg>
+      Data Hanging
+    </div>
 
-  {{-- Table --}}
-  <div class="card table-card">
-    <div class="table-wrapper">
-      <table class="data-table hanging-table">
+    <div class="sh-table-wrap">
+      <table class="sh-table">
         <thead>
           <tr>
-            <th class="col-no" rowspan="2">No</th>
-            <th class="col-shackle" rowspan="2">BLOK</th>
-            <th class="col-rule" rowspan="2">Jumlah Shackle</th>
+            <th class="sh-th-no" rowspan="2">No</th>
+            <th class="sh-th-blok" rowspan="2">BLOK</th>
+            <th class="sh-th-rule" rowspan="2">Jml Shackle</th>
             @for($s=1;$s<=$setCount;$s++)
-              <th class="set-head" colspan="2">KOLOM {{ $s }}</th>
+              <th class="sh-th-set" colspan="2">KOLOM {{ $s }}</th>
             @endfor
           </tr>
           <tr>
             @for($s=1;$s<=$setCount;$s++)
-              <th class="col-empty">KOSONG</th>
-              <th class="col-ayam">AYAM</th>
+              <th class="sh-th-sub">KOSONG</th>
+              <th class="sh-th-sub">AYAM</th>
             @endfor
           </tr>
         </thead>
 
         <tbody>
         @foreach($form->lines as $line)
-          <tr>
-            <td class="col-no">{{ $line->line_no }}</td>
-            <td class="col-shackle"><span class="strong">{{ $line->shackle_label }}</span></td>
-            <td class="col-rule">{{ $line->rule_min }}-{{ $line->rule_max }}</td>
+          <tr class="sh-tr">
+            <td class="sh-td sh-td-center sh-td-no">{{ $line->line_no }}</td>
+            <td class="sh-td sh-td-blok">
+              <span class="sh-blok-label">{{ $line->shackle_label }}</span>
+            </td>
+            <td class="sh-td sh-td-center">
+              <span class="sh-rule">{{ $line->rule_min }}–{{ $line->rule_max }}</span>
+            </td>
 
             @for($s=1;$s<=$setCount;$s++)
               @php
-                $cell = $line->sets->firstWhere('set_no',$s);
-                $emptyRaw = $cell?->empty_count; // null atau int
-                $empty = is_null($emptyRaw) ? null : (int) $emptyRaw;
-                $ayam = is_null($empty) ? 0 : (50 - $empty);
+                $cell     = $line->sets->firstWhere('set_no',$s);
+                $emptyRaw = $cell?->empty_count;
+                $empty    = is_null($emptyRaw) ? null : (int) $emptyRaw;
+                $ayam     = is_null($empty) ? 0 : (50 - $empty);
               @endphp
 
-              <td class="col-empty">
-                <div class="counter">
-                  <button type="button"
-                          class="counter-btn minus"
-                          onclick="updateCell({{ $cell->id }}, {{ max(0, ($empty ?? 0)-1) }})">-</button>
-
-                  <input id="empty-{{ $cell->id }}"
-                         value="{{ is_null($empty) ? '' : $empty }}"
-                         class="counter-input"
-                         inputmode="numeric"
-                         onchange="updateCell({{ $cell->id }}, this.value)"/>
-
-                  <button type="button"
-                          class="counter-btn plus"
+              <td class="sh-td sh-td-center sh-td-ctrl">
+                <div class="sh-counter">
+                  <button type="button" class="sh-ctr-btn sh-ctr-minus"
+                          @disabled($isDone)
+                          onclick="updateCell({{ $cell->id }}, {{ max(0, ($empty ?? 0)-1) }})">−</button>
+                  <input  id="empty-{{ $cell->id }}"
+                          value="{{ is_null($empty) ? '' : $empty }}"
+                          class="sh-ctr-input"
+                          inputmode="numeric"
+                          @disabled($isDone)
+                          onchange="updateCell({{ $cell->id }}, this.value)"/>
+                  <button type="button" class="sh-ctr-btn sh-ctr-plus"
+                          @disabled($isDone)
                           onclick="updateCell({{ $cell->id }}, {{ min(50, ($empty ?? 0)+1) }})">+</button>
                 </div>
               </td>
 
-              <td class="col-ayam">
-                <span id="ayam-{{ $cell->id }}" class="ayam-value">{{ $ayam }}</span>
+              <td class="sh-td sh-td-center">
+                <span id="ayam-{{ $cell->id }}" class="sh-ayam-val"
+                      data-empty="{{ is_null($empty) ? '' : $empty }}">{{ $ayam }}</span>
               </td>
             @endfor
           </tr>
@@ -258,19 +319,35 @@
 </div>
 
 <script>
+function refreshTotals() {
+  let totalKosong = 0, totalAyam = 0;
+  document.querySelectorAll('.sh-ayam-val').forEach(el => {
+    const s = el.getAttribute('data-empty');
+    if (!s && s !== '0') return;
+    const e = parseInt(s, 10);
+    if (isNaN(e)) return;
+    totalKosong += e;
+    totalAyam   += (50 - e);
+  });
+  const ke = document.getElementById('total-kosong');
+  const ae = document.getElementById('total-ayam');
+  if (ke) ke.textContent = totalKosong;
+  if (ae) ae.textContent = totalAyam;
+}
+
 async function updateCell(id, emptyCount) {
   let v = emptyCount;
-  if (v === '' || v === null || typeof v === 'undefined') v = null;
-
+  if (v === '' || v === null || v === undefined) v = null;
   if (v !== null) {
     v = parseInt(v, 10);
-    if (Number.isNaN(v)) v = 0;
+    if (isNaN(v)) v = 0;
     if (v < 0) v = 0;
     if (v > 50) v = 50;
   }
 
   const res = await fetch(`{{ url('/hanging-cells') }}/${id}`, {
     method: 'PATCH',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -279,247 +356,293 @@ async function updateCell(id, emptyCount) {
     body: JSON.stringify({ empty_count: v })
   });
 
-  const json = await res.json();
+  let json = null;
+  try { json = await res.json(); } catch (e) {}
 
-  document.getElementById(`empty-${id}`).value = (json.empty_count === null) ? '' : json.empty_count;
-  document.getElementById(`ayam-${id}`).textContent = json.ayam;
+  if (!res.ok) {
+    alert(`Gagal update (${res.status}). ` + (json?.message || ''));
+    return;
+  }
 
-  window.clearTimeout(window.__refreshTotalsTimer);
-  window.__refreshTotalsTimer = setTimeout(() => window.location.reload(), 300);
+  const inputEl = document.getElementById(`empty-${id}`);
+  const ayamEl  = document.getElementById(`ayam-${id}`);
+  inputEl.value          = json.empty_count === null ? '' : json.empty_count;
+  ayamEl.textContent     = json.ayam;
+  ayamEl.setAttribute('data-empty', json.empty_count === null ? '' : String(json.empty_count));
+
+  // flash feedback
+  ayamEl.classList.add('sh-flash');
+  setTimeout(() => ayamEl.classList.remove('sh-flash'), 400);
+
+  refreshTotals();
 }
+
+document.addEventListener('DOMContentLoaded', refreshTotals);
 </script>
 
 <style>
+/* ── TOKENS ── */
 :root {
-  --c-bg: #F5F6FA;
-  --c-card: #FFFFFF;
-  --c-border: #E8EAF0;
-  --c-text: #1A1D2E;
-  --c-muted: #6B7280;
-  --c-accent: #4F67FF;
-  --c-accent-hover: #3D53E8;
-  --c-accent-light: #EEF0FF;
-  --c-danger: #F03E3E;
-  --c-danger-light: #FFF5F5;
-  --c-success: #0CA678;
-  --c-success-light: #E6FAF5;
-  --c-warning: #F59F00;
-  --c-warning-light: #FFF8E1;
-  --radius: 12px;
-  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04);
+  --sh-bg:        #F0F2F7;
+  --sh-surface:   #FFFFFF;
+  --sh-border:    #E2E5EE;
+  --sh-text:      #0D1117;
+  --sh-muted:     #6B7896;
+  --sh-accent:    #E85D2F;
+  --sh-accent-hv: #D04A1E;
+  --sh-accent-xl: rgba(232,93,47,.08);
+  --sh-success:   #10B981;
+  --sh-warning:   #F59F00;
+  --sh-error:     #EF4444;
+  --sh-r:         14px;
+  --sh-shadow:    0 1px 4px rgba(0,0,0,.05), 0 6px 20px rgba(0,0,0,.05);
 }
 
-/* Layout */
-.hanging-page { max-width: 1280px; margin: 0 auto; padding: 28px 20px; }
-.mb-16 { margin-bottom: 16px; }
+/* ── LAYOUT ── */
+.sh-wrap { max-width: 1320px; margin: 0 auto; padding: 32px 24px; }
 
-/* Breadcrumb */
-.breadcrumb {
-  display: flex; align-items: center; gap: 6px;
-  font-size: .78rem; color: var(--c-muted);
-  margin-bottom: 20px;
+/* ── BREADCRUMB ── */
+.sh-breadcrumb {
+  display: flex; align-items: center; gap: 7px;
+  font-size: .78rem; color: var(--sh-muted);
+  margin-bottom: 22px;
 }
-.breadcrumb-link {
+.sh-bc-link {
   display: inline-flex; align-items: center; gap: 5px;
-  color: var(--c-accent); text-decoration: none; font-weight: 500;
+  color: var(--sh-accent); text-decoration: none;
+  font-weight: 600;
   transition: opacity .15s;
 }
-.breadcrumb-link:hover { opacity: .75; }
-.breadcrumb svg { color: #C5C9D6; }
+.sh-bc-link:hover { opacity: .75; }
+.sh-breadcrumb > svg { color: #C5CAD8; }
 
-/* Header */
-.page-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+/* ── HEADER ── */
+.sh-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
 }
-.page-title-group { display: flex; align-items: center; gap: 14px; }
-.page-icon {
-  width: 46px; height: 46px;
-  background: var(--c-accent-light);
-  color: var(--c-accent);
-  border-radius: 12px;
+.sh-header-left { display: flex; align-items: center; gap: 16px; }
+.sh-icon {
+  width: 52px; height: 52px; flex-shrink: 0;
+  background: var(--sh-accent-xl); color: var(--sh-accent);
+  border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
 }
-.page-title { font-size: 1.35rem; font-weight: 700; color: var(--c-text); margin: 0 0 2px; }
-.page-subtitle { font-size: .8rem; color: var(--c-muted); margin: 0; }
-.mono-chip {
-  background: #F3F4F8;
-  color: #4B5563;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: .75rem;
+.sh-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+.sh-title { font-size: 1.45rem; font-weight: 800; color: var(--sh-text); margin: 0; letter-spacing: -.01em; }
+
+.sh-status {
+  padding: 4px 12px; border-radius: 999px;
+  font-size: .68rem; font-weight: 900; letter-spacing: .08em;
+  border: 1.5px solid transparent;
+}
+.sh-status-draft   { background: #F3F4F8; color: #4B5563; border-color: rgba(75,85,99,.2); }
+.sh-status-running { background: rgba(245,159,0,.12); color: #92400E; border-color: rgba(245,159,0,.3); }
+.sh-status-done    { background: rgba(16,185,129,.12); color: #065F46; border-color: rgba(16,185,129,.25); }
+
+.sh-subtitle { margin: 0; font-size: .82rem; color: var(--sh-muted); font-weight: 600;
+               display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.sh-chip {
   font-family: 'Fira Code', 'Courier New', monospace;
+  background: #F3F4F8; color: #4B5563;
+  padding: 2px 10px; border-radius: 7px; font-size: .76rem;
 }
+.sh-sep { color: #C5CAD8; }
 
-/* Cards */
-.card {
-  background: var(--c-card);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-.card-pad { padding: 18px; }
-.card-title {
-  display: flex; align-items: center; gap: 7px;
-  font-size: .72rem; font-weight: 800;
-  letter-spacing: .08em; text-transform: uppercase;
-  color: var(--c-accent);
-  margin-bottom: 14px;
-}
-.table-card { overflow: hidden; }
-
-/* Buttons */
-.btn-secondary {
-  display: inline-flex; align-items: center; gap: 6px;
+.sh-header-actions { display: flex; align-items: center; gap: 10px; }
+.sh-btn-back {
+  display: inline-flex; align-items: center; gap: 7px;
   padding: 9px 16px;
-  border: 1.5px solid var(--c-border);
-  border-radius: 9px;
-  background: #fff;
-  color: var(--c-muted);
-  text-decoration: none;
-  font-size: .84rem; font-weight: 600;
+  border: 1.5px solid var(--sh-border); border-radius: 10px;
+  background: #fff; color: var(--sh-muted);
+  text-decoration: none; font-size: .84rem; font-weight: 600;
   transition: all .15s;
 }
-.btn-secondary:hover { border-color: #C5C9D6; color: var(--c-text); background: #F5F6FA; }
+.sh-btn-back:hover { border-color: #C5CAD8; color: var(--sh-text); }
 
-.btn-submit {
-  display: inline-flex; align-items: center; gap: 6px;
+.sh-btn-start {
+  display: inline-flex; align-items: center; gap: 7px;
   padding: 9px 18px;
-  border: none; border-radius: 9px;
+  border: none; border-radius: 10px;
+  background: var(--sh-accent); color: #fff;
   font-size: .84rem; font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 2px 10px rgba(232,93,47,.3);
   transition: all .18s;
 }
-.btn-success {
-  background: var(--c-success);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(12,166,120,.25);
+.sh-btn-start:hover { background: var(--sh-accent-hv); transform: translateY(-1px); }
+
+/* ── CARD BASE ── */
+.sh-card {
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-border);
+  border-radius: var(--sh-r);
+  box-shadow: var(--sh-shadow);
 }
-.btn-success:hover { filter: brightness(.95); transform: translateY(-1px); }
+.sh-card-label {
+  display: flex; align-items: center; gap: 7px;
+  font-size: .7rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--sh-accent);
+  padding: 14px 18px; border-bottom: 1px solid var(--sh-border);
+}
+.sh-card-label-pad { padding: 14px 18px; border-bottom: 1px solid var(--sh-border); }
 
-/* Form bits */
-.finish-form { display: flex; flex-direction: column; gap: 12px; }
-.finish-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.finish-actions { display: flex; justify-content: flex-end; }
-@media (max-width: 720px) { .finish-grid { grid-template-columns: 1fr; } }
+/* ── TOP GRID ── */
+.sh-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 0.6fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 1100px) { .sh-top-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 720px)  { .sh-top-grid { grid-template-columns: 1fr; } }
 
-.form-label { display:block; font-size: .8rem; font-weight: 700; color: var(--c-text); margin-bottom: 6px; }
-.required { color: var(--c-danger); margin-left: 2px; }
+/* ── FINISH PANEL ── */
+.sh-finish-panel { display: flex; flex-direction: column; }
+.sh-finish-form  { padding: 16px 18px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+.sh-finish-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .sh-finish-grid { grid-template-columns: 1fr; } }
 
-.input-wrapper {
-  position: relative;
+.sh-done-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px;
+  background: rgba(16,185,129,.08);
+  border-bottom: 1px solid rgba(16,185,129,.2);
+  color: #065F46; font-size: .82rem; font-weight: 700;
+}
+.sh-done-banner svg { flex-shrink: 0; }
+
+.sh-form-group  {}
+.sh-label { display: block; font-size: .8rem; font-weight: 700; color: var(--sh-text); margin-bottom: 7px; }
+.sh-input-wrap {
   display: flex; align-items: center;
-  border: 1.5px solid var(--c-border);
-  border-radius: 9px;
-  background: #FAFBFD;
+  border: 1.5px solid var(--sh-border);
+  border-radius: 10px; background: #FAFBFD;
   transition: border-color .18s, box-shadow .18s;
   overflow: hidden;
 }
-.input-wrapper:focus-within { border-color: var(--c-accent); box-shadow: 0 0 0 3px rgba(79,103,255,.12); background:#fff; }
-.input-wrapper.has-error { border-color: var(--c-danger); background: var(--c-danger-light); }
-
-.input-icon {
-  width: 40px; min-width: 40px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--c-muted);
-  pointer-events: none;
+.sh-input-wrap:focus-within { border-color: var(--sh-accent); box-shadow: 0 0 0 3px rgba(232,93,47,.12); background: #fff; }
+.sh-input-wrap.sh-has-error { border-color: var(--sh-error); background: rgba(239,68,68,.04); }
+.sh-input-icon { width: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; color: var(--sh-muted); }
+.sh-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  padding: 10px 12px 10px 0; font-size: .875rem; color: var(--sh-text);
 }
-.form-input {
-  flex: 1;
-  border: none; outline: none;
-  background: transparent;
-  padding: 10px 12px 10px 0;
-  font-size: .875rem;
-  color: var(--c-text);
-  width: 100%;
-}
-.form-error {
-  display: flex; align-items: center; gap: 6px;
-  color: var(--c-danger);
-  font-size: .76rem; font-weight: 600;
-  margin-top: 6px;
-}
+.sh-error { color: var(--sh-error); font-size: .76rem; font-weight: 600; margin-top: 5px; }
 
-/* Info grid */
-.info-grid { display: grid; grid-template-columns: 1.6fr .9fr; gap: 14px; margin-bottom: 14px; }
-@media (max-width: 960px) { .info-grid { grid-template-columns: 1fr; } }
-
-.kv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-@media (max-width: 720px) { .kv-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px) { .kv-grid { grid-template-columns: 1fr; } }
-
-.kv .k { font-size: .72rem; color: var(--c-muted); margin-bottom: 3px; }
-.kv .v { font-weight: 700; color: var(--c-text); }
-.kv .mono { font-family: 'Fira Code','Courier New',monospace; }
-.divider { grid-column: 1 / -1; height: 1px; background: var(--c-border); margin: 2px 0; }
-
-/* Summary */
-.summary-card .summary-line { display:flex; gap: 6px; align-items: baseline; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed rgba(232,234,240,.9); }
-.summary-card .summary-line:last-child { border-bottom: none; }
-.summary-value { font-weight: 900; color: var(--c-text); }
-.summary-unit { color: var(--c-muted); font-size: .82rem; }
-
-/* Table */
-.table-wrapper { overflow-x: auto; }
-.data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
-
-.data-table thead tr { background: #FAFBFD; border-bottom: 1px solid var(--c-border); }
-.data-table th {
-  padding: 10px 10px;
-  color: var(--c-muted);
-  font-size: .72rem;
-  font-weight: 800;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  text-align: left;
-  white-space: nowrap;
-}
-.data-table td { padding: 10px 10px; color: var(--c-text); border-top: 1px solid var(--c-border); vertical-align: middle; }
-.data-table tbody tr:hover { background: #FAFBFE; }
-.data-table tfoot td { padding: 12px 10px; background: #FAFBFD; border-top: 1px solid var(--c-border); font-weight: 800; color: var(--c-muted); }
-
-/* Column sizing (proporsional) */
-.hanging-table { min-width: 1100px; table-layout: fixed; }
-.col-no { width: 56px; text-align: center; }
-.col-shackle { width: 140px; }
-.col-rule { width: 110px; }
-.set-head { text-align: center !important; }
-.col-empty, .col-ayam { text-align: center; }
-
-@media (max-width: 720px) {
-  .hanging-table { min-width: 980px; }
-}
-
-/* Cell UI */
-.strong { font-weight: 800; }
-.counter {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.counter-btn {
-  width: 32px; height: 32px;
-  border: none;
-  border-radius: 9px;
-  font-weight: 900;
+.sh-finish-footer { display: flex; justify-content: flex-end; margin-top: auto; }
+.sh-btn-finish {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 20px;
+  border: none; border-radius: 10px;
+  background: var(--sh-success); color: #fff;
+  font-size: .84rem; font-weight: 700;
   cursor: pointer;
-  transition: transform .12s, filter .12s;
+  box-shadow: 0 2px 10px rgba(16,185,129,.3);
+  transition: all .18s;
 }
-.counter-btn:active { transform: translateY(1px); }
-.counter-btn.minus { background: #FDECEC; color: #D64545; }
-.counter-btn.plus { background: #E8FBF4; color: #0CA678; }
+.sh-btn-finish:hover:not(:disabled) { filter: brightness(.93); transform: translateY(-1px); }
+.sh-btn-finish:disabled { opacity: .5; cursor: not-allowed; }
 
-.counter-input {
-  width: 60px;
-  text-align: center;
-  border: 1.5px solid var(--c-border);
-  border-radius: 9px;
-  padding: 7px 8px;
-  font-weight: 800;
-  background: #fff;
+/* ── KV GRID ── */
+.sh-kv-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px; padding: 16px 18px;
 }
-.ayam-value { font-weight: 900; }
+@media (max-width: 720px) { .sh-kv-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px) { .sh-kv-grid { grid-template-columns: 1fr; } }
+.sh-kv {}
+.sh-kv-full { grid-column: 1 / -1; }
+.sh-kv-divider { grid-column: 1 / -1; height: 1px; background: var(--sh-border); }
+.sh-k { font-size: .72rem; color: var(--sh-muted); margin-bottom: 3px; font-weight: 600; }
+.sh-v { font-weight: 700; color: var(--sh-text); font-size: .875rem; }
+.sh-mono { font-family: 'Fira Code','Courier New',monospace; font-size: .82rem; }
+.sh-upper { text-transform: uppercase; letter-spacing: .04em; }
+
+/* ── SUMMARY ── */
+.sh-summary-list { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+.sh-summary-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-radius: 10px;
+  background: #FAFBFD; border: 1px solid var(--sh-border);
+}
+.sh-summary-highlight {
+  background: var(--sh-accent-xl); border-color: rgba(232,93,47,.2);
+}
+.sh-summary-key  { font-size: .78rem; color: var(--sh-muted); font-weight: 600; }
+.sh-summary-val  { display: flex; align-items: baseline; gap: 4px; }
+.sh-summary-num  { font-size: 1.1rem; font-weight: 900; color: var(--sh-text); }
+.sh-summary-highlight .sh-summary-num { color: var(--sh-accent); }
+.sh-summary-unit { font-size: .75rem; color: var(--sh-muted); font-weight: 600; }
+
+/* ── TABLE CARD ── */
+.sh-table-card { overflow: hidden; }
+.sh-table-wrap { overflow-x: auto; }
+.sh-table {
+  width: 100%; border-collapse: collapse;
+  font-size: .875rem;
+  min-width: 1100px;
+  table-layout: fixed;
+}
+
+/* Column widths */
+.sh-th-no   { width: 54px; }
+.sh-th-blok { width: 150px; }
+.sh-th-rule { width: 110px; }
+.sh-th-set  { min-width: 160px; }
+.sh-th-sub  { min-width: 80px; }
+
+.sh-table thead tr:first-child { background: #FAFBFD; border-bottom: 1px solid var(--sh-border); }
+.sh-table thead tr:last-child  { background: #F5F7FB; border-bottom: 1px solid var(--sh-border); }
+.sh-table th {
+  padding: 10px 12px;
+  color: var(--sh-muted); font-size: .7rem; font-weight: 800;
+  letter-spacing: .07em; text-transform: uppercase;
+  text-align: left; white-space: nowrap;
+}
+.sh-th-set { text-align: center; border-left: 1px solid var(--sh-border); }
+.sh-th-sub { text-align: center; }
+
+.sh-tr { border-bottom: 1px solid var(--sh-border); transition: background .12s; }
+.sh-tr:last-child { border-bottom: none; }
+.sh-tr:hover { background: #FAFBFE; }
+
+.sh-td { padding: 10px 12px; color: var(--sh-text); vertical-align: middle; }
+.sh-td-center { text-align: center; }
+.sh-td-no { color: var(--sh-muted); font-weight: 700; font-size: .8rem; }
+.sh-td-ctrl { padding: 8px 12px; }
+
+.sh-blok-label { font-weight: 800; color: var(--sh-text); }
+.sh-rule { font-size: .8rem; color: var(--sh-muted); font-weight: 700; }
+
+/* ── COUNTER ── */
+.sh-counter { display: inline-flex; align-items: center; gap: 6px; }
+.sh-ctr-btn {
+  width: 30px; height: 30px;
+  border: none; border-radius: 8px;
+  font-size: 1rem; font-weight: 900; line-height: 1;
+  cursor: pointer;
+  transition: transform .1s, filter .1s;
+}
+.sh-ctr-btn:active { transform: scale(.94); }
+.sh-ctr-btn:disabled { opacity: .4; cursor: not-allowed; }
+.sh-ctr-minus { background: #FDECEC; color: #D64545; }
+.sh-ctr-minus:hover:not(:disabled) { background: #fbd8d8; }
+.sh-ctr-plus  { background: #E6FAF5; color: #0CA678; }
+.sh-ctr-plus:hover:not(:disabled)  { background: #ccf5e8; }
+
+.sh-ctr-input {
+  width: 56px; text-align: center;
+  border: 1.5px solid var(--sh-border);
+  border-radius: 8px; padding: 6px;
+  font-weight: 800; font-size: .875rem;
+  background: #fff; color: var(--sh-text);
+  transition: border-color .15s, box-shadow .15s;
+}
+.sh-ctr-input:focus { outline: none; border-color: var(--sh-accent); box-shadow: 0 0 0 3px rgba(232,93,47,.12); }
+.sh-ctr-input:disabled { background: #F5F7FA; color: var(--sh-muted); }
+
+.sh-ayam-val { font-weight: 900; color: var(--sh-text); transition: color .3s; }
+.sh-flash { color: var(--sh-success) !important; }
 </style>
 @endsection

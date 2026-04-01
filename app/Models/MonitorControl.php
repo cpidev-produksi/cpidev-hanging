@@ -12,26 +12,43 @@ class MonitorControl extends Model
         'process_date',
         'shift',
         'size',
+
+        'truck_no',
+
         'farm_id',
-        'farm_fee_amount',
+
         'status',
         'set_count',
         'shackle_count',
+
         'expedition_id',
         'plate_number_id',
+
+        'seal_no',
+        'truck_arrival_time',
+        'catch_date',
+        'total_chicken',
+        'total_kilo',
+        'abw',
+        'sppa_no',
+        'order_id',
+        'sppa_date',
     ];
 
     protected $casts = [
         'process_date' => 'date',
-        'size' => 'decimal:1',
-        'farm_fee_amount' => 'decimal:2',
+        'catch_date' => 'date',
+        'sppa_date' => 'date',
+
+        'total_kilo' => 'decimal:2',
+        'abw' => 'decimal:2',
+
+        'truck_arrival_time' => 'datetime:H:i',
     ];
 
     public function farm() { return $this->belongsTo(Farm::class); }
     public function expedition() { return $this->belongsTo(Expedition::class); }
     public function plateNumber() { return $this->belongsTo(PlateNumber::class); }
 
-    public function hangingForm() {
-        return $this->hasOne(HangingForm::class);
-    }
+    public function hangingForm() { return $this->hasOne(HangingForm::class); }
 }

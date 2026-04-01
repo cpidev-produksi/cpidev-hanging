@@ -3,803 +3,679 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Live Monitor • SlaughterHouse</title>
+    <title>Live Monitor • {{ $location }}</title>
     @vite(['resources/css/app.css','resources/js/app.js'])
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Premium design system - COMPACT SINGLE SCREEN VIEW */
         :root {
-            --bg: #0a0c0f;
-            --card: #111318;
-            --border: #1e2330;
-            --border-glow: #2e3a52;
-            --accent: #e85d2f;
-            --accent-soft: rgba(232, 93, 47, 0.12);
-            --accent2: #f5a623;
-            --text: #f0f2f5;
-            --muted: #6b7591;
-            --success: #10b981;
+            --bg:           #080a0d;
+            --surface:      #0f1217;
+            --card:         #13161e;
+            --border:       #1c2030;
+            --border-hi:    #2c3550;
+            --accent:       #e8522a;
+            --accent-glow:  rgba(232, 82, 42, 0.18);
+            --accent-dim:   rgba(232, 82, 42, 0.08);
+            --gold:         #f0a500;
+            --gold-dim:     rgba(240, 165, 0, 0.1);
+            --text:         #eef0f5;
+            --muted:        #5a6380;
+            --success:      #22c97a;
+            --info:         #3b8aff;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: var(--bg);
-            font-family: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: 'DM Sans', system-ui, sans-serif;
             height: 100vh;
             overflow: hidden;
-            position: relative;
+            color: var(--text);
         }
 
-        /* Atmospheric background */
+        /* Ambient glow layers */
         body::before {
             content: '';
-            position: fixed;
-            inset: 0;
+            position: fixed; inset: 0;
             background:
-                radial-gradient(ellipse 80% 60% at 15% 80%, rgba(232,93,47,0.08) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 50% at 85% 10%, rgba(245,166,35,0.06) 0%, transparent 55%);
-            pointer-events: none;
-            z-index: 0;
+                radial-gradient(ellipse 70% 55% at 10% 90%, rgba(232,82,42,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 45% at 90% 5%,  rgba(240,165,0,0.05) 0%, transparent 55%);
+            pointer-events: none; z-index: 0;
         }
 
+        /* Subtle grid */
         body::after {
             content: '';
-            position: fixed;
-            inset: 0;
+            position: fixed; inset: 0;
             background-image:
-                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
+                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+            background-size: 44px 44px;
+            pointer-events: none; z-index: 0;
         }
 
-        .monitor-container {
-            position: relative;
-            z-index: 1;
+        /* ═══════════════════════════════════════
+           LAYOUT WRAPPER
+        ═══════════════════════════════════════ */
+        .wrap {
+            position: relative; z-index: 1;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 0.75rem 1.25rem;
-            gap: 0.75rem;
-            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto auto 1fr 64px auto;
+            gap: 0.65rem;
+            padding: 0.7rem 1.2rem;
         }
 
-        /* Header - Compact */
-        .header-section {
+        /* ═══════════════════════════════════════
+           HEADER
+        ═══════════════════════════════════════ */
+        .header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-wrap: nowrap;
-            gap: 1rem;
-            padding: 0.5rem 0;
+            gap: 0.75rem;
+            padding-bottom: 0.6rem;
             border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
         }
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .company-logo {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* Logo */
+        .logo-box {
+            width: 40px; height: 40px;
+            border-radius: 10px;
             background: var(--card);
             border: 1px solid var(--border);
-            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0;
         }
+        .logo-box img { width: 100%; height: 100%; object-fit: cover; }
 
-        .company-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        /* Brand */
+        .brand h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            letter-spacing: 1.5px;
+            background: linear-gradient(135deg, #fff 25%, var(--gold) 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            line-height: 1.1;
         }
-
-        .brand-text h1 {
-            font-family: 'Syne', 'DM Sans', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 800;
-            letter-spacing: -0.3px;
-            background: linear-gradient(135deg, #fff 30%, var(--accent2) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            line-height: 1.2;
-        }
-
-        .brand-text p {
-            font-size: 0.6rem;
+        .brand p {
+            font-size: 0.58rem;
             color: var(--muted);
+            letter-spacing: 0.4px;
         }
 
-        .location-badge {
+        /* Spacer */
+        .h-gap { flex: 1; }
+
+        /* Location badge */
+        .loc-badge {
+            display: flex; align-items: center; gap: 0.45rem;
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 100px;
-            padding: 0.35rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            padding: 0.3rem 0.85rem;
+        }
+        .loc-badge svg { color: var(--accent); flex-shrink: 0; }
+        .loc-lbl { font-size: 0.58rem; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; }
+        .loc-val {
+            font-size: 0.82rem; font-weight: 700; color: #fff;
+            background: var(--accent-dim);
+            padding: 0.1rem 0.45rem; border-radius: 5px;
         }
 
-        .location-icon {
-            color: var(--accent);
-            width: 14px;
-            height: 14px;
+        /* DateTime */
+        .datetime-block {
+            text-align: right;
         }
-
-        .location-text {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #ffffff;
-            letter-spacing: 0.5px;
-        }
-
-        .location-name {
-            font-size: 0.85rem;
-            font-weight: 700;
+        .dt-time {
+            font-family: 'Bebas Neue', monospace;
+            font-size: 2rem; font-weight: 400;
             color: var(--text);
-            background: var(--accent-soft);
-            padding: 0.15rem 0.5rem;
-            border-radius: 6px;
+            letter-spacing: 3px;
+            line-height: 1;
         }
-
-        .report-code-card {
-            background: rgba(17, 19, 24, 0.8);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 0.4rem 1rem;
-            text-align: center;
-            border-left: 2px solid var(--accent);
-        }
-
-        .report-label {
-            font-size: 0.55rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .dt-date {
+            font-size: 0.68rem;
+            font-weight: 600;
             color: var(--muted);
+            letter-spacing: 0.3px;
+            margin-top: 2px;
         }
 
-        .report-value {
-            font-family: monospace;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--accent2);
+        /* Report code */
+        .report-pill {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 2px solid var(--gold);
+            border-radius: 8px;
+            padding: 0.2rem 0.55rem;
+            text-align: center;
+        }
+        .report-pill .lbl { font-size: 0.45rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .report-pill .val {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.62rem; font-weight: 500;
+            color: var(--gold);
         }
 
-        /* Fullscreen Button */
-        .fullscreen-btn {
+        /* Fullscreen button */
+        .fs-btn {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 0.35rem 0.85rem;
+            border-radius: 9px;
+            padding: 0.3rem 0.7rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 0.4rem;
             color: var(--muted);
-            font-size: 0.7rem;
-            font-weight: 500;
+            font-size: 0.65rem; font-weight: 500;
+            font-family: inherit;
+            transition: all 0.18s ease;
         }
-
-        .fullscreen-btn:hover {
+        .fs-btn:hover {
             border-color: var(--accent);
             color: var(--accent);
-            background: var(--accent-soft);
+            background: var(--accent-dim);
+        }
+        .fs-btn svg { width: 14px; height: 14px; }
+
+        /* ═══════════════════════════════════════
+           MAIN HERO — Total Ayam (SANGAT BESAR)
+        ═══════════════════════════════════════ */
+        .hero {
+            background: linear-gradient(135deg, rgba(232,82,42,0.12) 0%, rgba(240,165,0,0.06) 100%);
+            border: 1px solid rgba(232,82,42,0.28);
+            border-radius: 20px;
+            padding: 0.55rem 1.2rem 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            min-height: 0;
         }
 
-        .fullscreen-btn svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        /* HERO TOTAL AYAM - LARGE BUT COMPACT */
-        .hero-ayam-section {
-            background: linear-gradient(135deg, rgba(232,93,47,0.1) 0%, rgba(245,166,35,0.05) 100%);
-            border-radius: 24px;
-            padding: 0.6rem 1rem;
-            border: 1px solid rgba(232,93,47,0.25);
-            flex-shrink: 0;
-        }
-
-        .hero-label {
-            font-size: 0.65rem;
+        .hero-main { flex: 1; min-height: 0; }
+        .hero-lbl {
+            font-size: 0.6rem;
             text-transform: uppercase;
+            letter-spacing: 2.5px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 0.1rem;
+        }
+        .hero-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(8rem, 28vh, 22rem);
+            line-height: 0.88;
+            background: linear-gradient(135deg, #fff 0%, var(--gold) 60%, var(--accent) 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
             letter-spacing: 2px;
-            font-weight: 600;
-            color: var(--accent2);
-            text-align: center;
         }
-
-        .hero-number {
-            font-family: 'Syne', monospace;
-            font-size: 4.5rem;
-            font-weight: 900;
-            text-align: center;
-            line-height: 1;
-            background: linear-gradient(135deg, #FFFFFF 0%, var(--accent2) 70%, var(--accent) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            letter-spacing: -1px;
-        }
-
-        .hero-sub {
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.6rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.3rem;
-        }
-
-        .pulse-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        /* 3-Column Stats Grid - Compact */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            flex-shrink: 0;
-        }
-
-        .stat-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 0.7rem 0.8rem;
-            transition: all 0.2s;
-        }
-
-        .stat-card:hover {
-            border-color: var(--border-glow);
-        }
-
-        .stat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-title {
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            color: var(--muted);
-        }
-
-        .stat-icon {
-            width: 24px;
-            height: 24px;
-            background: var(--accent-soft);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent);
-        }
-
-        .stat-icon svg {
-            width: 12px;
-            height: 12px;
-        }
-
-        .stat-value {
-            font-family: 'Syne', monospace;
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--text);
-            line-height: 1.2;
-        }
-
-        .stat-value-sm {
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .stat-sub {
-            font-size: 0.55rem;
-            color: var(--muted);
+        .hero-pulse {
+            font-size: 0.58rem;
+            color: var(--success);
+            display: flex; align-items: center; gap: 0.3rem;
             margin-top: 0.25rem;
         }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: rgba(16, 185, 129, 0.1);
-            padding: 0.2rem 0.6rem;
-            border-radius: 100px;
-            font-size: 0.65rem;
-            color: var(--success);
+        .pulse-dot {
+            width: 6px; height: 6px;
+            background: var(--success); border-radius: 50%;
+            animation: blink 1.4s ease-in-out infinite;
         }
 
-        /* Content Panel - Compact Data Grid */
-        .content-panel {
-            background: rgba(17, 19, 24, 0.5);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 0.8rem 1rem;
-            flex: 1;
-            min-height: 0;
+        /* Hero secondary stats — total ekor & truck no */
+        .hero-stats {
             display: flex;
             flex-direction: column;
+            gap: 0.5rem;
+            flex-shrink: 0;
         }
-
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.75rem;
-            height: 100%;
-        }
-
-        .data-item {
-            background: rgba(10, 12, 15, 0.5);
-            border-radius: 16px;
-            padding: 0.7rem;
+        .hstat {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 0.4rem 1rem;
             text-align: center;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            min-width: 130px;
         }
-
-        .data-label {
-            font-size: 0.6rem;
+        .hstat .lbl {
+            font-size: 0.55rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--muted);
-            margin-bottom: 0.4rem;
+        }
+        .hstat .val {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            line-height: 1;
+            color: var(--text);
+        }
+        .hstat.accent-hi .val { color: var(--accent); }
+        .hstat.gold-hi .val   { color: var(--gold);   }
+
+        /* ═══════════════════════════════════════
+           SUB MAIN — Ekspedisi & Farm
+        ═══════════════════════════════════════ */
+        .sub-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.65rem;
+            height: 64px;
         }
 
-        .data-value {
-            font-size: 1rem;
+        .sub-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 0.4rem 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: border-color 0.2s;
+            overflow: hidden;
+        }
+        .sub-card:hover { border-color: var(--border-hi); }
+
+        .sc-icon {
+            width: 28px; height: 28px; flex-shrink: 0;
+            background: var(--accent-dim);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent);
+        }
+        .sc-icon svg { width: 13px; height: 13px; }
+
+        .sc-body { min-width: 0; }
+        .sc-lbl {
+            font-size: 0.48rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 0.15rem;
+        }
+        .sc-val {
+            font-size: 0.75rem;
             font-weight: 700;
             color: var(--text);
-            word-break: break-word;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
-        .data-value-sm {
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-        }
-
-        .empty-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--accent-soft);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .empty-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .empty-desc {
-            font-size: 0.7rem;
+        .sc-sub {
+            font-size: 0.6rem;
             color: var(--muted);
+            margin-top: 0.05rem;
         }
 
-        /* Footer Compact */
-        .footer-info {
+        .sc-icon.gold { background: var(--gold-dim); color: var(--gold); }
+
+        /* ═══════════════════════════════════════
+           EMPTY STATE (inside hero area)
+        ═══════════════════════════════════════ */
+        .empty-state {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 0.4rem;
+            text-align: center;
+            height: 100%;
+            padding: 1rem;
+        }
+        .empty-icon {
+            width: 44px; height: 44px;
+            background: var(--accent-dim);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent);
+        }
+        .empty-title { font-size: 0.85rem; font-weight: 600; }
+        .empty-desc  { font-size: 0.65rem; color: var(--muted); }
+
+        /* ═══════════════════════════════════════
+           FOOTER
+        ═══════════════════════════════════════ */
+        .footer {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-shrink: 0;
+            gap: 1rem;
             padding-top: 0.5rem;
             border-top: 1px solid var(--border);
-            font-size: 0.55rem;
+            font-size: 0.58rem;
             color: var(--muted);
+            flex-shrink: 0;
         }
 
-        .auto-refresh {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
+        .refresh-badge {
+            display: flex; align-items: center; gap: 0.35rem;
             background: var(--card);
-            padding: 0.25rem 0.7rem;
-            border-radius: 100px;
             border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 0.22rem 0.65rem;
+            flex-shrink: 0;
+        }
+        .refresh-badge svg { color: var(--success); animation: spin 2s linear infinite; }
+
+        .footer-counter {
+            display: flex; align-items: center; gap: 0.5rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.35rem 1rem;
+        }
+        .fc-lbl { color: var(--muted); font-size: 0.7rem; font-weight: 500; }
+        .fc-val {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem;
+            line-height: 1;
+            color: var(--text);
+            letter-spacing: 1px;
         }
 
-        .hidden {
-            display: none !important;
-        }
+        .footer-right { margin-left: auto; }
 
-        @keyframes pulse {
+        /* ═══════════════════════════════════════
+           UTILITY
+        ═══════════════════════════════════════ */
+        .hidden { display: none !important; }
+
+        @keyframes blink {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
+            50%       { opacity: 0.4; transform: scale(0.75); }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero, .sub-card { animation: fadeUp 0.35s ease-out both; }
+        .sub-card:nth-child(2) { animation-delay: 0.06s; }
+
+        /* Fullscreen overrides */
+        :fullscreen .hero-num,
+        :-webkit-full-screen .hero-num,
+        :-moz-full-screen .hero-num {
+            font-size: clamp(10rem, 34vh, 28rem);
+        }
+        :fullscreen .wrap,
+        :-webkit-full-screen .wrap,
+        :-moz-full-screen .wrap {
+            padding: 0.9rem 1.5rem;
         }
 
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @media (max-width: 860px) {
+            .hero-num { font-size: 4.5rem; }
+            .sub-grid { grid-template-columns: 1fr; }
+            .hero-stats { flex-direction: row; }
         }
-
-        .animate-in {
-            animation: fadeSlideUp 0.3s ease-out forwards;
-        }
-
-        /* Fullscreen mode adjustments */
-        :-webkit-full-screen .monitor-container {
-            padding: 1rem 1.5rem;
-        }
-        :-moz-full-screen .monitor-container {
-            padding: 1rem 1.5rem;
-        }
-        :fullscreen .monitor-container {
-            padding: 1rem 1.5rem;
-        }
-
-        :-webkit-full-screen .hero-number {
-            font-size: 6rem;
-        }
-        :-moz-full-screen .hero-number {
-            font-size: 6rem;
-        }
-        :fullscreen .hero-number {
-            font-size: 6rem;
-        }
-
-        /* Compact Responsive */
-        @media (max-width: 900px) {
-            .hero-number { font-size: 3rem; }
-            :fullscreen .hero-number { font-size: 4.5rem; }
-            .stat-value { font-size: 1rem; }
-            .data-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 700px) {
-            .stats-grid { grid-template-columns: 1fr; }
-            .data-grid { grid-template-columns: 1fr; }
-            .header-section { flex-wrap: wrap; }
+        @media (max-width: 600px) {
+            .datetime-block { display: none; }
+            .hero { flex-direction: column; gap: 0.75rem; }
+            .hero-stats { flex-direction: row; width: 100%; }
+            .hstat { flex: 1; }
         }
     </style>
 </head>
 <body>
-<div class="monitor-container">
-    <!-- Header - Compact with Fullscreen Button -->
-    <div class="header-section">
-        <div class="logo-area">
-            <div class="company-logo">
-                <img src="{{ asset('images/logo small.png') }}" alt="Logo" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2242%22%20height%3D%2242%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23e85d2f%22%20stroke-width%3D%221.5%22%3E%3Cpath%20d%3D%22M12%202L2%207l10%205%2010-5-10-5zM2%2017l10%205%2010-5M2%2012l10%205%2010-5%22%2F%3E%3C%2Fsvg%3E';">
-            </div>
-            <div class="brand-text">
-                <h1>Slaughter House</h1>
-                <p>Live Production Monitor</p>
-            </div>
+<div class="wrap">
+
+    <!-- ════════════════ HEADER ════════════════ -->
+    <div class="header">
+        <!-- Logo + Brand -->
+        <div class="logo-box">
+            <img src="{{ asset('images/logo small.png') }}" alt="Logo"
+                 onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e8522a%22 stroke-width=%221.5%22%3E%3Cpath d=%22M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5%22/%3E%3C/svg%3E';">
         </div>
-        <div class="location-badge">
-            <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="brand">
+            <h1>Slaughter House</h1>
+            <p>Live Production Monitor</p>
+        </div>
+
+        <div class="h-gap"></div>
+
+        <!-- Location -->
+        <div class="loc-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                 <circle cx="12" cy="10" r="3"/>
             </svg>
-            <span class="location-text">LOKASI</span>
-            <span class="location-name" id="locationName">{{ $location }}</span>
+            <span class="loc-lbl">LOKASI</span>
+            <span class="loc-val">{{ $location }}</span>
         </div>
-        <div class="report-code-card">
-            <div class="report-label">Report Code</div>
-            <div class="report-value" id="reportCode">—</div>
+
+        <!-- Date & Time -->
+        <div class="datetime-block">
+            <div class="dt-time" id="dtTime">--:--:--</div>
+            <div class="dt-date" id="dtDate">--</div>
         </div>
-        <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen Mode">
-            <svg id="fullscreenIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+        <!-- Report Code -->
+        <div class="report-pill">
+            <div class="lbl">Report Code</div>
+            <div class="val" id="reportCode">—</div>
+        </div>
+
+        <!-- Fullscreen -->
+        <button class="fs-btn" id="fsBtn" title="Fullscreen">
+            <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
             </svg>
-            <span id="fullscreenText">Fullscreen</span>
+            <span id="fsText">Fullscreen</span>
         </button>
     </div>
 
-    <!-- HERO TOTAL AYAM - ANGKA PALING BESAR -->
-    <div class="hero-ayam-section">
-        <div class="hero-label">TOTAL AYAM DIPROSES</div>
-        <div class="hero-number" id="heroTotalAyam">0</div>
-        <div class="hero-sub">
-            <span class="pulse-dot"></span>
-            <span>Real-time Count</span>
-        </div>
-    </div>
-
-    <!-- 3-Column Stats Grid -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-title">NOMINAL EKORAN</span>
-                <span class="stat-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 1v22M17 5H9.5M17 5a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h10Z"/>
-                    </svg>
-                </span>
-            </div>
-            <div class="stat-value" id="statNominal">0</div>
-            <div class="stat-sub">Total ekor ayam</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-title">AKTIFITAS</span>
-                <span class="stat-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                </span>
-            </div>
-            <div class="status-badge" id="statusBadge">
+    <!-- ════════════════ HERO (MAIN) ════════════════ -->
+    <div class="hero" id="heroSection">
+        <!-- Left: giant number -->
+        <div class="hero-main">
+            <div class="hero-lbl">TOTAL AYAM DIPROSES</div>
+            <div class="hero-num" id="heroAyam">0</div>
+            <div class="hero-pulse" id="heroPulse">
                 <span class="pulse-dot"></span>
-                <span id="statusText">Menunggu</span>
+                <span>Real-time</span>
             </div>
-            <div class="stat-sub" id="activeDetail">-</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-title">TRUCK</span>
-                <span class="stat-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"/>
-                        <circle cx="5.5" cy="18.5" r="2.5"/>
-                        <circle cx="18.5" cy="18.5" r="2.5"/>
-                    </svg>
-                </span>
+
+        <!-- Right: Total Ekor + No Truk -->
+        <div class="hero-stats">
+            <div class="hstat gold-hi">
+                <div class="lbl">TOTAL EKOR</div>
+                <div class="val" id="statTotalEkor">0</div>
             </div>
-            <div class="stat-value stat-value-sm" id="truckExpedition">—</div>
-            <div class="stat-sub">nomor truk / ekspedisi</div>
+            <div class="hstat accent-hi">
+                <div class="lbl">NO. TRUK</div>
+                <div class="val" id="statTruckNo">—</div>
+            </div>
         </div>
     </div>
 
-    <!-- Content Panel - Detail Data -->
-    <div class="content-panel">
-        <!-- Empty State -->
-        <div id="emptyState" class="empty-state">
+    <!-- ════════════════ SUB MAIN ════════════════ -->
+    <div class="sub-grid" id="subGrid">
+        <!-- Ekspedisi + Sopir -->
+        <div class="sub-card" id="cardExpedisi">
+            <div class="sc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"/>
+                    <circle cx="5.5" cy="18.5" r="2.5"/>
+                    <circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+            </div>
+            <div class="sc-body">
+                <div class="sc-lbl">EKSPEDISI &amp; SOPIR</div>
+                <div class="sc-val" id="subExpedisi">—</div>
+                <div class="sc-sub" id="subDriver">—</div>
+            </div>
+        </div>
+
+        <!-- Size + Farm -->
+        <div class="sub-card" id="cardFarm">
+            <div class="sc-icon gold">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+            </div>
+            <div class="sc-body">
+                <div class="sc-lbl">SIZE AYAM &amp; FARM</div>
+                <div class="sc-val" id="subFarm">—</div>
+                <div class="sc-sub" id="subSize">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State (overlay, shown when not active) -->
+    <div id="emptyOverlay" class="hidden" style="grid-row: 2 / 4; align-self: stretch;">
+        <div class="empty-state" style="height:100%; background: var(--card); border:1px solid var(--border); border-radius:20px;">
             <div class="empty-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
                     <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
+                    <line x1="8"  y1="2" x2="8"  y2="6"/>
+                    <line x1="3"  y1="10" x2="21" y2="10"/>
                 </svg>
             </div>
             <div class="empty-title">Tidak Ada Proses Running</div>
-            <div class="empty-desc">Belum ada aktivitas pemotongan</div>
-        </div>
-
-        <!-- Active Data Row -->
-        <div id="activeDataRow" class="hidden" style="height: 100%;">
-            <div class="data-grid">
-                <div class="data-item">
-                    <div class="data-label">Sopir & Ekspedisi</div>
-                    <div class="data-value data-value-sm" id="expDriver">—</div>
-                </div>
-                <div class="data-item">
-                    <div class="data-label">Ukuran & Farm</div>
-                    <div class="data-value data-value-sm" id="sizeFarm">—</div>
-                </div>
-                <div class="data-item">
-                    <div class="data-label">Total Ayam</div>
-                    <div class="data-value" id="totalAyamDetail">0</div>
-                </div>
-                <div class="data-item">
-                    <div class="data-label">Nominal Ekoran</div>
-                    <div class="data-value" id="nominalDetail">0</div>
-                </div>
-            </div>
+            <div class="empty-desc">Belum ada aktivitas pemotongan saat ini</div>
         </div>
     </div>
 
-    <!-- Footer Compact -->
-    <div class="footer-info">
-        <div class="auto-refresh">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M23 12a11 11 0 0 1-22 0 11 11 0 0 1 22 0z"/>
-                <path d="M12 8v4l3 3"/>
+    <!-- ════════════════ FOOTER ════════════════ -->
+    <div class="footer">
+        <!-- Auto refresh indicator -->
+        <div class="refresh-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
             </svg>
-            <span>Auto refresh 2dtk</span>
+            <span>Auto refresh 2 dtk</span>
         </div>
-        <div>© 2025 SlaughterHouse</div>
-        <div id="lastUpdate">Update: <span id="lastUpdateTime">—</span></div>
+
+        <!-- Counter ayam hari ini -->
+        <div class="footer-counter" style="border-color: rgba(240,165,0,0.3);">
+            <span class="fc-lbl">🐔 Ayam hari ini</span>
+            <span class="fc-val" id="footerAyam" style="color: var(--gold);">0</span>
+        </div>
+
+        <!-- Counter truk hari ini -->
+        <div class="footer-counter" style="border-color: rgba(232,82,42,0.3);">
+            <span class="fc-lbl">🚛 Truk hari ini</span>
+            <span class="fc-val" id="footerTruck" style="color: var(--accent);">0</span>
+        </div>
+
+        <div class="footer-right">
+            Update: <span id="lastUpdate" style="font-family:'DM Mono',monospace;">—</span>
+        </div>
     </div>
 </div>
 
 <script>
-    // Format angka tanpa Rp (numeric dengan separator)
-    function formatNumber(value) {
-        if (value === undefined || value === null) return '0';
-        return new Intl.NumberFormat('id-ID').format(Number(value));
+    /* ─── Helpers ─── */
+    function fmt(v) {
+        return new Intl.NumberFormat('id-ID').format(Number(v) || 0);
     }
+    function pad(n) { return String(n).padStart(2, '0'); }
 
-    // Update timestamp
-    function updateTimestamp() {
+    /* ─── Clock ─── */
+    const DAYS_ID  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+    function tickClock() {
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const updateSpan = document.getElementById('lastUpdateTime');
-        if (updateSpan) updateSpan.textContent = timeStr;
+        document.getElementById('dtTime').textContent =
+            `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        document.getElementById('dtDate').textContent =
+            `${DAYS_ID[now.getDay()]}, ${now.getDate()} ${MONTHS_ID[now.getMonth()]} ${now.getFullYear()}`;
     }
+    tickClock();
+    setInterval(tickClock, 1000);
 
-    // ==================== FULLSCREEN FUNCTIONALITY ====================
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const fullscreenIcon = document.getElementById('fullscreenIcon');
-    const fullscreenText = document.getElementById('fullscreenText');
-    
-    // Icons for fullscreen/exit
-    const enterFullscreenIcon = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
-    const exitFullscreenIcon = '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>';
-    
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            // Enter fullscreen
-            document.documentElement.requestFullscreen().catch(err => {
-                console.error(`Fullscreen error: ${err.message}`);
-            });
+    /* ─── Fullscreen ─── */
+    const fsBtn  = document.getElementById('fsBtn');
+    const fsIcon = document.getElementById('fsIcon');
+    const fsText = document.getElementById('fsText');
+
+    const ICON_ENTER = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+    const ICON_EXIT  = '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>';
+
+    function syncFsBtn() {
+        const full = !!document.fullscreenElement;
+        fsIcon.innerHTML = full ? ICON_EXIT  : ICON_ENTER;
+        fsText.textContent = full ? 'Exit'      : 'Fullscreen';
+    }
+    fsIcon.innerHTML = ICON_ENTER;
+    fsBtn.addEventListener('click', () => {
+        document.fullscreenElement
+            ? document.exitFullscreen()
+            : document.documentElement.requestFullscreen().catch(console.error);
+    });
+    document.addEventListener('fullscreenchange', syncFsBtn);
+
+    /* ─── Data fetch ─── */
+    function setActive(on) {
+        const heroSection = document.getElementById('heroSection');
+        const subGrid     = document.getElementById('subGrid');
+        const emptyOverlay= document.getElementById('emptyOverlay');
+
+        if (on) {
+            heroSection.style.display  = '';
+            subGrid.style.display      = '';
+            emptyOverlay.style.display = 'none';
         } else {
-            // Exit fullscreen
-            document.exitFullscreen();
+            heroSection.style.display  = 'none';
+            subGrid.style.display      = 'none';
+            emptyOverlay.style.display = '';
         }
     }
-    
-    function updateFullscreenButton() {
-        const isFullscreen = !!document.fullscreenElement;
-        if (isFullscreen) {
-            fullscreenIcon.innerHTML = exitFullscreenIcon;
-            fullscreenText.textContent = 'Exit';
-            fullscreenBtn.title = 'Exit Fullscreen';
-        } else {
-            fullscreenIcon.innerHTML = enterFullscreenIcon;
-            fullscreenText.textContent = 'Fullscreen';
-            fullscreenBtn.title = 'Fullscreen Mode';
-        }
-    }
-    
-    // Event listeners for fullscreen
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
-    document.addEventListener('fullscreenchange', updateFullscreenButton);
-    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-    document.addEventListener('mozfullscreenchange', updateFullscreenButton);
-    document.addEventListener('MSFullscreenChange', updateFullscreenButton);
-    
-    // Initialize icon
-    fullscreenIcon.innerHTML = enterFullscreenIcon;
-    // ==================== END FULLSCREEN ====================
 
-    // Main refresh function
     async function refresh() {
         try {
             const res = await fetch(`{{ route('monitor.data', $location) }}`, {
                 headers: { 'Accept': 'application/json' }
             });
-            if (!res.ok) throw new Error('Network error');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
             const j = await res.json();
 
-            const emptyState = document.getElementById('emptyState');
-            const activeRow = document.getElementById('activeDataRow');
-            const reportCodeSpan = document.getElementById('reportCode');
-            const statusTextSpan = document.getElementById('statusText');
-            const activeDetailSpan = document.getElementById('activeDetail');
-            const heroTotalSpan = document.getElementById('heroTotalAyam');
-            const statNominalSpan = document.getElementById('statNominal');
-            const truckExpeditionSpan = document.getElementById('truckExpedition');
+            /* Footer counters — always updated */
+            document.getElementById('footerAyam').textContent  = fmt(j.today_total_ayam);
+            document.getElementById('footerTruck').textContent = fmt(j.today_truck_count);
 
-            // Check if active process exists
-            const isActive = j.active === true || (j.active !== false && j.truck_no && j.truck_no !== null && j.truck_no !== '');
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent =
+                `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-            if (!isActive) {
-                activeRow.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                reportCodeSpan.textContent = '—';
-                statusTextSpan.textContent = 'Tidak Aktif';
-                activeDetailSpan.textContent = 'Tidak ada proses';
-                heroTotalSpan.textContent = '0';
-                statNominalSpan.textContent = '0';
-                document.getElementById('totalAyamDetail').textContent = '0';
-                document.getElementById('nominalDetail').textContent = '0';
-                truckExpeditionSpan.textContent = '—';
-                document.getElementById('expDriver').textContent = '—';
-                document.getElementById('sizeFarm').textContent = '—';
-                updateTimestamp();
+            if (!j.active) {
+                setActive(false);
+                document.getElementById('reportCode').textContent = '—';
                 return;
             }
 
-            // Active process
-            emptyState.classList.add('hidden');
-            activeRow.classList.remove('hidden');
+            setActive(true);
 
-            // Extract data
-            const reportCode = j.report_code || '-';
-            const truckNo = j.truck_no || '-';
-            const expeditionName = j.expedition_name || '-';
-            const driverName = j.driver_name || '-';
-            const size = j.size || '-';
-            const farmName = j.farm_name || '-';
-            const totalAyam = (j.total_ayam !== undefined && j.total_ayam !== null) ? Number(j.total_ayam) : 0;
-            const farmFee = (j.farm_fee_amount !== undefined && j.farm_fee_amount !== null) ? Number(j.farm_fee_amount) : 0;
+            /* Header */
+            document.getElementById('reportCode').textContent = j.report_code || '—';
 
-            // Update all displays
-            reportCodeSpan.textContent = reportCode;
-            statusTextSpan.textContent = 'AKTIF • RUNNING';
-            activeDetailSpan.textContent = `Report: ${reportCode}`;
-            
-            // Hero Total Ayam - ANGKA SANGAT BESAR
-            heroTotalSpan.textContent = formatNumber(totalAyam);
-            
-            // Nominal tanpa Rp
-            statNominalSpan.textContent = formatNumber(farmFee);
-            document.getElementById('nominalDetail').textContent = formatNumber(farmFee);
-            document.getElementById('totalAyamDetail').textContent = formatNumber(totalAyam);
-            
-            // Truck & Expedition
-            truckExpeditionSpan.textContent = `${truckNo}`;
-            if (expeditionName !== '-') {
-                truckExpeditionSpan.textContent = `${truckNo} • ${expeditionName}`;
-            }
-            
-            // Detail fields
-            document.getElementById('expDriver').textContent = `${expeditionName} - ${driverName}`;
-            document.getElementById('sizeFarm').textContent = `${size} - ${farmName}`;
-            
-            updateTimestamp();
+            /* Hero */
+            document.getElementById('heroAyam').textContent   = fmt(j.total_ayam_running);
+            document.getElementById('statTotalEkor').textContent = fmt(j.total_ekor);
+            document.getElementById('statTruckNo').textContent   = j.truck_no || '—';
 
-        } catch (error) {
-            console.error('Refresh error:', error);
-            const emptyState = document.getElementById('emptyState');
-            const activeRow = document.getElementById('activeDataRow');
-            if (activeRow) activeRow.classList.add('hidden');
-            if (emptyState) {
-                emptyState.classList.remove('hidden');
-                const emptyTitle = emptyState.querySelector('.empty-title');
-                const emptyDesc = emptyState.querySelector('.empty-desc');
-                if (emptyTitle) emptyTitle.textContent = 'Koneksi Error';
-                if (emptyDesc) emptyDesc.textContent = 'Gagal mengambil data, coba refresh halaman';
-            }
-            document.getElementById('reportCode').textContent = 'ERR';
-            document.getElementById('heroTotalAyam').textContent = '0';
+            /* Sub main — Ekspedisi & Sopir */
+            document.getElementById('subExpedisi').textContent = j.expedition_name || '—';
+            let driverLine = j.driver_name || '—';
+            if (j.driver_phone) driverLine += '  ·  ' + j.driver_phone;
+            document.getElementById('subDriver').textContent = driverLine;
+
+            /* Sub main — Size & Farm */
+            document.getElementById('subFarm').textContent = j.farm_name || '—';
+            document.getElementById('subSize').textContent = j.size ? 'Ukuran: ' + j.size : '—';
+
+        } catch (err) {
+            console.error('Refresh error:', err);
         }
     }
 
-    // Initial load and interval
+    /* Boot */
     refresh();
-    const intervalId = setInterval(refresh, 2000);
-
-    window.addEventListener('beforeunload', () => {
-        if (intervalId) clearInterval(intervalId);
-    });
-
-    // Add subtle animation
-    document.querySelectorAll('.stat-card, .hero-ayam-section, .content-panel').forEach(el => {
-        el.classList.add('animate-in');
-    });
+    const _iv = setInterval(refresh, 2000);
+    window.addEventListener('beforeunload', () => clearInterval(_iv));
 </script>
 </body>
 </html>
