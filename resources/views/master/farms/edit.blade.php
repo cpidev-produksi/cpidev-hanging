@@ -183,10 +183,10 @@
                     </div>
                     <select id="area_category" name="area_category" class="form-input form-select">
                         <option value="">— Pilih Kategori Area —</option>
-                        <option value="1" {{ old('area_category', $farm->area_category) == 1 ? 'selected' : '' }}>Area 1 (Terdekat)</option>
-                        <option value="2" {{ old('area_category', $farm->area_category) == 2 ? 'selected' : '' }}>Area 2</option>
-                        <option value="3" {{ old('area_category', $farm->area_category) == 3 ? 'selected' : '' }}>Area 3</option>
-                        <option value="4" {{ old('area_category', $farm->area_category) == 4 ? 'selected' : '' }}>Area 4 (Terjauh)</option>
+                        <option value="1" {{ old('area_category', $farm->area_category) == 1 ? 'selected' : '' }}>1</option>
+                        <option value="2" {{ old('area_category', $farm->area_category) == 2 ? 'selected' : '' }}>2</option>
+                        <option value="3" {{ old('area_category', $farm->area_category) == 3 ? 'selected' : '' }}>3</option>
+                        <option value="4" {{ old('area_category', $farm->area_category) == 4 ? 'selected' : '' }}>4</option>
                     </select>
                     <div class="select-arrow">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">

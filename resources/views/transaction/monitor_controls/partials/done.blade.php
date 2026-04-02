@@ -27,6 +27,38 @@
           <span class="dn-meta">{{ $it->plateNumber?->plate_number ?? '–' }}</span>
           <span class="dn-meta">{{ $it->expedition?->name ?? '–' }}</span>
           <span class="dn-meta">{{ $it->farm?->name ?? '–' }}</span>
+          @if(
+              $it->status === 'done'
+              && $it->hangingForm
+              && $it->hangingForm->status === 'done'
+              && $it->hangingForm->basket_condition
+              && $it->hangingForm->truck_platform_condition
+              && $it->hangingForm->feather_condition
+          )
+            <a href="{{ route('monitor-controls.summary', $it) }}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="dn-btn-summary"
+              title="Export Rekap Summary">
+              <span class="dn-btn-summary-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+              </span>
+              <span class="dn-btn-summary-label">Export Summary</span>
+              <span class="dn-btn-summary-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"/>
+                  <polyline points="7 7 17 7 17 17"/>
+                </svg>
+              </span>
+            </a>
+          @endif
         </div>
       @endforeach
     </div>
@@ -141,4 +173,78 @@ function toggleDone(id) {
   border:1px solid rgba(79,103,255,.2);
 }
 .dn-meta { color:#9CA3AF; font-size:.76rem; font-weight:700; }
+
+/* ── EXPORT SUMMARY BUTTON ── */
+.dn-btn-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 5px 11px 5px 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+  color: #fff;
+  background: linear-gradient(135deg, #059669 0%, #0EA5A0 100%);
+  box-shadow:
+    0 1px 3px rgba(5,150,105,.35),
+    0 0 0 0 rgba(5,150,105,.0);
+  border: 1px solid rgba(255,255,255,.15);
+  position: relative;
+  overflow: hidden;
+  transition:
+    box-shadow .18s,
+    transform .13s,
+    filter .18s;
+}
+
+/* shimmer sweep */
+.dn-btn-summary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg,
+    transparent 30%,
+    rgba(255,255,255,.22) 50%,
+    transparent 70%);
+  transform: translateX(-100%);
+  transition: transform .45s;
+}
+.dn-btn-summary:hover::before {
+  transform: translateX(100%);
+}
+
+.dn-btn-summary:hover {
+  box-shadow:
+    0 4px 12px rgba(5,150,105,.45),
+    0 0 0 3px rgba(5,150,105,.12);
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+.dn-btn-summary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(5,150,105,.3);
+  filter: brightness(.97);
+}
+
+.dn-btn-summary-icon {
+  display: flex;
+  align-items: center;
+  opacity: .9;
+}
+.dn-btn-summary-label {
+  line-height: 1;
+}
+.dn-btn-summary-arrow {
+  display: flex;
+  align-items: center;
+  opacity: .75;
+  transition: transform .15s, opacity .15s;
+}
+.dn-btn-summary:hover .dn-btn-summary-arrow {
+  transform: translate(2px, -2px);
+  opacity: 1;
+}
 </style>

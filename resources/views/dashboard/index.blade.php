@@ -2,16 +2,20 @@
 
 @section('content')
 <style>
+    /* ── Typography ── */
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');
+
+    /* ── Grand Summary Grid ── */
     .dash-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 16px;
-        margin-bottom: 28px;
+        margin-bottom: 20px;
     }
     @media (max-width: 1100px) { .dash-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .dash-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 600px)  { .dash-grid { grid-template-columns: 1fr; } }
 
-    /* Stat Cards */
+    /* ── Stat Cards ── */
     .stat-card {
         background: #fff;
         border-radius: 16px;
@@ -37,13 +41,12 @@
     .stat-card.blue::before   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
     .stat-card.orange::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
     .stat-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
-    .stat-card.red::before    { background: linear-gradient(90deg, #ef4444, #f87171); }
 
     .stat-card-top {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
     }
     .stat-label {
         font-size: 11px;
@@ -55,7 +58,7 @@
     }
     .stat-value {
         font-family: 'Syne', sans-serif;
-        font-size: 36px;
+        font-size: 34px;
         font-weight: 800;
         color: #0d1117;
         line-height: 1;
@@ -69,11 +72,10 @@
         justify-content: center;
         flex-shrink: 0;
     }
-    .stat-icon.green  { background: rgba(16,185,129,0.1); color: #10b981; }
-    .stat-icon.blue   { background: rgba(59,130,246,0.1); color: #3b82f6; }
-    .stat-icon.orange { background: rgba(245,158,11,0.1); color: #f59e0b; }
-    .stat-icon.purple { background: rgba(139,92,246,0.1); color: #8b5cf6; }
-    .stat-icon.red    { background: rgba(239,68,68,0.1);  color: #ef4444; }
+    .stat-icon.green  { background: rgba(16,185,129,0.1);  color: #10b981; }
+    .stat-icon.blue   { background: rgba(59,130,246,0.1);  color: #3b82f6; }
+    .stat-icon.orange { background: rgba(245,158,11,0.1);  color: #f59e0b; }
+    .stat-icon.purple { background: rgba(139,92,246,0.1);  color: #8b5cf6; }
 
     .stat-footer {
         display: flex;
@@ -81,19 +83,9 @@
         gap: 5px;
         font-size: 12px;
         color: #8090b0;
-    }
-    .stat-trend {
         font-weight: 600;
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-        gap: 2px;
     }
-    .stat-trend.up   { color: #10b981; }
-    .stat-trend.down { color: #ef4444; }
-    .stat-trend.neutral { color: #8090b0; }
 
-    /* Progress bar inside card */
     .stat-progress {
         height: 4px;
         background: #f0f2f7;
@@ -106,28 +98,21 @@
         border-radius: 100px;
         transition: width 1s ease;
     }
-    .green .stat-progress-bar  { background: linear-gradient(90deg, #10b981, #34d399); }
-    .blue .stat-progress-bar   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .green  .stat-progress-bar { background: linear-gradient(90deg, #10b981, #34d399); }
+    .blue   .stat-progress-bar { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
     .orange .stat-progress-bar { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
     .purple .stat-progress-bar { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
 
-    /* Bottom row */
-    .dash-bottom {
-        display: grid;
-        grid-template-columns: 1fr 340px;
-        gap: 16px;
-    }
-    @media (max-width: 900px) { .dash-bottom { grid-template-columns: 1fr; } }
-
-    /* Panel */
+    /* ── Panel ── */
     .panel {
         background: #fff;
         border-radius: 16px;
         border: 1px solid #e4e8f0;
         overflow: hidden;
+        margin-bottom: 16px;
     }
     .panel-header {
-        padding: 18px 22px;
+        padding: 16px 22px;
         border-bottom: 1px solid #f0f2f7;
         display: flex;
         align-items: center;
@@ -139,47 +124,140 @@
         font-weight: 700;
         color: #0d1117;
     }
-    .panel-action {
+    .panel-meta {
         font-size: 12px;
-        color: #e85d2f;
+        color: #8090b0;
         font-weight: 600;
-        text-decoration: none;
+    }
+    .panel-body {
+        padding: 16px 22px;
+    }
+
+    /* ── Per Lokasi Grid ── */
+    .loc-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    @media (max-width: 900px) { .loc-grid { grid-template-columns: 1fr; } }
+
+    /* ── Mini stat inside lokasi panel ── */
+    .mini-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 14px 0;
+    }
+    .mini-stat {
+        background: #f8f9fc;
+        border-radius: 12px;
+        padding: 12px 14px;
+        border: 1px solid #f0f2f7;
+    }
+    .mini-stat-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #8090b0;
+        margin-bottom: 6px;
+    }
+    .mini-stat-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        color: #0d1117;
+        line-height: 1;
+    }
+
+    /* ── Ayam received row ── */
+    .ayam-row {
+        background: #f8f9fc;
+        border: 1px solid #f0f2f7;
+        border-radius: 12px;
+        padding: 12px 16px;
         display: flex;
         align-items: center;
-        gap: 4px;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4a5577;
+        margin-bottom: 12px;
     }
-    .panel-action:hover { opacity: 0.8; }
+    .ayam-row b {
+        font-family: 'Syne', sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        color: #0d1117;
+    }
 
-    /* Project Table */
-    .project-table { width: 100%; border-collapse: collapse; }
-    .project-table th {
-        text-align: left;
-        padding: 10px 22px;
+    /* ── Live Running block ── */
+    .running-block {
+        background: rgba(245,158,11,0.05);
+        border: 1px solid rgba(245,158,11,0.2);
+        border-radius: 12px;
+        padding: 14px 16px;
+    }
+    .running-block-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .running-label {
         font-size: 10px;
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #8090b0;
-        background: #f8f9fc;
-        border-bottom: 1px solid #f0f2f7;
+        color: #b45309;
     }
-    .project-table td {
-        padding: 14px 22px;
-        border-bottom: 1px solid #f5f7fc;
-        font-size: 13px;
-        vertical-align: middle;
+    .pulse-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: #f59e0b;
+        animation: pulse 1.6s ease-in-out infinite;
     }
-    .project-table tr:last-child td { border-bottom: none; }
-    .project-table tr:hover td { background: #fafbff; }
-
-    .proj-name {
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+    .running-empty {
+        font-size: 12px;
         font-weight: 600;
-        color: #0d1117;
-        margin-bottom: 2px;
+        color: #8090b0;
+        padding: 4px 0;
     }
-    .proj-meta { font-size: 11px; color: #8090b0; }
+    .running-report {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0d1117;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .running-detail {
+        font-size: 12px;
+        font-weight: 600;
+        color: #8090b0;
+        margin-bottom: 8px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .running-ayam {
+        font-size: 13px;
+        font-weight: 700;
+        color: #4a5577;
+    }
+    .running-ayam b {
+        font-family: 'Syne', sans-serif;
+        color: #0d1117;
+    }
 
-    /* Status badges */
+    /* ── Badge ── */
     .badge {
         display: inline-flex;
         align-items: center;
@@ -191,371 +269,303 @@
         white-space: nowrap;
     }
     .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
-    .badge.running  { background: rgba(245,158,11,0.1); color: #b45309; }
+    .badge.running { background: rgba(245,158,11,0.1); color: #b45309; }
     .badge.running .badge-dot { background: #f59e0b; }
-    .badge.done     { background: rgba(16,185,129,0.1); color: #065f46; }
-    .badge.done .badge-dot { background: #10b981; }
-    .badge.pending  { background: rgba(139,92,246,0.1); color: #5b21b6; }
-    .badge.pending .badge-dot { background: #8b5cf6; }
-    .badge.stopped  { background: rgba(239,68,68,0.1); color: #991b1b; }
-    .badge.stopped .badge-dot { background: #ef4444; }
 
-    /* Progress col */
-    .prog-wrap { min-width: 100px; }
-    .prog-label {
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        color: #8090b0;
-        margin-bottom: 4px;
-    }
-    .prog-bar {
-        height: 6px;
-        background: #f0f2f7;
-        border-radius: 100px;
-        overflow: hidden;
-    }
-    .prog-fill {
-        height: 100%;
-        border-radius: 100px;
-    }
-    .prog-fill.green  { background: linear-gradient(90deg, #10b981, #34d399); }
-    .prog-fill.blue   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-    .prog-fill.orange { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-    .prog-fill.purple { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
-
-    /* Activity Feed */
-    .activity-list { padding: 8px 0; }
-    .activity-item {
-        display: flex;
+    /* ── Master Data ── */
+    .master-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         gap: 12px;
-        padding: 12px 22px;
-        transition: background 0.15s;
+        padding: 16px 22px;
     }
-    .activity-item:hover { background: #fafbff; }
-    .activity-dot-wrap {
+    @media (max-width: 700px) { .master-grid { grid-template-columns: 1fr; } }
+
+    /* ── Page header ── */
+    .page-header {
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0;
-        flex-shrink: 0;
-        padding-top: 3px;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 8px;
     }
-    .activity-dot {
-        width: 10px; height: 10px;
-        border-radius: 50%;
-        flex-shrink: 0;
+    .page-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 26px;
+        font-weight: 800;
+        color: #0d1117;
+        margin: 0;
     }
-    .activity-line {
-        width: 1px;
-        flex: 1;
-        min-height: 20px;
-        background: #e4e8f0;
-        margin-top: 4px;
-    }
-    .activity-item:last-child .activity-line { display: none; }
-    .activity-content { flex: 1; }
-    .activity-text {
-        font-size: 12px;
-        color: #2d3748;
-        line-height: 1.5;
-    }
-    .activity-text strong { color: #0d1117; font-weight: 600; }
-    .activity-time {
-        font-size: 10px;
+    .page-subtitle {
+        font-size: 13px;
+        font-weight: 600;
         color: #8090b0;
         margin-top: 2px;
     }
-
-    /* Header area */
-    .page-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        margin-bottom: 24px;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-    .page-header-left h2 {
-        font-family: 'Syne', sans-serif;
-        font-size: 24px;
-        font-weight: 800;
-        color: #0d1117;
-        letter-spacing: -0.5px;
-    }
-    .page-header-left p {
-        font-size: 13px;
-        color: #8090b0;
-        margin-top: 3px;
-    }
-    .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-    .btn {
+    .readonly-badge {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
-        padding: 9px 18px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.18s;
-        border: none;
-        font-family: 'DM Sans', sans-serif;
-        white-space: nowrap;
-        text-decoration: none;
-    }
-    .btn-primary {
-        background: linear-gradient(135deg, #e85d2f, #c94820);
-        color: white;
-        box-shadow: 0 3px 14px rgba(232,93,47,0.25);
-    }
-    .btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(232,93,47,0.35);
-    }
-    .btn-secondary {
-        background: #fff;
-        color: #4a5577;
+        gap: 6px;
+        background: #f0f2f7;
         border: 1px solid #e4e8f0;
+        border-radius: 100px;
+        padding: 5px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #8090b0;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
     }
-    .btn-secondary:hover { background: #f5f7fc; }
 </style>
 
-<!-- Page Header -->
-<div class="page-header">
-    <div class="page-header-left">
-        <h2>Dashboard</h2>
-        <p>Selamat datang kembali! Berikut ringkasan operasional hari ini.</p>
-    </div>
-</div>
+<div style="max-width:1200px;margin:0 auto;padding:28px 18px">
 
-<!-- Stats Cards -->
-<div class="dash-grid">
-    <!-- Total -->
-    <div class="stat-card green">
-        <div class="stat-card-top">
-            <div>
-                <div class="stat-label">Total Project</div>
-                <div class="stat-value">24</div>
-            </div>
-            <div class="stat-icon green">
-                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    {{-- Page Header --}}
+    <div class="page-header">
+        <div>
+            <h2 class="page-title">Dashboard</h2>
+            <div class="page-subtitle">
+                Ringkasan operasional tanggal
+                <strong style="color:#0d1117">{{ \Carbon\Carbon::parse($today)->format('d/m/Y') }}</strong>
             </div>
         </div>
-        <div class="stat-footer">
-            <span class="stat-trend up">↑ 2.5%</span>
-            <span>dari bulan lalu</span>
-        </div>
-        <div class="stat-progress"><div class="stat-progress-bar" style="width:75%"></div></div>
     </div>
 
-    <!-- Ended -->
-    <div class="stat-card blue">
-        <div class="stat-card-top">
-            <div>
-                <div class="stat-label">Selesai</div>
-                <div class="stat-value">10</div>
+    {{-- Grand Summary --}}
+    <div class="dash-grid">
+
+        {{-- Total Truk --}}
+        <div class="stat-card green">
+            <div class="stat-card-top">
+                <div>
+                    <div class="stat-label">Total Truk Hari Ini</div>
+                    <div class="stat-value">{{ $grand['truk_total'] }}</div>
+                </div>
+                <div class="stat-icon green">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m9 0H5m8 0h3m-3 0V9m3 7h2a1 1 0 001-1v-4l-3-4h-2m0 0v4"/>
+                    </svg>
+                </div>
             </div>
-            <div class="stat-icon blue">
-                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="stat-footer">Semua truk terdaftar hari ini</div>
+            @php $pct_total = $grand['truk_total'] > 0 ? 100 : 0; @endphp
+            <div class="stat-progress"><div class="stat-progress-bar" style="width:{{ $pct_total }}%"></div></div>
+        </div>
+
+        {{-- Truk Counted --}}
+        <div class="stat-card blue">
+            <div class="stat-card-top">
+                <div>
+                    <div class="stat-label">Sudah Dihitung</div>
+                    <div class="stat-value">{{ $grand['truk_counted'] }}</div>
+                </div>
+                <div class="stat-icon blue">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
             </div>
+            <div class="stat-footer">Truk sudah dihitung hanging</div>
+            @php $pct_counted = $grand['truk_total'] > 0 ? round(($grand['truk_counted'] / $grand['truk_total']) * 100) : 0; @endphp
+            <div class="stat-progress"><div class="stat-progress-bar" style="width:{{ $pct_counted }}%"></div></div>
         </div>
-        <div class="stat-footer">
-            <span class="stat-trend up">↑ 1.2%</span>
-            <span>dari bulan lalu</span>
+
+        {{-- Truk Antrian --}}
+        <div class="stat-card orange">
+            <div class="stat-card-top">
+                <div>
+                    <div class="stat-label">Antrian (Draft)</div>
+                    <div class="stat-value">{{ $grand['truk_queue'] }}</div>
+                </div>
+                <div class="stat-icon orange">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="stat-footer">Menunggu proses penghitungan</div>
+            @php $pct_queue = $grand['truk_total'] > 0 ? round(($grand['truk_queue'] / $grand['truk_total']) * 100) : 0; @endphp
+            <div class="stat-progress"><div class="stat-progress-bar" style="width:{{ $pct_queue }}%"></div></div>
         </div>
-        <div class="stat-progress"><div class="stat-progress-bar" style="width:42%"></div></div>
+
+        {{-- Ayam Diterima --}}
+        <div class="stat-card purple">
+            <div class="stat-card-top">
+                <div>
+                    <div class="stat-label">Ayam Diterima</div>
+                    <div class="stat-value">{{ number_format($grand['ayam_received']) }}</div>
+                </div>
+                <div class="stat-icon purple">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="stat-footer">Total ekor diterima hari ini</div>
+            <div class="stat-progress"><div class="stat-progress-bar" style="width:80%"></div></div>
+        </div>
+
     </div>
 
-    <!-- Running -->
-    <div class="stat-card orange">
-        <div class="stat-card-top">
-            <div>
-                <div class="stat-label">Berjalan</div>
-                <div class="stat-value">12</div>
+    {{-- Per Lokasi --}}
+    <div class="loc-grid">
+        @foreach($statsByLoc as $loc => $s)
+        <div class="panel">
+
+            <div class="panel-header">
+                <span class="panel-title">Lokasi {{ $loc }}</span>
+                <span class="panel-meta">Total truk: <strong style="color:#0d1117">{{ $s['truk_total'] }}</strong></span>
             </div>
-            <div class="stat-icon orange">
-                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+
+            <div class="panel-body">
+
+                {{-- Mini stats --}}
+                <div class="mini-stat-grid">
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Dihitung</div>
+                        <div class="mini-stat-value">{{ $s['truk_counted'] }}</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Antrian</div>
+                        <div class="mini-stat-value">{{ $s['truk_queue'] }}</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Run / Done</div>
+                        <div class="mini-stat-value" style="font-size:18px">
+                            {{ $s['truk_running'] }}<span style="color:#c5cce0;font-size:14px;margin:0 2px">/</span>{{ $s['truk_done'] }}
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Ayam received --}}
+                <div class="ayam-row">
+                    <span>Ayam diterima hari ini</span>
+                    <b>{{ number_format($s['ayam_received']) }}</b>
+                </div>
+
+                {{-- Live Running --}}
+                <div class="running-block">
+                    <div class="running-block-header">
+                        <div class="pulse-dot"></div>
+                        <span class="running-label">Live Running</span>
+                    </div>
+
+                    @if(!$s['running'])
+                        <div class="running-empty">Tidak ada proses running saat ini.</div>
+                    @else
+                        <div class="running-report">
+                            <span class="badge running">
+                                <span class="badge-dot"></span>Running
+                            </span>
+                            <code style="background:#f0f2f7;padding:2px 8px;border-radius:6px;font-size:12px">
+                                {{ $s['running']['report_code'] }}
+                            </code>
+                            <span>Truk <strong>#{{ $s['running']['truck_no'] }}</strong></span>
+                        </div>
+                        <div class="running-detail">
+                            <span>
+                                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:3px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                {{ $s['running']['expedition'] ?? '—' }}
+                            </span>
+                            <span>
+                                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:3px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                {{ $s['running']['farm'] ?? '—' }}
+                            </span>
+                            <span>
+                                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:3px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke-width="2.5"/><path stroke-linecap="round" stroke-width="2.5" d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                                {{ $s['running']['plate'] ?? '—' }}
+                            </span>
+                        </div>
+                        <div class="running-ayam">
+                            Total ayam running: <b>{{ number_format($s['running']['total_ayam']) }}</b>
+                        </div>
+                    @endif
+                </div>
+
             </div>
         </div>
-        <div class="stat-footer">
-            <span class="stat-trend up">↑ 3.1%</span>
-            <span>dari bulan lalu</span>
-        </div>
-        <div class="stat-progress"><div class="stat-progress-bar" style="width:50%"></div></div>
+        @endforeach
     </div>
 
-    <!-- Pending -->
-    <div class="stat-card purple">
-        <div class="stat-card-top">
-            <div>
-                <div class="stat-label">Pending</div>
-                <div class="stat-value">2</div>
-            </div>
-            <div class="stat-icon purple">
-                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-        </div>
-        <div class="stat-footer">
-            <span class="stat-trend neutral">—</span>
-            <span>Dalam diskusi</span>
-        </div>
-        <div class="stat-progress"><div class="stat-progress-bar" style="width:8%"></div></div>
-    </div>
-</div>
-
-<!-- Bottom Row -->
-<div class="dash-bottom">
-    <!-- Projects Table -->
+    {{-- Master Data --}}
     <div class="panel">
         <div class="panel-header">
-            <span class="panel-title">Daftar Project Aktif</span>
-            <a href="#" class="panel-action">
-                Lihat Semua
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-            </a>
+            <span class="panel-title">Master Data</span>
         </div>
-        <table class="project-table">
-            <thead>
-                <tr>
-                    <th>Project</th>
-                    <th>Status</th>
-                    <th>Progres</th>
-                    <th>Farm</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        <div class="proj-name">SH01 — Batch Maret</div>
-                        <div class="proj-meta">Dimulai 10 Mar 2025</div>
-                    </td>
-                    <td><span class="badge running"><span class="badge-dot"></span>Berjalan</span></td>
-                    <td>
-                        <div class="prog-wrap">
-                            <div class="prog-label"><span>72%</span></div>
-                            <div class="prog-bar"><div class="prog-fill orange" style="width:72%"></div></div>
-                        </div>
-                    </td>
-                    <td><span style="font-size:12px;color:#4a5577">Farm Unggas A</span></td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="proj-name">SH02 — Batch Februari</div>
-                        <div class="proj-meta">Dimulai 1 Feb 2025</div>
-                    </td>
-                    <td><span class="badge done"><span class="badge-dot"></span>Selesai</span></td>
-                    <td>
-                        <div class="prog-wrap">
-                            <div class="prog-label"><span>100%</span></div>
-                            <div class="prog-bar"><div class="prog-fill green" style="width:100%"></div></div>
-                        </div>
-                    </td>
-                    <td><span style="font-size:12px;color:#4a5577">Farm Unggas B</span></td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="proj-name">SH01 — Batch April</div>
-                        <div class="proj-meta">Dimulai 1 Apr 2025</div>
-                    </td>
-                    <td><span class="badge pending"><span class="badge-dot"></span>Pending</span></td>
-                    <td>
-                        <div class="prog-wrap">
-                            <div class="prog-label"><span>0%</span></div>
-                            <div class="prog-bar"><div class="prog-fill purple" style="width:0%"></div></div>
-                        </div>
-                    </td>
-                    <td><span style="font-size:12px;color:#4a5577">Farm Unggas C</span></td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="proj-name">SH02 — Batch Maret</div>
-                        <div class="proj-meta">Dimulai 15 Mar 2025</div>
-                    </td>
-                    <td><span class="badge running"><span class="badge-dot"></span>Berjalan</span></td>
-                    <td>
-                        <div class="prog-wrap">
-                            <div class="prog-label"><span>45%</span></div>
-                            <div class="prog-bar"><div class="prog-fill blue" style="width:45%"></div></div>
-                        </div>
-                    </td>
-                    <td><span style="font-size:12px;color:#4a5577">Farm Unggas A</span></td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="master-grid">
+
+            <div class="stat-card green" style="padding:16px 18px">
+                <div class="stat-card-top" style="margin-bottom:6px">
+                    <div>
+                        <div class="stat-label">Ekspedisi</div>
+                        <div class="stat-value" style="font-size:28px">{{ $master['expeditions'] }}</div>
+                    </div>
+                    <div class="stat-icon green" style="width:36px;height:36px">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8 17l4 4 4-4m-4-5v9M3 5h18M3 5a2 2 0 002 2h14a2 2 0 002-2M3 5a2 2 0 012-2h14a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-footer">Ekspedisi tersimpan</div>
+            </div>
+
+            <div class="stat-card blue" style="padding:16px 18px">
+                <div class="stat-card-top" style="margin-bottom:6px">
+                    <div>
+                        <div class="stat-label">Farm</div>
+                        <div class="stat-value" style="font-size:28px">{{ $master['farms'] }}</div>
+                    </div>
+                    <div class="stat-icon blue" style="width:36px;height:36px">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-footer">Farm tersimpan</div>
+            </div>
+
+            @if(!is_null($master['plates']))
+            <div class="stat-card orange" style="padding:16px 18px">
+                <div class="stat-card-top" style="margin-bottom:6px">
+                    <div>
+                        <div class="stat-label">Kendaraan Truk</div>
+                        <div class="stat-value" style="font-size:28px">{{ $master['plates'] }}</div>
+                    </div>
+                    <div class="stat-icon orange" style="width:36px;height:36px">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect x="2" y="7" width="20" height="10" rx="2" ry="2" stroke-width="2"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M7 11h.01M17 11h.01"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-footer">Plat Nomor tersimpan</div>
+            </div>
+            @endif
+
+        </div>
     </div>
 
-    <!-- Activity Feed -->
-    <div class="panel">
-        <div class="panel-header">
-            <span class="panel-title">Aktivitas Terbaru</span>
-            <a href="#" class="panel-action">Semua</a>
-        </div>
-        <div class="activity-list">
-            <div class="activity-item">
-                <div class="activity-dot-wrap">
-                    <div class="activity-dot" style="background:#10b981"></div>
-                    <div class="activity-line"></div>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-text"><strong>SH02 Batch Feb</strong> telah selesai diproses</div>
-                    <div class="activity-time">5 menit lalu</div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <div class="activity-dot-wrap">
-                    <div class="activity-dot" style="background:#3b82f6"></div>
-                    <div class="activity-line"></div>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-text">Truk <strong>B 1234 XY</strong> terdaftar ke ekspedisi</div>
-                    <div class="activity-time">32 menit lalu</div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <div class="activity-dot-wrap">
-                    <div class="activity-dot" style="background:#f59e0b"></div>
-                    <div class="activity-line"></div>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-text">Monitor <strong>SH01</strong> diperbarui secara otomatis</div>
-                    <div class="activity-time">1 jam lalu</div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <div class="activity-dot-wrap">
-                    <div class="activity-dot" style="background:#8b5cf6"></div>
-                    <div class="activity-line"></div>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-text">User <strong>operator_1</strong> ditambahkan ke sistem</div>
-                    <div class="activity-time">3 jam lalu</div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <div class="activity-dot-wrap">
-                    <div class="activity-dot" style="background:#e85d2f"></div>
-                    <div class="activity-line"></div>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-text">Project <strong>SH01 Batch April</strong> dibuat baru</div>
-                    <div class="activity-time">5 jam lalu</div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>
-    // Animate progress bars on load
-    document.addEventListener('DOMContentLoaded', function() {
-        const bars = document.querySelectorAll('.stat-progress-bar, .prog-fill');
+    document.addEventListener('DOMContentLoaded', function () {
+        const bars = document.querySelectorAll('.stat-progress-bar');
         bars.forEach(bar => {
             const w = bar.style.width;
             bar.style.width = '0';
-            setTimeout(() => { bar.style.width = w; }, 100);
+            setTimeout(() => { bar.style.width = w; }, 120);
         });
     });
 </script>
+
 @endsection

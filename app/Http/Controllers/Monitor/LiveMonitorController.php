@@ -41,6 +41,8 @@ class LiveMonitorController extends Controller
         $todayTruckCount = (int) MonitorControl::query()
             ->where('location', $location)
             ->whereDate('process_date', date('Y-m-d'))
+            ->whereHas('hangingForm', fn($q) => $q->whereIn('status', ['running','done']))
+            ->whereHas('hangingForm.lines.sets', fn($q) => $q->whereNotNull('empty_count'))
             ->count();
 
         if (!$active || !$active->hangingForm) {

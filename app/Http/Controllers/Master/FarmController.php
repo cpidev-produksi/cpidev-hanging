@@ -23,17 +23,17 @@ class FarmController extends Controller
             'address' => ['required','string','max:255'],
             'city' => ['required','string','max:100'],
             'vendor_code' => ['required','string','max:50'], // boleh duplikat
-            'area_category' => ['required','integer','in:1,2,3,4'],
-            'distance' => ['required','string','max:100'], // bebas format
+            'area_category' => ['integer','in:1,2,3,4'],
+            'distance' => ['string','max:100'],
         ], [
             'name.required' => 'Nama farm wajib diisi.',
             'name.unique' => 'Nama farm sudah ada.',
             'address.required' => 'Alamat farm wajib diisi.',
             'city.required' => 'Kota wajib diisi.',
             'vendor_code.required' => 'Vendor Code wajib diisi.',
-            'area_category.required' => 'Kategori area wajib dipilih.',
-            'area_category.in' => 'Kategori area harus 1, 2, 3, atau 4.',
-            'distance.required' => 'Jarak wajib diisi.',
+            // 'area_category.required' => 'Kategori area wajib dipilih.',
+            // 'area_category.in' => 'Kategori area harus 1, 2, 3, atau 4.',
+            // 'distance.required' => 'Jarak wajib diisi.',
         ]);
 
         Farm::create($data);
@@ -51,17 +51,17 @@ class FarmController extends Controller
             'address' => ['required','string','max:255'],
             'city' => ['required','string','max:100'],
             'vendor_code' => ['required','string','max:50'],
-            'area_category' => ['required','integer','in:1,2,3,4'],
-            'distance' => ['required','string','max:100'],
+            'area_category' => ['integer','in:1,2,3,4'],
+            'distance' => ['string','max:100'],
         ], [
             'name.required' => 'Nama farm wajib diisi.',
             'name.unique' => 'Nama farm sudah ada.',
             'address.required' => 'Alamat farm wajib diisi.',
             'city.required' => 'Kota wajib diisi.',
             'vendor_code.required' => 'Vendor Code wajib diisi.',
-            'area_category.required' => 'Kategori area wajib dipilih.',
-            'area_category.in' => 'Kategori area harus 1, 2, 3, atau 4.',
-            'distance.required' => 'Jarak wajib diisi.',
+            // 'area_category.required' => 'Kategori area wajib dipilih.',
+            // 'area_category.in' => 'Kategori area harus 1, 2, 3, atau 4.',
+            // 'distance.required' => 'Jarak wajib diisi.',
         ]);
 
         $farm->update($data);

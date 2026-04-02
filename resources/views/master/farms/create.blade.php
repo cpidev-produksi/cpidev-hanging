@@ -163,7 +163,6 @@
             <div class="form-group">
                 <label class="form-label" for="area_category">
                     Kategori Area
-                    <span class="required">*</span>
                 </label>
                 <div class="input-wrapper select-wrapper @error('area_category') has-error @enderror">
                     <div class="input-icon">
@@ -202,7 +201,6 @@
             <div class="form-group">
                 <label class="form-label" for="distance">
                     Jarak
-                    <span class="required">*</span>
                 </label>
                 <div class="input-wrapper @error('distance') has-error @enderror">
                     <div class="input-icon">

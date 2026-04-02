@@ -222,20 +222,6 @@
             <span class="sh-summary-unit">Ekor</span>
           </span>
         </div>
-
-        {{-- <div class="summary-line">
-          Ayam Retur:
-          <span class="summary-value">{{ (int)($form->retur_count ?? 0) }}</span>
-          <span class="summary-unit">Ekor</span>
-        </div>
-
-        <div class="summary-line">
-          Total Berat Retur:
-          <span class="summary-value">{{ number_format((float)($form->retur_total_kg ?? 0), 2) }}</span>
-          <span class="summary-unit">Kg</span>
-        </div>
-
-        <a href="{{ route('retur-mati.edit', $form) }}" class="btn-secondary">Ayam Retur & Mati</a> --}}
       </div>
     </div>
   </div>
@@ -292,16 +278,18 @@
                 <div class="sh-counter">
                   <button type="button" class="sh-ctr-btn sh-ctr-minus"
                           @disabled($isDone)
-                          onclick="updateCell({{ $cell->id }}, {{ max(0, ($empty ?? 0)-1) }})">−</button>
+                          onclick="changeEmpty({{ $cell->id }}, -1)">−</button>
+
                   <input  id="empty-{{ $cell->id }}"
                           value="{{ is_null($empty) ? '' : $empty }}"
                           class="sh-ctr-input"
                           inputmode="numeric"
                           @disabled($isDone)
                           onchange="updateCell({{ $cell->id }}, this.value)"/>
+
                   <button type="button" class="sh-ctr-btn sh-ctr-plus"
                           @disabled($isDone)
-                          onclick="updateCell({{ $cell->id }}, {{ min(50, ($empty ?? 0)+1) }})">+</button>
+                          onclick="changeEmpty({{ $cell->id }}, 1)">+</button>
                 </div>
               </td>
 
@@ -333,6 +321,24 @@ function refreshTotals() {
   const ae = document.getElementById('total-ayam');
   if (ke) ke.textContent = totalKosong;
   if (ae) ae.textContent = totalAyam;
+}
+
+function changeEmpty(id, delta) {
+  const inputEl = document.getElementById(`empty-${id}`);
+
+  // ambil nilai terbaru dari input (kalau kosong anggap 0)
+  let n = (inputEl.value === '' ? 0 : parseInt(inputEl.value, 10));
+  if (isNaN(n)) n = 0;
+
+  let next = n + delta;
+  if (next < 0) next = 0;
+  if (next > 50) next = 50;
+
+  // update UI langsung
+  inputEl.value = String(next);
+
+  // simpan ke server (updateCell juga tetap clamp)
+  updateCell(id, next);
 }
 
 async function updateCell(id, emptyCount) {

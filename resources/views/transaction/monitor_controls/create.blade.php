@@ -235,7 +235,7 @@
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l3 2"/></svg>
                     </div>
-                    <input id="truck_arrival_time" name="truck_arrival_time" type="time" value="{{ old('truck_arrival_time') }}" class="form-input">
+                    <input id="truck_arrival_time" name="truck_arrival_time" type="time" value="{{ old('truck_arrival_time', isset($data) ? \Carbon\Carbon::parse($data->truck_arrival_time)->format('H:i') : '') }}" class="form-input">
                 </div>
                 @error('truck_arrival_time')<div class="form-error">{{ $message }}</div>@enderror
             </div>

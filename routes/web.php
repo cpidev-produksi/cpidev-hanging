@@ -10,6 +10,7 @@ use App\Http\Controllers\Transaction\ConditionController;
 use App\Http\Controllers\Transaction\HangingFormController;
 use App\Http\Controllers\Transaction\HangingLandingController;
 use App\Http\Controllers\Transaction\MonitorControlController;
+use App\Http\Controllers\Transaction\MonitorSummaryController;
 use App\Http\Controllers\Transaction\ReturMatiController;
 use App\Http\Controllers\Transaction\ReturMatiLandingController;
 use Illuminate\Support\Facades\Route;
@@ -36,14 +37,18 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     Route::get('/retur-mati', [ReturMatiLandingController::class, 'index'])->name('retur-mati.landing');
     Route::post('/retur-mati/open/{monitorControl}', [ReturMatiLandingController::class, 'open'])->name('retur-mati.open');
-
     Route::post('monitor-controls/{monitorControl}/move', [MonitorControlController::class, 'moveTruckNo'])
         ->name('monitor-controls.move');
 
-    Route::resource('monitor-controls', MonitorControlController::class);
+    //Route::resource('monitor-controls', MonitorControlController::class);
     Route::get('/hanging', [HangingLandingController::class, 'index'])->name('hanging.landing');
     Route::post('/hanging/open/{monitorControl}', [HangingLandingController::class, 'open'])->name('hanging.open');
     Route::post('/hanging/start/{hangingForm}', [HangingLandingController::class, 'start'])->name('hanging.start');
+
+    Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])
+    ->name('monitor-controls.summary');
+    Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])
+        ->name('monitor-controls.summary.pdf');
 
     // Form Hanging
     Route::get('hanging-forms/{hangingForm}', [HangingFormController::class, 'show'])->name('hanging-forms.show');
