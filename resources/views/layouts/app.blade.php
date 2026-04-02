@@ -544,6 +544,8 @@
             <div id="accProduksi" class="mobile-acc-body">
                 <a class="mobile-sub {{ request()->routeIs('monitor-controls.*') ? 'active' : '' }}" href="{{ route('monitor-controls.index') }}">Kontrol Monitor</a>
                 <a class="mobile-sub {{ request()->routeIs('hanging.landing') || request()->routeIs('hanging.*') || request()->routeIs('hanging-forms.*') ? 'active' : '' }}" href="{{ route('hanging.landing') }}">Form Hanging Ayam</a>
+                <a class="mobile-sub {{ request()->routeIs('retur-mati.*') ? 'active' : '' }}" href="{{ route('retur-mati.landing') }}">Ayam Retur &amp; Mati</a>
+                <a class="mobile-sub {{ request()->routeIs('conditions.*') ? 'active' : '' }}" href="{{ route('conditions.landing') }}">QC Kondisi</a>
             </div>
 
             <div class="mobile-divider"></div>

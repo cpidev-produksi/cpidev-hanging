@@ -20,50 +20,70 @@ Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'nocache'])->group(function () {
-    Route::get('/', fn () => redirect()->route('dashboard'));
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Master Data
-    Route::prefix('master')->name('master.')->group(function () {
-        Route::resource('users', UserController::class);
-        Route::resource('expeditions', ExpeditionController::class);
-        Route::resource('farms', FarmController::class);
+    // Master Data (Operator TS)
+    Route::middleware('role:operator_ts')->prefix('master')->name('master.')->group(function () {
+        Route::resource('expeditions', ExpeditionController::class)->except(['destroy']);
+        Route::resource('farms', FarmController::class)->except(['destroy']);
     });
 
-    // Kontrol Monitor
-    Route::resource('monitor-controls', MonitorControlController::class)->except(['show']);
-    Route::post('monitor-controls/{monitorControl}/start', [MonitorControlController::class, 'start'])
-        ->name('monitor-controls.start');
+    // Delete Master Data (Supervisor only)
+    Route::middleware('supervisor')->prefix('master')->name('master.')->group(function () {
+        Route::delete('expeditions/{expedition}', [ExpeditionController::class, 'destroy'])->name('expeditions.destroy');
+        Route::delete('farms/{farm}', [FarmController::class, 'destroy'])->name('farms.destroy');
+        Route::resource('users', UserController::class); // user management supervisor only
+    });
 
-    Route::get('/retur-mati', [ReturMatiLandingController::class, 'index'])->name('retur-mati.landing');
-    Route::post('/retur-mati/open/{monitorControl}', [ReturMatiLandingController::class, 'open'])->name('retur-mati.open');
-    Route::post('monitor-controls/{monitorControl}/move', [MonitorControlController::class, 'moveTruckNo'])
-        ->name('monitor-controls.move');
+    // Monitor Controls (Operator TS)
+    Route::middleware('role:operator_ts')->group(function () {
+        Route::resource('monitor-controls', MonitorControlController::class)->except(['destroy','show']);
+        Route::post('monitor-controls/{monitorControl}/start', [MonitorControlController::class, 'start'])->name('monitor-controls.start');
+        Route::post('monitor-controls/{monitorControl}/move', [MonitorControlController::class, 'moveTruckNo'])->name('monitor-controls.move');
+    });
 
-    //Route::resource('monitor-controls', MonitorControlController::class);
-    Route::get('/hanging', [HangingLandingController::class, 'index'])->name('hanging.landing');
-    Route::post('/hanging/open/{monitorControl}', [HangingLandingController::class, 'open'])->name('hanging.open');
-    Route::post('/hanging/start/{hangingForm}', [HangingLandingController::class, 'start'])->name('hanging.start');
+    // Delete monitor-controls (Supervisor only)
+    Route::delete('monitor-controls/{monitorControl}', [MonitorControlController::class, 'destroy'])
+        ->middleware('supervisor')
+        ->name('monitor-controls.destroy');
 
-    Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])
-    ->name('monitor-controls.summary');
-    Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])
-        ->name('monitor-controls.summary.pdf');
+    // Hanging (Checker Hanging)
+    Route::middleware('role:checker_hanging')->group(function () {
+        Route::get('/hanging', [HangingLandingController::class, 'index'])->name('hanging.landing');
+        Route::post('/hanging/open/{monitorControl}', [HangingLandingController::class, 'open'])->name('hanging.open');
+        Route::post('/hanging/start/{hangingForm}', [HangingLandingController::class, 'start'])->name('hanging.start');
 
-    // Form Hanging
-    Route::get('hanging-forms/{hangingForm}', [HangingFormController::class, 'show'])->name('hanging-forms.show');
-    Route::post('hanging-forms/{hangingForm}/finish', [HangingFormController::class, 'finish'])
-        ->name('hanging-forms.finish');
-    Route::patch('hanging-cells/{hangingLineSet}', [HangingFormController::class, 'updateCell'])->name('hanging-cells.update');
-    Route::get('/retur-mati/{hangingForm}', [ReturMatiController::class, 'edit'])->name('retur-mati.edit');
-    Route::post('/retur-mati/{hangingForm}', [ReturMatiController::class, 'update'])->name('retur-mati.update');
+        Route::get('hanging-forms/{hangingForm}', [HangingFormController::class, 'show'])->name('hanging-forms.show');
+        Route::post('hanging-forms/{hangingForm}/finish', [HangingFormController::class, 'finish'])->name('hanging-forms.finish');
+        Route::patch('hanging-cells/{hangingLineSet}', [HangingFormController::class, 'updateCell'])->name('hanging-cells.update');
+    });
 
-    Route::get('/conditions', [ConditionController::class, 'landing'])->name('conditions.landing');
-    Route::post('/conditions/open/{monitorControl}', [ConditionController::class, 'open'])->name('conditions.open');
-    Route::get('/conditions/{hangingForm}', [ConditionController::class, 'edit'])->name('conditions.edit');
-    Route::post('/conditions/{hangingForm}', [ConditionController::class, 'update'])->name('conditions.update');
+    // Retur & Mati (Checker Hanging OR Checker Retur)
+    Route::middleware('role:checker_hanging,checker_retur')->group(function () {
+        Route::get('/retur-mati', [ReturMatiLandingController::class, 'index'])->name('retur-mati.landing');
+        Route::post('/retur-mati/open/{monitorControl}', [ReturMatiLandingController::class, 'open'])->name('retur-mati.open');
+        Route::get('/retur-mati/{hangingForm}', [ReturMatiController::class, 'edit'])->name('retur-mati.edit');
+        Route::post('/retur-mati/{hangingForm}', [ReturMatiController::class, 'update'])->name('retur-mati.update');
+    });
 
-    // Live Monitor
+    // QC Kondisi (Operator TS OR QC TS)
+    Route::middleware('role:operator_ts,qc_ts')->group(function () {
+        Route::get('/conditions', [ConditionController::class, 'landing'])->name('conditions.landing');
+        Route::post('/conditions/open/{monitorControl}', [ConditionController::class, 'open'])->name('conditions.open');
+        Route::get('/conditions/{hangingForm}', [ConditionController::class, 'edit'])->name('conditions.edit');
+        Route::post('/conditions/{hangingForm}', [ConditionController::class, 'update'])->name('conditions.update');
+    });
+
+    // Summary + Sign + PDF (Supervisor only)
+    Route::middleware('supervisor')->group(function () {
+        Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])->name('monitor-controls.summary');
+        Route::post('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'sign'])->name('monitor-controls.summary.sign');
+        Route::delete('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'unsign'])->name('monitor-controls.summary.unsign');
+        Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])->name('monitor-controls.summary.pdf');
+    });
+
+    // Live monitor: Anda bisa biarkan semua role bisa lihat
     Route::get('monitor/{location}', [LiveMonitorController::class, 'show'])->name('monitor.show');
     Route::get('monitor/{location}/data', [LiveMonitorController::class, 'data'])->name('monitor.data');
 });

@@ -225,7 +225,7 @@
         /* Hero secondary stats — total ekor & truck no */
         .hero-stats {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             gap: 0.5rem;
             flex-shrink: 0;
         }
@@ -412,6 +412,219 @@
             .hero-stats { flex-direction: row; width: 100%; }
             .hstat { flex: 1; }
         }
+        @media (max-width: 860px) {
+            .hero-num { font-size: 4.5rem; }
+            .sub-grid { 
+                grid-template-columns: 1fr; 
+                gap: 0.5rem;
+            }
+            .hero-stats { flex-direction: row; }
+            
+            /* Perbaikan untuk sub-card */
+            .sub-card {
+                padding: 0.5rem 0.7rem;
+                gap: 0.5rem;
+            }
+            
+            .sc-body {
+                min-width: 0; /* Allow text truncation */
+                flex: 1;
+            }
+            
+            .sc-val {
+                font-size: 0.7rem;
+                white-space: normal; /* Allow text to wrap */
+                word-break: break-word;
+                line-height: 1.3;
+            }
+            
+            .sc-sub {
+                font-size: 0.55rem;
+                white-space: normal;
+                word-break: break-word;
+            }
+            
+            .sc-icon {
+                width: 32px;
+                height: 32px;
+                flex-shrink: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .wrap {
+                padding: 0.5rem 0.8rem;
+                gap: 0.5rem;
+            }
+            
+            .datetime-block { display: none; }
+            .hero { 
+                flex-direction: column; 
+                gap: 0.75rem;
+                padding: 0.75rem;
+            }
+            .hero-stats { 
+                flex-direction: row; 
+                width: 100%;
+                gap: 0.5rem;
+            }
+            .hstat { 
+                flex: 1; 
+                padding: 0.3rem 0.5rem;
+                min-width: 0;
+            }
+            .hstat .val {
+                font-size: 1.2rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .hstat .lbl {
+                font-size: 0.5rem;
+                white-space: nowrap;
+            }
+            
+            /* Perbaikan sub-card di mobile */
+            .sub-card {
+                padding: 0.5rem;
+                gap: 0.5rem;
+            }
+            
+            .sc-val {
+                font-size: 0.65rem;
+                line-height: 1.2;
+            }
+            
+            .sc-sub {
+                font-size: 0.5rem;
+                margin-top: 0.1rem;
+            }
+            
+            /* Footer responsive */
+            .footer {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                padding-top: 0.5rem;
+            }
+            
+            .footer-counter {
+                padding: 0.2rem 0.6rem;
+            }
+            
+            .footer-counter .fc-lbl {
+                font-size: 0.6rem;
+            }
+            
+            .footer-counter .fc-val {
+                font-size: 1.1rem;
+            }
+            
+            .refresh-badge {
+                padding: 0.2rem 0.5rem;
+            }
+            
+            .refresh-badge span {
+                font-size: 0.5rem;
+            }
+            
+            .footer-right {
+                font-size: 0.5rem;
+                margin-left: 0;
+            }
+        }
+
+        /* Untuk layar sangat kecil (<= 400px) */
+        @media (max-width: 400px) {
+            .hero-stats {
+                flex-direction: column;
+                gap: 0.4rem;
+            }
+            
+            .hstat {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem;
+                padding: 0.3rem 0.8rem;
+            }
+            
+            .hstat .lbl {
+                font-size: 0.55rem;
+                margin-bottom: 0;
+                white-space: normal;
+            }
+            
+            .hstat .val {
+                font-size: 1rem;
+            }
+            
+            .sub-card {
+                flex-wrap: wrap;
+            }
+            
+            .sc-body {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            /* Header mobile */
+            .header {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .loc-badge {
+                order: 1;
+            }
+            
+            .report-pill {
+                order: 2;
+            }
+            
+            .fs-btn {
+                order: 3;
+            }
+            
+            .h-gap {
+                display: none;
+            }
+        }
+
+        /* Untuk tampilan landscape di mobile */
+        @media (max-width: 860px) and (orientation: landscape) {
+            .wrap {
+                padding: 0.4rem 0.8rem;
+                gap: 0.4rem;
+            }
+            
+            .hero {
+                padding: 0.4rem;
+            }
+            
+            .hero-num {
+                font-size: 3rem;
+            }
+            
+            .sub-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .footer {
+                flex-wrap: nowrap;
+            }
+        }
+
+        /* Tooltip untuk text yang terpotong */
+        .sc-val[title], .sc-sub[title] {
+            cursor: help;
+        }
+
+        /* Tambahkan text truncation dengan ellipsis untuk single line */
+        .sc-val.single-line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
@@ -500,8 +713,8 @@
             </div>
             <div class="sc-body">
                 <div class="sc-lbl">EKSPEDISI &amp; SOPIR</div>
-                <div class="sc-val" id="subExpedisi">—</div>
-                <div class="sc-sub" id="subDriver">—</div>
+                <div class="sc-val" id="subExpedisi" title="">—</div>
+                <div class="sc-sub" id="subDriver" title="">—</div>
             </div>
         </div>
 
@@ -515,8 +728,8 @@
             </div>
             <div class="sc-body">
                 <div class="sc-lbl">SIZE AYAM &amp; FARM</div>
-                <div class="sc-val" id="subFarm">—</div>
-                <div class="sc-sub" id="subSize">—</div>
+                <div class="sc-val" id="subFarm" title="">—</div>
+                <div class="sc-sub" id="subSize" title="">—</div>
             </div>
         </div>
     </div>
@@ -658,14 +871,32 @@
             document.getElementById('statTruckNo').textContent   = j.truck_no || '—';
 
             /* Sub main — Ekspedisi & Sopir */
-            document.getElementById('subExpedisi').textContent = j.expedition_name || '—';
-            let driverLine = j.driver_name || '—';
-            if (j.driver_phone) driverLine += '  ·  ' + j.driver_phone;
-            document.getElementById('subDriver').textContent = driverLine;
+            const expedisiName = j.expedition_name || '—';
+            const driverName = j.driver_name || '—';
+            const driverPhone = j.driver_phone ? '  ·  ' + j.driver_phone : '';
+            const driverLine = driverName + driverPhone;
+            
+            const subExpedisi = document.getElementById('subExpedisi');
+            const subDriver = document.getElementById('subDriver');
+            
+            subExpedisi.textContent = expedisiName;
+            subExpedisi.title = expedisiName; // Tooltip untuk text panjang
+            
+            subDriver.textContent = driverLine;
+            subDriver.title = driverLine; // Tooltip untuk text panjang
 
             /* Sub main — Size & Farm */
-            document.getElementById('subFarm').textContent = j.farm_name || '—';
-            document.getElementById('subSize').textContent = j.size ? 'Ukuran: ' + j.size : '—';
+            const farmName = j.farm_name || '—';
+            const sizeText = j.size ? 'Ukuran: ' + j.size : '—';
+            
+            const subFarm = document.getElementById('subFarm');
+            const subSize = document.getElementById('subSize');
+            
+            subFarm.textContent = farmName;
+            subFarm.title = farmName;
+            
+            subSize.textContent = sizeText;
+            subSize.title = sizeText;
 
         } catch (err) {
             console.error('Refresh error:', err);

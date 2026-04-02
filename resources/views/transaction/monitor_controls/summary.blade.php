@@ -32,10 +32,15 @@
       </div>
     </div>
     <div class="sum-actions">
-      <a class="sum-btn-export" target="_blank" href="{{ route('monitor-controls.summary.pdf', $mc) }}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-        Export PDF
-      </a>
+      @if($mc->supervisor_signature)
+        <a class="sum-btn-export" target="_blank" href="{{ route('monitor-controls.summary.pdf', $mc) }}">
+          ... Export PDF ...
+        </a>
+      @else
+        <button class="sum-btn-export" type="button" disabled style="opacity:.55;cursor:not-allowed">
+          ... Export PDF (butuh tanda tangan) ...
+        </button>
+      @endif
       <a class="sum-btn-back" href="{{ route('monitor-controls.index') }}">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         Kembali
@@ -214,12 +219,111 @@
   </div>{{-- /grid --}}
 
   {{-- ══ SIGNATURE ══ --}}
-  <div class="sum-sig">
+  {{-- <div class="sum-sig">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     Dibuat oleh: <strong>{{ $createdBy }}</strong>
-  </div>
+  </div> --}}
 
+  {{-- ══ SUPERVISOR SIGNATURE ══ --}}
+  <div class="sum-card" style="margin-top:14px">
+    <div class="sum-card-head qc">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+      </svg>
+      Approval Supervisor (Tanda Tangan)
+    </div>
+
+    @if($mc->supervisor_signature)
+      <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:900;margin-bottom:8px">Tanda tangan tersimpan</div>
+          <img src="{{ $mc->supervisor_signature }}" alt="Signature" style="border:1px solid #E8EAF0;border-radius:12px;width:320px;max-width:100%;background:#fff">
+          <div style="margin-top:8px;color:#6B7280;font-weight:800;font-size:.82rem">
+            Nama: <b>{{ $mc->supervisor_signed_name ?? '—' }}</b><br>
+            Waktu: <b>{{ $mc->supervisor_signed_at?->format('d/m/Y H:i') ?? '—' }}</b>
+          </div>
+        </div>
+
+        <form method="POST" action="{{ route('monitor-controls.summary.unsign', $mc) }}"
+              onsubmit="return confirm('Hapus tanda tangan supervisor?')">
+          @csrf
+          @method('DELETE')
+          <button class="sum-btn-back" type="submit">Hapus Tanda Tangan</button>
+        </form>
+      </div>
+    @else
+      <div style="color:#6B7280;font-weight:800;margin-bottom:10px">
+        Silahkan supervisor tanda tangan terlebih dahulu. Export PDF akan aktif setelah tanda tangan tersimpan.
+      </div>
+
+      <div style="border:1.5px dashed #D1D5DB;border-radius:14px;padding:12px;background:#FAFBFD;max-width:520px">
+        <canvas id="sigPad" width="500" height="200" style="width:100%;height:auto;background:#fff;border-radius:12px;border:1px solid #E8EAF0"></canvas>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
+          <input id="signedName" type="text" placeholder="Nama supervisor (opsional)"
+                style="flex:1;min-width:220px;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:10px;font-weight:800">
+
+          <button type="button" class="sum-btn-back" onclick="clearSig()">Clear</button>
+
+          <form id="sigForm" method="POST" action="{{ route('monitor-controls.summary.sign', $mc) }}">
+            @csrf
+            <input type="hidden" name="signature" id="signatureInput">
+            <input type="hidden" name="signed_name" id="signedNameInput">
+            <button type="button" class="sum-btn-export" onclick="submitSig()">Simpan Tanda Tangan</button>
+          </form>
+        </div>
+      </div>
+    @endif
+  </div>
 </div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('sigPad');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#111827';
+
+  let drawing = false;
+
+  function getPos(e){
+    const r = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+    // scale for CSS size vs actual size
+    return {
+      x: x * (canvas.width / r.width),
+      y: y * (canvas.height / r.height),
+    };
+  }
+
+  function start(e){ drawing = true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); }
+  function move(e){ if(!drawing) return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); }
+  function end(){ drawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+
+  window.clearSig = function(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+
+  window.submitSig = function(){
+    const dataUrl = canvas.toDataURL('image/png');
+    document.getElementById('signatureInput').value = dataUrl;
+    document.getElementById('signedNameInput').value = document.getElementById('signedName').value || '';
+    document.getElementById('sigForm').submit();
+  }
+})();
+</script>
 
 <style>
 /* ── PAGE ── */

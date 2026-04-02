@@ -68,7 +68,7 @@ class ReturMatiController extends Controller
             ]);
 
             return redirect()
-                ->route('hanging-forms.show', $hangingForm)
+                ->route('retur-mati.landing')
                 ->with('status', 'Data Ayam Retur & Mati tersimpan.');
         });
     }

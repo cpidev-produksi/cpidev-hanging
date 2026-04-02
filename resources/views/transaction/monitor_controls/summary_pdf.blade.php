@@ -364,7 +364,15 @@
       </div>
       <div class="sig-cell">
         <div class="sig-label">Mengetahui / Supervisor</div>
-        <div class="sig-line">&nbsp;</div>
+
+        @if(!empty($mc->supervisor_signature))
+          <div style="margin-bottom:8px">
+            <img src="{{ $mc->supervisor_signature }}" style="width:220px;height:auto;border:1px solid #ddd;padding:6px;border-radius:8px">
+          </div>
+          <div class="sig-line">{{ $mc->supervisor_signed_name ?? '' }}</div>
+        @else
+          <div class="sig-line">&nbsp;</div>
+        @endif
       </div>
     </div>
 

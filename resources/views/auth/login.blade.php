@@ -6,7 +6,6 @@
     <title>Login — SlaughterHouse</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css','resources/js/app.js'])
     <style>
         :root {
             --bg: #0a0c0f;
@@ -383,22 +382,6 @@
         </div>
         <h1 class="brand-title">Slaughter<span>House</span></h1>
         <p class="brand-desc">Sistem operasional terpadu untuk kontrol dan monitoring seluruh aktivitas SlaughterHouse secara real-time.</p>
-        <div class="stats-row">
-            <div class="stat-item">
-                <span class="stat-num">24</span>
-                <span class="stat-label">Projects</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-num">2</span>
-                <span class="stat-label">Live SH</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-num">12</span>
-                <span class="stat-label">Running</span>
-            </div>
-        </div>
     </div>
 
     <!-- Login Card -->
@@ -457,7 +440,7 @@
         </form>
         <div class="seed-hint">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <p>Silahkan hubungi supervisor Anda untuk informasi login.</p>
+            <p>Silahkan hubungi supervisor Anda untuk registrasi akun.</p>
         </div>
     </div>
 </div>

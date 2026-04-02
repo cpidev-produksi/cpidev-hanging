@@ -33,12 +33,17 @@ class MonitorControl extends Model
         'sppa_no',
         'order_id',
         'sppa_date',
+
+        'supervisor_signature',
+        'supervisor_signed_name',
+        'supervisor_signed_at',
     ];
 
     protected $casts = [
         'process_date' => 'date',
         'catch_date' => 'date',
         'sppa_date' => 'date',
+        'supervisor_signed_at' => 'datetime',
 
         'total_kilo' => 'decimal:2',
         'abw' => 'decimal:2',
