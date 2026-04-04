@@ -15,6 +15,10 @@ use App\Http\Controllers\Transaction\ReturMatiController;
 use App\Http\Controllers\Transaction\ReturMatiLandingController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
