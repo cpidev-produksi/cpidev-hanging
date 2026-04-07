@@ -32,7 +32,6 @@
             overflow: hidden;
         }
 
-        /* Atmospheric background */
         body::before {
             content: '';
             position: fixed;
@@ -43,7 +42,6 @@
             pointer-events: none;
         }
 
-        /* Grid texture */
         body::after {
             content: '';
             position: fixed;
@@ -68,34 +66,7 @@
             padding: 24px;
         }
 
-        .input-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 10px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            color: #6b7280;
-            display: flex;
-            align-items: center;
-            transition: color 0.2s;
-        }
-
-        .toggle-password:hover {
-            color: #111827;
-        }
-
-        .toggle-password svg {
-            width: 20px;
-            height: 20px;
-        }
-
+        /* ── Brand Panel ── */
         .brand-panel {
             flex: 1;
             padding: 48px 40px;
@@ -111,14 +82,14 @@
             align-items: center;
             gap: 12px;
         }
-        
+
         .brand-logo img {
             width: 48px;
             height: 48px;
             object-fit: contain;
             filter: drop-shadow(0 0 8px rgba(232,93,47,0.3));
         }
-        
+
         .brand-logo-text {
             font-family: 'Syne', sans-serif;
             font-size: 28px;
@@ -126,10 +97,8 @@
             color: var(--text);
             letter-spacing: -0.5px;
         }
-        
-        .brand-logo-text span {
-            color: var(--accent);
-        }
+
+        .brand-logo-text span { color: var(--accent); }
 
         .brand-badge {
             display: inline-flex;
@@ -165,47 +134,150 @@
             letter-spacing: -1px;
             margin-bottom: 16px;
         }
-        .brand-title span {
-            color: var(--accent);
-        }
+        .brand-title span { color: var(--accent); }
 
         .brand-desc {
             color: var(--muted);
             font-size: 14px;
             line-height: 1.7;
             max-width: 300px;
+            margin-bottom: 36px;
         }
 
-        .stats-row {
-            display: flex;
-            gap: 20px;
-            margin-top: 36px;
-        }
-        .stat-item {
+        /* ── Live Monitor Buttons ── */
+        .monitor-section {
             display: flex;
             flex-direction: column;
-            gap: 2px;
-        }
-        .stat-num {
-            font-family: 'Syne', sans-serif;
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text);
-        }
-        .stat-label {
-            font-size: 11px;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-        .stat-divider {
-            width: 1px;
-            height: 40px;
-            background: var(--border);
-            align-self: center;
+            gap: 10px;
         }
 
-        /* Login Card */
+        .monitor-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+
+        .monitor-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-monitor {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* SH01 — accent orange */
+        .btn-monitor-sh01 {
+            background: linear-gradient(135deg, #e85d2f 0%, #c94820 100%);
+            color: #fff;
+            box-shadow:
+                0 4px 18px rgba(232,93,47,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+
+        /* SH02 — amber/gold */
+        .btn-monitor-sh02 {
+            background: linear-gradient(135deg, #f5a623 0%, #d4880d 100%);
+            color: #fff;
+            box-shadow:
+                0 4px 18px rgba(245,166,35,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+
+        .btn-monitor::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0);
+            transition: background 0.2s ease;
+        }
+
+        .btn-monitor:hover::before {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .btn-monitor:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-monitor-sh01:hover {
+            box-shadow:
+                0 8px 28px rgba(232,93,47,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+
+        .btn-monitor-sh02:hover {
+            box-shadow:
+                0 8px 28px rgba(245,166,35,0.45),
+                inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+
+        .btn-monitor:active {
+            transform: translateY(0);
+        }
+
+        /* Dot pulse on each button */
+        .btn-monitor-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            flex-shrink: 0;
+            animation: dotPulse 2s ease-in-out infinite;
+        }
+
+        .btn-monitor-sh02 .btn-monitor-dot {
+            animation-delay: 0.4s;
+        }
+
+        .btn-monitor-icon {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+            opacity: 0.9;
+        }
+
+        /* ── Input wrapper ── */
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+        .toggle-password:hover { color: var(--text); }
+        .toggle-password svg { width: 20px; height: 20px; }
+
+        /* ── Login Card ── */
         .login-card {
             width: 400px;
             flex-shrink: 0;
@@ -218,49 +290,46 @@
                 0 30px 80px rgba(0,0,0,0.6),
                 inset 0 1px 0 rgba(255,255,255,0.04);
             animation: slideRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-            animation-delay: 0.1s;
         }
 
         .card-header {
-            margin-bottom: 32px;
+            margin-bottom: 28px;
         }
         .card-header h2 {
             font-family: 'Syne', sans-serif;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--text);
             margin-bottom: 6px;
         }
         .card-header p {
-            color: var(--muted);
             font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .form-group label {
             display: block;
             font-size: 12px;
             font-weight: 600;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
             color: var(--muted);
-            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 7px;
         }
 
-        .input-wrap {
-            position: relative;
-        }
-        .input-wrap .icon {
+        .icon {
             position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
+            left: 12px;
+            width: 18px;
+            height: 18px;
             color: var(--muted);
-            width: 16px; height: 16px;
             pointer-events: none;
         }
+
         .input-wrap input {
             width: 100%;
             background: var(--input-bg);
@@ -316,61 +385,44 @@
             gap: 8px;
         }
         .seed-hint svg { color: var(--accent2); flex-shrink: 0; }
-        .seed-hint p {
-            font-size: 11px;
-            color: var(--muted);
-        }
-        .seed-hint code {
-            font-family: 'Courier New', monospace;
-            color: var(--accent2);
-            background: rgba(245,166,35,0.1);
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 11px;
-        }
+        .seed-hint p { font-size: 11px; color: var(--muted); }
 
+        /* ── Keyframes ── */
         @keyframes slideLeft {
             from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
+            to   { opacity: 1; transform: translateX(0); }
         }
         @keyframes slideRight {
             from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
+            to   { opacity: 1; transform: translateX(0); }
         }
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.85); }
         }
+        @keyframes dotPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,255,255,0.5); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(255,255,255,0); }
+        }
 
+        /* ── Responsive ── */
         @media (max-width: 768px) {
             .brand-panel { display: none; }
             .login-card { width: 100%; max-width: 400px; }
-            .login-wrap {
-                padding: 16px;
-                justify-content: center;
-            }
+            .login-wrap { padding: 16px; justify-content: center; }
         }
-        
+
         @media (min-width: 769px) and (max-width: 1024px) {
-            .login-wrap {
-                max-width: 860px;
-                padding: 24px;
-            }
-            .brand-panel {
-                padding: 40px 24px;
-            }
-            .brand-title {
-                font-size: 40px;
-            }
-            .login-card {
-                width: 360px;
-                padding: 32px 28px;
-            }
+            .login-wrap { max-width: 860px; padding: 24px; }
+            .brand-panel { padding: 40px 24px; }
+            .brand-title { font-size: 40px; }
+            .login-card { width: 360px; padding: 32px 28px; }
         }
     </style>
 </head>
 <body>
 <div class="login-wrap">
+
     <!-- Brand Panel -->
     <div class="brand-panel">
         <div class="brand-logo">
@@ -382,6 +434,37 @@
         </div>
         <h1 class="brand-title">Slaughter<span>House</span></h1>
         <p class="brand-desc">Sistem operasional terpadu untuk kontrol dan monitoring seluruh aktivitas SlaughterHouse secara real-time.</p>
+
+        <!-- Live Monitor Buttons -->
+        <div class="monitor-section">
+            <div class="monitor-label">Live Monitor</div>
+            <div class="monitor-buttons">
+                <a href="{{ route('monitor.show', 'SH01') }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn-monitor btn-monitor-sh01">
+                    <!-- Camera icon -->
+                    <svg class="btn-monitor-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M15 10l4.553-2.069A1 1 0 0121 8.869v6.262a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                    </svg>
+                    <span>SH01</span>
+                    <span class="btn-monitor-dot"></span>
+                </a>
+
+                <a href="{{ route('monitor.show', 'SH02') }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn-monitor btn-monitor-sh02">
+                    <svg class="btn-monitor-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M15 10l4.553-2.069A1 1 0 0121 8.869v6.262a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                    </svg>
+                    <span>SH02</span>
+                    <span class="btn-monitor-dot"></span>
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Login Card -->
@@ -395,15 +478,20 @@
             <div class="form-group">
                 <label>Username</label>
                 <div class="input-wrap">
-                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                    <input type="text" name="username" value="{{ old('username') }}" placeholder="Masukkan username" autocomplete="username" />
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <input type="text" name="username" value="{{ old('username') }}"
+                           placeholder="Masukkan username" autocomplete="username" />
                 </div>
             </div>
             <div class="form-group">
                 <label>Password</label>
                 <div class="input-wrap">
                     <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                     <input
                         type="password"
@@ -421,30 +509,36 @@
                         aria-label="Lihat password"
                         style="display: none;"
                     >
-                        {{-- Eye icon (password tersembunyi) --}}
                         <svg id="eyeIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                         </svg>
-                        {{-- Eye-off icon (password terlihat) --}}
                         <svg id="eyeOffIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
                         </svg>
                     </button>
                 </div>
             </div>
             <button type="submit" class="btn-login">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
                 Login
             </button>
         </form>
         <div class="seed-hint">
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
             <p>Silahkan hubungi supervisor Anda untuk registrasi akun.</p>
         </div>
     </div>
 </div>
-</body>
 
 <script>
 function toggleEyeIcon(input) {

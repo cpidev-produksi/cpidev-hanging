@@ -142,20 +142,13 @@
             {{-- Farm --}}
             <div class="form-group">
                 <label class="form-label" for="farm_id">Farm <span class="required">*</span></label>
-                <div class="input-wrapper select-wrapper @error('farm_id') has-error @enderror">
-                    <div class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 21h18"/><path d="M5 21V9l7-4 7 4v12"/><path d="M9 21v-6h6v6"/>
-                        </svg>
-                    </div>
-                    <select id="farm_id" name="farm_id" class="form-input form-select">
+                <div class="@error('farm_id') has-error @enderror">
+                    <select id="farm_id" name="farm_id" class="form-input">
+                        <option value="">— Cari atau Pilih Farm —</option>
                         @foreach($farms as $f)
                             <option value="{{ $f->id }}" @selected(old('farm_id', $monitor->farm_id) == $f->id)>{{ $f->name }}</option>
                         @endforeach
                     </select>
-                    <div class="select-arrow">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                    </div>
                 </div>
                 @error('farm_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
@@ -175,25 +168,22 @@
             {{-- Ekspedisi --}}
             <div class="form-group full-width">
                 <label class="form-label" for="expedition_id">Ekspedisi <span class="required">*</span></label>
-                <div class="input-wrapper select-wrapper @error('expedition_id') has-error @enderror">
-                    <div class="input-icon">E</div>
-                    <select id="expedition_id" name="expedition_id" class="form-input form-select">
+                <div class="@error('expedition_id') has-error @enderror">
+                    <select id="expedition_id" name="expedition_id" class="form-input">
+                        <option value="">— Cari atau Pilih Ekspedisi —</option>
                         @foreach($expeditions as $e)
                             <option value="{{ $e->id }}" @selected(old('expedition_id', $monitor->expedition_id) == $e->id)>{{ $e->name }}</option>
                         @endforeach
                     </select>
-                    <div class="select-arrow">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                    </div>
                 </div>
                 @error('expedition_id')<div class="form-error">{{ $message }}</div>@enderror
 
                 <div style="height:12px"></div>
 
                 <label class="form-label" for="plate_number_id">No Polisi <span class="required">*</span></label>
-                <div class="input-wrapper select-wrapper @error('plate_number_id') has-error @enderror">
-                    <div class="input-icon">NP</div>
-                    <select id="plate_number_id" name="plate_number_id" class="form-input form-select">
+                <div class="@error('plate_number_id') has-error @enderror">
+                    <select id="plate_number_id" name="plate_number_id" class="form-input">
+                        <option value="">— Cari atau Pilih No Polisi —</option>
                         @foreach($expeditions as $e)
                             @foreach($e->plateNumbers as $pn)
                                 <option value="{{ $pn->id }}"
@@ -204,9 +194,6 @@
                             @endforeach
                         @endforeach
                     </select>
-                    <div class="select-arrow">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                    </div>
                 </div>
                 @error('plate_number_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
@@ -321,33 +308,176 @@
     </form>
 </div>
 
-<script>
-(function () {
-    const expedition = document.getElementById('expedition_id');
-    const plate = document.getElementById('plate_number_id');
-    if (!expedition || !plate) return;
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    function filterPlate() {
-        const eid = expedition.value;
-        const opts = Array.from(plate.options);
-        opts.forEach((o) => {
-            const oeid = o.getAttribute('data-expedition');
-            if (!oeid) return;
-            o.hidden = (eid && oeid !== eid);
+<script>
+$(document).ready(function () {
+
+    const SELECT2_COMMON = {
+        allowClear: true,
+        width: '100%',
+        minimumResultsForSearch: 0,   // search box selalu tampil
+    };
+
+    // ── Farm ──
+    $('#farm_id').select2($.extend({}, SELECT2_COMMON, {
+        placeholder: 'Cari nama farm...',
+        language: { noResults: () => 'Farm tidak ditemukan' }
+    }));
+
+    // ── Ekspedisi ──
+    $('#expedition_id').select2($.extend({}, SELECT2_COMMON, {
+        placeholder: 'Cari nama ekspedisi...',
+        language: { noResults: () => 'Ekspedisi tidak ditemukan' }
+    }));
+
+    // ── No Polisi ──
+    // Simpan semua option SEBELUM Select2 diinit (DOM masih bersih)
+    const $plate = $('#plate_number_id');
+
+    // Ambil data langsung dari atribut HTML menggunakan attr(), bukan data()
+    const allPlateData = [];
+    $plate.find('option').each(function () {
+        allPlateData.push({
+            value: $(this).val(),
+            text:  $(this).text(),
+            expId: $(this).attr('data-expedition') || ''
+        });
+    });
+
+    $plate.select2($.extend({}, SELECT2_COMMON, {
+        placeholder: 'Cari nomor polisi...',
+        language: { noResults: () => 'No polisi tidak ditemukan' }
+    }));
+
+    function filterPlateByExpedition(restoreVal) {
+        const eid = String($('#expedition_id').val() || '');
+
+        // Rebuild <option> list dari data asli
+        $plate.empty();
+        allPlateData.forEach(function (d) {
+            if (d.value === '') {
+                $plate.append(new Option(d.text, d.value, false, false));
+                return;
+            }
+            if (!eid || d.expId === eid) {
+                $plate.append(new Option(d.text, d.value, false, false));
+            }
         });
 
-        const selected = plate.options[plate.selectedIndex];
-        if (selected && selected.hidden) plate.value = '';
+        // Restore nilai jika masih ada di list
+        if (restoreVal && $plate.find('option[value="' + restoreVal + '"]').length) {
+            $plate.val(restoreVal);
+        } else {
+            $plate.val('');
+        }
+
+        $plate.trigger('change.select2');
     }
 
-    expedition.addEventListener('change', filterPlate);
-    filterPlate();
-})();
+    $('#expedition_id').on('change', function () {
+        filterPlateByExpedition(''); // ganti ekspedisi → reset plate
+    });
+
+    // Load awal: filter sesuai ekspedisi yang sudah terpilih ($monitor), lalu restore plate
+    const savedPlate = "{{ old('plate_number_id', $monitor->plate_number_id) }}";
+    filterPlateByExpedition(savedPlate);
+});
 </script>
 
 <style>
-/* Minimal tambahan supaya file ini langsung enak dilihat */
-.field-hint{font-size:.74rem;color:#9CA3AF;margin-top:6px;font-weight:600}
-.mono-chip{font-family:'Fira Code','Courier New',monospace;background:#F3F4F8;padding:2px 8px;border-radius:8px}
+/* ── Select2 custom theme ── */
+.select2-container { width: 100% !important; }
+
+.select2-container--default .select2-selection--single {
+    height: 44px;
+    border: 1.5px solid #E2E5EE;
+    border-radius: 10px;
+    background: #FAFBFD;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    transition: border-color .2s, box-shadow .2s;
+}
+.select2-container--default.select2-container--open .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #E85D2F;
+    box-shadow: 0 0 0 3px rgba(232,93,47,.12);
+    outline: none;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #0D1117;
+    line-height: 44px;
+    padding: 0;
+    font-size: 14px;
+}
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #9CA3AF;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 42px;
+    right: 10px;
+}
+.select2-container--default .select2-selection--single .select2-selection__clear {
+    margin-right: 6px;
+    color: #9CA3AF;
+    font-size: 16px;
+}
+
+/* Dropdown */
+.select2-dropdown {
+    border: 1.5px solid #E2E5EE;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    overflow: hidden;
+    margin-top: 4px;
+}
+.select2-search--dropdown {
+    padding: 10px;
+    border-bottom: 1px solid #F1F3F9;
+}
+.select2-search--dropdown .select2-search__field {
+    border: 1.5px solid #E2E5EE !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-size: 13px;
+    transition: border-color .2s, box-shadow .2s;
+    width: 100%;
+}
+.select2-search--dropdown .select2-search__field:focus {
+    border-color: #E85D2F !important;
+    box-shadow: 0 0 0 3px rgba(232,93,47,.1) !important;
+    outline: none !important;
+}
+.select2-results__option {
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: #374151;
+    transition: background .15s;
+}
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: #E85D2F;
+    color: #fff;
+}
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background: #FEF0EB;
+    color: #E85D2F;
+    font-weight: 600;
+}
+.select2-results__options {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+/* Error state */
+.has-error .select2-container--default .select2-selection--single {
+    border-color: #EF4444;
+}
+
+/* Misc */
+.field-hint { font-size: .74rem; color: #9CA3AF; margin-top: 6px; font-weight: 600; }
+.mono-chip { font-family: 'Fira Code','Courier New',monospace; background: #F3F4F8; padding: 2px 8px; border-radius: 8px; }
 </style>
 @endsection

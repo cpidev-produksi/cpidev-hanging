@@ -2,7 +2,27 @@
 
 @section('content')
 <div class="ke-wrap">
-  @php $mc = $form->monitorControl; @endphp
+  @php
+    $mc = $form->monitorControl;
+
+    /**
+     * ── HELPER: warna kondisi ──────────────────────────────────────
+     * Mengembalikan key CSS class untuk setiap nilai kondisi.
+     *   'green'  → Kering / Bak Kering
+     *   'yellow' → Basah / Medium Basah
+     *   'orange' → Bak berisi air / Benda lain-lain
+     *   'red'    → Sangat Basah
+     */
+    $condColor = function(string $val): string {
+        return match($val) {
+            'kering', 'bak_kering'              => 'green',
+            'basah', 'medium_basah'             => 'yellow',
+            'bak_berisi_air', 'benda_lain'      => 'orange',
+            'sangat_basah'                      => 'red',
+            default                             => '',
+        };
+    };
+  @endphp
 
   {{-- ── HEADER ── --}}
   <div class="ke-header">
@@ -55,23 +75,60 @@
     </div>
   @endif
 
+  {{-- ── COLOR LEGEND ── --}}
+  <div class="ke-legend">
+    <span class="ke-legend-title">Keterangan warna:</span>
+    <span class="ke-legend-item cond-green">
+      <span class="ke-legend-dot"></span>Kondisi Baik
+    </span>
+    <span class="ke-legend-item cond-yellow">
+      <span class="ke-legend-dot"></span>Perlu Perhatian
+    </span>
+    <span class="ke-legend-item cond-orange">
+      <span class="ke-legend-dot"></span>Kurang Baik
+    </span>
+    <span class="ke-legend-item cond-red">
+      <span class="ke-legend-dot"></span>Buruk
+    </span>
+  </div>
+
   {{-- ── FORM CARD ── --}}
   <form method="POST" action="{{ route('conditions.update', $form) }}" class="ke-card">
     @csrf
+
+    {{-- ── COLOR DEFINITION MAP untuk JS ── --}}
+    {{-- Dipakai JS supaya saat klik radio, warna option langsung berubah --}}
+    <div id="ke-color-map" data-map='{
+      "sangat_basah":    "red",
+      "basah":           "yellow",
+      "medium_basah":    "yellow",
+      "kering":          "green",
+      "bak_berisi_air":  "orange",
+      "bak_kering":      "green",
+      "benda_lain":      "orange"
+    }' style="display:none"></div>
 
     {{-- 1) Kondisi Keranjang --}}
     <div class="ke-section">
       <div class="ke-section-head">
         <span class="ke-section-num">1</span>
         <span class="ke-section-title">Ayam dimasukkan dalam kondisi keranjang</span>
+        @php $cur1 = old('basket_condition', $form->basket_condition); @endphp
+        @if($cur1)
+          <span class="ke-cond-badge cond-{{ $condColor($cur1) }}">
+            {{ $cur1 }}
+          </span>
+        @endif
       </div>
-      @php $v = old('basket_condition', $form->basket_condition); @endphp
+      @php $v = $cur1; @endphp
       <div class="ke-radio-grid">
         @foreach(['sangat_basah' => 'Sangat Basah', 'basah' => 'Basah', 'kering' => 'Kering'] as $val => $label)
-          <label class="ke-radio {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $form->status === 'done' ? 'ke-radio-disabled' : '' }}">
+          @php $color = $condColor($val); @endphp
+          <label class="ke-radio cond-{{ $color }} {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $form->status === 'done' ? 'ke-radio-disabled' : '' }}">
             <input type="radio" name="basket_condition" value="{{ $val }}"
                    @checked($v === $val) @disabled($form->status === 'done')>
             <span class="ke-radio-dot"></span>
+            <span class="ke-radio-color-dot cond-dot-{{ $color }}"></span>
             {{ $label }}
           </label>
         @endforeach
@@ -94,14 +151,22 @@
       <div class="ke-section-head">
         <span class="ke-section-num">2</span>
         <span class="ke-section-title">Kondisi Plat Form Truck</span>
+        @php $cur2 = old('truck_platform_condition', $form->truck_platform_condition); @endphp
+        @if($cur2)
+          <span class="ke-cond-badge cond-{{ $condColor($cur2) }}">
+            {{ $cur2 }}
+          </span>
+        @endif
       </div>
-      @php $v = old('truck_platform_condition', $form->truck_platform_condition); @endphp
+      @php $v = $cur2; @endphp
       <div class="ke-radio-grid">
         @foreach(['bak_berisi_air' => 'Bak berisi air', 'bak_kering' => 'Bak kering', 'benda_lain' => 'Benda lain-lain yang memberatkan timbangan'] as $val => $label)
-          <label class="ke-radio {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $form->status === 'done' ? 'ke-radio-disabled' : '' }}">
+          @php $color = $condColor($val); @endphp
+          <label class="ke-radio cond-{{ $color }} {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $form->status === 'done' ? 'ke-radio-disabled' : '' }}">
             <input type="radio" name="truck_platform_condition" value="{{ $val }}"
                    @checked($v === $val) @disabled($form->status === 'done')>
             <span class="ke-radio-dot"></span>
+            <span class="ke-radio-color-dot cond-dot-{{ $color }}"></span>
             {{ $label }}
           </label>
         @endforeach
@@ -124,14 +189,22 @@
       <div class="ke-section-head">
         <span class="ke-section-num">3</span>
         <span class="ke-section-title">Kondisi Bulu Ayam</span>
+        @php $cur3 = old('feather_condition', $form->feather_condition); @endphp
+        @if($cur3)
+          <span class="ke-cond-badge cond-{{ $condColor($cur3) }}">
+            {{ $cur3 }}
+          </span>
+        @endif
       </div>
-      @php $v = old('feather_condition', $form->feather_condition); @endphp
+      @php $v = $cur3; @endphp
       <div class="ke-radio-grid">
         @foreach(['sangat_basah' => 'Sangat Basah', 'medium_basah' => 'Medium Basah', 'basah' => 'Basah', 'kering' => 'Kering'] as $val => $label)
-          <label class="ke-radio {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $form->status === 'done' ? 'ke-radio-disabled' : '' }}">
+          @php $color = $condColor($val); @endphp
+          <label class="ke-radio cond-{{ $color }} {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $form->status === 'done' ? 'ke-radio-disabled' : '' }}">
             <input type="radio" name="feather_condition" value="{{ $val }}"
                    @checked($v === $val) @disabled($form->status === 'done')>
             <span class="ke-radio-dot"></span>
+            <span class="ke-radio-color-dot cond-dot-{{ $color }}"></span>
             {{ $label }}
           </label>
         @endforeach
@@ -163,18 +236,48 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  const colorMap = JSON.parse(document.getElementById('ke-color-map').dataset.map);
+  const allColors = ['green','yellow','orange','red'];
+
   document.querySelectorAll('.ke-radio-grid').forEach(function (grid) {
     grid.querySelectorAll('.ke-radio').forEach(function (label) {
       label.addEventListener('click', function () {
         if (label.classList.contains('ke-radio-disabled')) return;
-        // remove checked from siblings
+
+        const input = label.querySelector('input[type="radio"]');
+        if (!input) return;
+
+        // ── uncheck siblings
         grid.querySelectorAll('.ke-radio').forEach(function (l) {
           l.classList.remove('ke-radio-checked');
         });
+
+        // ── check this one
         label.classList.add('ke-radio-checked');
-        // actually check the hidden input
-        const input = label.querySelector('input[type="radio"]');
-        if (input) input.checked = true;
+        input.checked = true;
+
+        // ── update section badge
+        const section = label.closest('.ke-section');
+        if (section) {
+          let badge = section.querySelector('.ke-cond-badge');
+          const val = input.value;
+          const color = colorMap[val] || '';
+          const labels = {
+            sangat_basah: 'Sangat Basah', basah: 'Basah',
+            medium_basah: 'Medium Basah', kering: 'Kering',
+            bak_berisi_air: 'Bak berisi air', bak_kering: 'Bak kering',
+            benda_lain: 'Benda lain-lain'
+          };
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'ke-cond-badge';
+            section.querySelector('.ke-section-head').appendChild(badge);
+          }
+          // reset colors
+          allColors.forEach(c => badge.classList.remove('cond-' + c));
+          if (color) badge.classList.add('cond-' + color);
+          badge.textContent = labels[val] || val;
+        }
       });
     });
   });
@@ -192,6 +295,12 @@ document.addEventListener('DOMContentLoaded', function () {
   --ke-acc-xl:  rgba(79,103,255,.08);
   --ke-r:       14px;
   --ke-sh:      0 1px 4px rgba(0,0,0,.05), 0 6px 20px rgba(0,0,0,.05);
+
+  /* ── Condition color tokens ── */
+  --cg-bg:  #DCFCE7; --cg-border: #86EFAC; --cg-text: #166534; --cg-dot: #22C55E;
+  --cy-bg:  #FEF9C3; --cy-border: #FDE047; --cy-text: #854D0E; --cy-dot: #EAB308;
+  --co-bg:  #FFEDD5; --co-border: #FDBA74; --co-text: #9A3412; --co-dot: #F97316;
+  --cr-bg:  #FEE2E2; --cr-border: #FCA5A5; --cr-text: #991B1B; --cr-dot: #EF4444;
 }
 
 .ke-wrap { max-width: 860px; margin: 0 auto; padding: 32px 24px; }
@@ -234,6 +343,32 @@ document.addEventListener('DOMContentLoaded', function () {
   margin-bottom:14px;
 }
 
+/* ── LEGEND ── */
+.ke-legend {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:10px 14px; border-radius:10px;
+  background:#F8F9FC; border:1px solid var(--ke-border);
+  margin-bottom:14px; font-size:.78rem;
+}
+.ke-legend-title { font-weight:800; color:var(--ke-muted); margin-right:2px; }
+.ke-legend-item {
+  display:inline-flex; align-items:center; gap:5px;
+  font-weight:700; padding:3px 10px; border-radius:999px;
+  border:1.5px solid;
+}
+.ke-legend-dot {
+  width:8px; height:8px; border-radius:50%; flex-shrink:0;
+}
+/* legend color variants */
+.ke-legend-item.cond-green  { background:var(--cg-bg); border-color:var(--cg-border); color:var(--cg-text); }
+.ke-legend-item.cond-yellow { background:var(--cy-bg); border-color:var(--cy-border); color:var(--cy-text); }
+.ke-legend-item.cond-orange { background:var(--co-bg); border-color:var(--co-border); color:var(--co-text); }
+.ke-legend-item.cond-red    { background:var(--cr-bg); border-color:var(--cr-border); color:var(--cr-text); }
+.ke-legend-item.cond-green  .ke-legend-dot { background:var(--cg-dot); }
+.ke-legend-item.cond-yellow .ke-legend-dot { background:var(--cy-dot); }
+.ke-legend-item.cond-orange .ke-legend-dot { background:var(--co-dot); }
+.ke-legend-item.cond-red    .ke-legend-dot { background:var(--cr-dot); }
+
 /* ── CARD ── */
 .ke-card {
   background:var(--ke-surface);
@@ -245,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /* ── SECTION ── */
 .ke-section { padding:18px 20px; }
-.ke-section-head { display:flex; align-items:center; gap:10px; margin-bottom:13px; }
+.ke-section-head { display:flex; align-items:center; gap:10px; margin-bottom:13px; flex-wrap:wrap; }
 .ke-section-num {
   width:24px; height:24px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
@@ -255,6 +390,19 @@ document.addEventListener('DOMContentLoaded', function () {
   border:1px solid rgba(79,103,255,.2);
 }
 .ke-section-title { font-size:.88rem; font-weight:800; color:var(--ke-text); }
+
+/* ── SECTION BADGE (warna kondisi terpilih) ── */
+.ke-cond-badge {
+  display:inline-flex; align-items:center;
+  padding:2px 10px; border-radius:999px;
+  font-size:.72rem; font-weight:900; letter-spacing:.02em;
+  border:1.5px solid; margin-left:auto;
+  transition:all .2s;
+}
+.ke-cond-badge.cond-green  { background:var(--cg-bg); border-color:var(--cg-border); color:var(--cg-text); }
+.ke-cond-badge.cond-yellow { background:var(--cy-bg); border-color:var(--cy-border); color:var(--cy-text); }
+.ke-cond-badge.cond-orange { background:var(--co-bg); border-color:var(--co-border); color:var(--co-text); }
+.ke-cond-badge.cond-red    { background:var(--cr-bg); border-color:var(--cr-border); color:var(--cr-text); }
 
 /* ── RADIO GRID ── */
 .ke-radio-grid { display:grid; grid-template-columns:1fr; gap:8px; }
@@ -268,17 +416,23 @@ document.addEventListener('DOMContentLoaded', function () {
   cursor:pointer;
   transition:border-color .15s, background .15s;
 }
-.ke-radio:hover:not(.ke-radio-disabled) {
-  border-color:rgba(79,103,255,.35);
-  background:var(--ke-acc-xl);
-}
-.ke-radio-checked {
-  border-color:rgba(79,103,255,.4);
-  background:var(--ke-acc-xl);
-  color:var(--ke-accent);
-}
+
+/* color-tinted unchecked hover per warna kondisi */
+.ke-radio.cond-green:hover:not(.ke-radio-disabled)  { border-color:var(--cg-border); background:rgba(220,252,231,.45); }
+.ke-radio.cond-yellow:hover:not(.ke-radio-disabled) { border-color:var(--cy-border); background:rgba(254,249,195,.45); }
+.ke-radio.cond-orange:hover:not(.ke-radio-disabled) { border-color:var(--co-border); background:rgba(255,237,213,.45); }
+.ke-radio.cond-red:hover:not(.ke-radio-disabled)    { border-color:var(--cr-border); background:rgba(254,226,226,.45); }
+
+/* checked states per warna kondisi */
+.ke-radio.ke-radio-checked.cond-green  { border-color:var(--cg-border); background:var(--cg-bg); color:var(--cg-text); }
+.ke-radio.ke-radio-checked.cond-yellow { border-color:var(--cy-border); background:var(--cy-bg); color:var(--cy-text); }
+.ke-radio.ke-radio-checked.cond-orange { border-color:var(--co-border); background:var(--co-bg); color:var(--co-text); }
+.ke-radio.ke-radio-checked.cond-red    { border-color:var(--cr-border); background:var(--cr-bg); color:var(--cr-text); }
+
 .ke-radio-disabled { opacity:.55; cursor:not-allowed; }
 .ke-radio input[type="radio"] { display:none; }
+
+/* ── Radio default dot (putih/abu saat belum checked) ── */
 .ke-radio-dot {
   width:16px; height:16px; flex-shrink:0;
   border-radius:50%;
@@ -287,17 +441,29 @@ document.addEventListener('DOMContentLoaded', function () {
   transition:border-color .15s, background .15s;
   position:relative;
 }
-.ke-radio-checked .ke-radio-dot {
-  border-color:var(--ke-accent);
-  background:var(--ke-accent);
-}
+/* warna dot saat checked mengikuti kondisi */
+.ke-radio-checked.cond-green  .ke-radio-dot { border-color:var(--cg-dot); background:var(--cg-dot); }
+.ke-radio-checked.cond-yellow .ke-radio-dot { border-color:var(--cy-dot); background:var(--cy-dot); }
+.ke-radio-checked.cond-orange .ke-radio-dot { border-color:var(--co-dot); background:var(--co-dot); }
+.ke-radio-checked.cond-red    .ke-radio-dot { border-color:var(--cr-dot); background:var(--cr-dot); }
 .ke-radio-checked .ke-radio-dot::after {
-  content:'';
-  width:6px; height:6px;
-  border-radius:50%;
-  background:#fff;
-  position:absolute;
+  content:''; width:6px; height:6px;
+  border-radius:50%; background:#fff; position:absolute;
 }
+
+/* ── Small color indicator dot (always visible) ── */
+.ke-radio-color-dot {
+  width:10px; height:10px; flex-shrink:0;
+  border-radius:50%;
+  margin-left:auto;
+  opacity:.6;
+  transition:opacity .15s, transform .15s;
+}
+.ke-radio-checked .ke-radio-color-dot { opacity:1; transform:scale(1.2); }
+.cond-dot-green  { background:var(--cg-dot); }
+.cond-dot-yellow { background:var(--cy-dot); }
+.cond-dot-orange { background:var(--co-dot); }
+.cond-dot-red    { background:var(--cr-dot); }
 
 /* ── DIVIDER ── */
 .ke-divider { height:1px; background:var(--ke-border); margin:0 20px; }

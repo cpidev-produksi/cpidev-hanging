@@ -15,6 +15,10 @@ use App\Http\Controllers\Transaction\ReturMatiController;
 use App\Http\Controllers\Transaction\ReturMatiLandingController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -33,7 +37,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::middleware('supervisor')->prefix('master')->name('master.')->group(function () {
         Route::delete('expeditions/{expedition}', [ExpeditionController::class, 'destroy'])->name('expeditions.destroy');
         Route::delete('farms/{farm}', [FarmController::class, 'destroy'])->name('farms.destroy');
-        Route::resource('users', UserController::class); // user management supervisor only
+        Route::resource('users', UserController::class);
     });
 
     // Monitor Controls (Operator TS)
@@ -53,7 +57,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/hanging', [HangingLandingController::class, 'index'])->name('hanging.landing');
         Route::post('/hanging/open/{monitorControl}', [HangingLandingController::class, 'open'])->name('hanging.open');
         Route::post('/hanging/start/{hangingForm}', [HangingLandingController::class, 'start'])->name('hanging.start');
-
         Route::get('hanging-forms/{hangingForm}', [HangingFormController::class, 'show'])->name('hanging-forms.show');
         Route::post('hanging-forms/{hangingForm}/finish', [HangingFormController::class, 'finish'])->name('hanging-forms.finish');
         Route::patch('hanging-cells/{hangingLineSet}', [HangingFormController::class, 'updateCell'])->name('hanging-cells.update');

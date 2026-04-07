@@ -107,7 +107,7 @@
             {{-- Kota --}}
             <div class="form-group">
                 <label class="form-label" for="city">
-                    Kabupaten / Kota
+                    Depo
                     <span class="required">*</span>
                 </label>
                 <div class="input-wrapper @error('city') has-error @enderror">

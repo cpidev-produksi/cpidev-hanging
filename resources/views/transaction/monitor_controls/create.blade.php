@@ -149,13 +149,8 @@
             {{-- Farm --}}
             <div class="form-group">
                 <label class="form-label" for="farm_id">Farm <span class="required">*</span></label>
-                <div class="input-wrapper @error('farm_id') has-error @enderror">
-                    <div class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 21h18"/><path d="M5 21V9l7-4 7 4v12"/><path d="M9 21v-6h6v6"/>
-                        </svg>
-                    </div>
-                    <select id="farm_id" name="farm_id" class="form-input select2-farm">
+                <div class="@error('farm_id') has-error @enderror">
+                    <select id="farm_id" name="farm_id" class="form-input">
                         <option value="">— Cari atau Pilih Farm —</option>
                         @foreach($farms as $f)
                             <option value="{{ $f->id }}" @selected(old('farm_id') == $f->id)>
@@ -170,13 +165,8 @@
             {{-- Ekspedisi dengan Select2 --}}
             <div class="form-group full-width">
                 <label class="form-label" for="expedition_id">Ekspedisi <span class="required">*</span></label>
-                <div class="input-wrapper @error('expedition_id') has-error @enderror">
-                    <div class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>
-                        </svg>
-                    </div>
-                    <select id="expedition_id" name="expedition_id" class="form-input select2-expedition">
+                <div class="@error('expedition_id') has-error @enderror">
+                    <select id="expedition_id" name="expedition_id" class="form-input">
                         <option value="">— Cari atau Pilih Ekspedisi —</option>
                         @foreach($expeditions as $e)
                             <option value="{{ $e->id }}" @selected(old('expedition_id') == $e->id)>
@@ -191,13 +181,8 @@
 
                 {{-- No Polisi dengan Select2 --}}
                 <label class="form-label" for="plate_number_id">No Polisi <span class="required">*</span></label>
-                <div class="input-wrapper @error('plate_number_id') has-error @enderror">
-                    <div class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-                        </svg>
-                    </div>
-                    <select id="plate_number_id" name="plate_number_id" class="form-input select2-plate">
+                <div class="@error('plate_number_id') has-error @enderror">
+                    <select id="plate_number_id" name="plate_number_id" class="form-input">
                         <option value="">— Pilih No Polisi —</option>
                         @foreach($expeditions as $e)
                             @foreach($e->plateNumbers as $pn)
@@ -326,131 +311,172 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-    // Inisialisasi Select2 untuk Farm
-    if ($('#farm_id').length) {
-        $('#farm_id').select2({
-            placeholder: "Cari nama farm...",
-            allowClear: true,
-            width: '100%',
-            theme: 'default'
+$(document).ready(function () {
+
+    const SELECT2_COMMON = {
+        allowClear: true,
+        width: '100%',
+        minimumResultsForSearch: 0,   // search box selalu tampil
+    };
+
+    // ── Farm ──
+    $('#farm_id').select2($.extend({}, SELECT2_COMMON, {
+        placeholder: 'Cari nama farm...',
+        language: { noResults: () => 'Farm tidak ditemukan' }
+    }));
+
+    // ── Ekspedisi ──
+    $('#expedition_id').select2($.extend({}, SELECT2_COMMON, {
+        placeholder: 'Cari nama ekspedisi...',
+        language: { noResults: () => 'Ekspedisi tidak ditemukan' }
+    }));
+
+    // ── No Polisi ──
+    // Simpan semua option SEBELUM Select2 diinit (DOM masih bersih)
+    const $plate = $('#plate_number_id');
+
+    // Ambil data langsung dari atribut HTML menggunakan attr(), bukan data()
+    const allPlateData = [];
+    $plate.find('option').each(function () {
+        allPlateData.push({
+            value: $(this).val(),
+            text:  $(this).text(),
+            expId: $(this).attr('data-expedition') || ''
         });
-    }
-
-    // Inisialisasi Select2 untuk Ekspedisi
-    $('#expedition_id').select2({
-        placeholder: "Cari nama ekspedisi...",
-        allowClear: true,
-        width: '100%',
-        theme: 'default',
-        language: {
-            noResults: function() {
-                return "Tidak ada ekspedisi ditemukan";
-            }
-        }
     });
 
-    // Inisialisasi Select2 untuk No Polisi
-    $('#plate_number_id').select2({
-        placeholder: "Cari nomor polisi...",
-        allowClear: true,
-        width: '100%',
-        theme: 'default',
-        language: {
-            noResults: function() {
-                return "Tidak ada nomor polisi ditemukan";
+    $plate.select2($.extend({}, SELECT2_COMMON, {
+        placeholder: 'Cari nomor polisi...',
+        language: { noResults: () => 'No polisi tidak ditemukan' }
+    }));
+
+    function filterPlateByExpedition(restoreVal) {
+        const eid = String($('#expedition_id').val() || '');
+
+        // Rebuild <option> list dari data asli
+        $plate.empty();
+        allPlateData.forEach(function (d) {
+            // Selalu tampilkan placeholder (value kosong)
+            if (d.value === '') {
+                $plate.append(new Option(d.text, d.value, false, false));
+                return;
             }
-        }
-    });
+            // Tampilkan hanya yang cocok dengan ekspedisi (atau semua jika ekspedisi belum dipilih)
+            if (!eid || d.expId === eid) {
+                $plate.append(new Option(d.text, d.value, false, false));
+            }
+        });
 
-    const $plateSelect = $('#plate_number_id');
-    const originalPlateOptions = $plateSelect.html();
-    $plateSelect.data('original-options', originalPlateOptions);
-
-    // Function untuk filter plate berdasarkan ekspedisi
-    function filterPlateByExpedition() {
-        const expeditionId = $('#expedition_id').val();
-        
-        if (!expeditionId) {
-            // Jika tidak ada ekspedisi dipilih, tampilkan semua option
-            $plateSelect.html($plateSelect.data('original-options'));
+        // Restore nilai jika masih ada di list
+        if (restoreVal && $plate.find('option[value="' + restoreVal + '"]').length) {
+            $plate.val(restoreVal);
         } else {
-            // Filter option berdasarkan data-expedition
-            const $originalOptions = $($plateSelect.data('original-options'));
-            const $filteredOptions = $originalOptions.filter(function() {
-                const $option = $(this);
-                const optionExpId = $option.data('expedition');
-                // Ambil option placeholder (value kosong) dan option yang sesuai dengan ekspedisi
-                return $option.val() === '' || optionExpId == expeditionId;
-            });
-            
-            $plateSelect.html($filteredOptions);
+            $plate.val('');
         }
-        
-        // Reset nilai yang dipilih jika tidak sesuai
-        const currentVal = $plateSelect.val();
-        if (currentVal) {
-            const selectedOption = $plateSelect.find(`option[value="${currentVal}"]`);
-            if (selectedOption.length === 0 || selectedOption.css('display') === 'none') {
-                $plateSelect.val('').trigger('change');
-            }
-        }
-        
-        // Refresh Select2
-        $plateSelect.trigger('change.select2');
+
+        $plate.trigger('change.select2');
     }
 
-    // Event listener untuk perubahan ekspedisi
-    $('#expedition_id').on('change', function() {
-        filterPlateByExpedition();
+    $('#expedition_id').on('change', function () {
+        filterPlateByExpedition(''); // ganti ekspedisi → reset plate
     });
 
-    // Panggil filter saat halaman load (untuk old value)
-    filterPlateByExpedition();
+    // Load awal: filter sesuai ekspedisi, lalu restore old() value
+    const oldPlate = "{{ old('plate_number_id') }}";
+    filterPlateByExpedition(oldPlate);
 });
 </script>
 
 <style>
-    .select2-container--default .select2-selection--single {
-        border: 1.5px solid #E2E5EE;
-        border-radius: 10px;
-        height: 44px;
-        padding: 5px;
-        background: #FAFBFD;
-    }
+/* ── Select2 custom theme ── */
+.select2-container { width: 100% !important; }
 
-    .select2-container--default .select2-selection--single:focus {
-        border-color: #E85D2F;
-    }
+.select2-container--default .select2-selection--single {
+    height: 44px;
+    border: 1.5px solid #E2E5EE;
+    border-radius: 10px;
+    background: #FAFBFD;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    transition: border-color .2s, box-shadow .2s;
+}
+.select2-container--default.select2-container--open .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #E85D2F;
+    box-shadow: 0 0 0 3px rgba(232,93,47,.12);
+    outline: none;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #0D1117;
+    line-height: 44px;
+    padding: 0;
+    font-size: 14px;
+}
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #9CA3AF;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 42px;
+    right: 10px;
+}
+.select2-container--default .select2-selection--single .select2-selection__clear {
+    margin-right: 6px;
+    color: #9CA3AF;
+    font-size: 16px;
+}
 
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 32px;
-        color: #0D1117;
-    }
+/* Dropdown */
+.select2-dropdown {
+    border: 1.5px solid #E2E5EE;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    overflow: hidden;
+    margin-top: 4px;
+}
+.select2-search--dropdown {
+    padding: 10px;
+    border-bottom: 1px solid #F1F3F9;
+}
+.select2-search--dropdown .select2-search__field {
+    border: 1.5px solid #E2E5EE !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-size: 13px;
+    transition: border-color .2s, box-shadow .2s;
+    width: 100%;
+}
+.select2-search--dropdown .select2-search__field:focus {
+    border-color: #E85D2F !important;
+    box-shadow: 0 0 0 3px rgba(232,93,47,.1) !important;
+    outline: none !important;
+}
+.select2-results__option {
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: #374151;
+    transition: background .15s;
+}
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: #E85D2F;
+    color: #fff;
+}
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background: #FEF0EB;
+    color: #E85D2F;
+    font-weight: 600;
+}
+.select2-results__options {
+    max-height: 240px;
+    overflow-y: auto;
+}
 
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 42px;
-    }
+/* Error state */
+.has-error .select2-container--default .select2-selection--single {
+    border-color: #EF4444;
+}
 
-    .select2-dropdown {
-        border-color: #E2E5EE;
-        border-radius: 10px;
-    }
-
-    .select2-container--default .select2-results__option--highlighted[aria-selected] {
-        background-color: #E85D2F;
-    }
-
-    .select2-search__field {
-        border: 1.5px solid #E2E5EE !important;
-        border-radius: 8px !important;
-        padding: 8px !important;
-    }
-
-    .select2-search__field:focus {
-        border-color: #E85D2F !important;
-        outline: none !important;
-    }
-    .field-hint{font-size:.74rem;color:#9CA3AF;margin-top:6px;font-weight:600}
+/* Misc */
+.field-hint { font-size: .74rem; color: #9CA3AF; margin-top: 6px; font-weight: 600; }
 </style>
 @endsection

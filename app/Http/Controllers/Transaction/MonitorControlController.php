@@ -86,8 +86,6 @@ class MonitorControlController extends Controller
             'truck_arrival_time.date_format' => 'Format jam truk datang harus HH:MM.',
         ]);
 
-        // $data['farm_fee_amount'] = $data['total_chicken'] ?? 0;
-
         // plate number harus milik ekspedisi tsb
         $ok = PlateNumber::query()
             ->where('id', $data['plate_number_id'])
@@ -191,8 +189,6 @@ class MonitorControlController extends Controller
                 ->withInput();
         }
 
-        // Kalau user ganti tanggal/lokasi via edit (lokasi tidak ada di form Anda saat ini),
-        // truck_no tetap (karena no urut di hari itu). Untuk MVP: kita biarkan.
         $monitorControl->update($data);
 
         return redirect()->route('monitor-controls.index')->with('status', 'Kontrol monitor diupdate.');

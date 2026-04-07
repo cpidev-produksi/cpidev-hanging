@@ -1,6 +1,40 @@
 @extends('layouts.app')
 
 @section('content')
+
+@php
+/**
+ * ── HELPER: warna kondisi ─────────────────────────────────────────
+ * Konsisten dengan edit.blade.php dan summary_pdf.blade.php
+ *   'green'  → Kering / Bak Kering
+ *   'yellow' → Basah / Medium Basah
+ *   'orange' → Bak berisi air / Benda lain-lain
+ *   'red'    → Sangat Basah
+ */
+$condColor = function(?string $val): string {
+    return match($val) {
+        'kering', 'bak_kering'              => 'green',
+        'basah', 'medium_basah'             => 'yellow',
+        'bak_berisi_air', 'benda_lain'      => 'orange',
+        'sangat_basah'                      => 'red',
+        default                             => 'neutral',
+    };
+};
+
+$condLabel = function(?string $val): string {
+    return match($val) {
+        'sangat_basah'  => 'Sangat Basah',
+        'medium_basah'  => 'Medium Basah',
+        'basah'         => 'Basah',
+        'kering'        => 'Kering',
+        'bak_berisi_air'=> 'Bak berisi air',
+        'bak_kering'    => 'Bak kering',
+        'benda_lain'    => 'Benda lain-lain',
+        default         => $val ?? '—',
+    };
+};
+@endphp
+
 <div class="sum-page">
 
   {{-- ══ HEADER ══ --}}
@@ -193,36 +227,114 @@
         </div>
       </div>
 
-      {{-- QC Kondisi --}}
+      {{-- ══ QC Kondisi ══ --}}
+      @php
+        /**
+         * condLevel: urutan level dari terbaik (1) ke terburuk (4)
+         * Dipakai untuk menentukan blok mana yang "aktif" dan ukurannya
+         *   1 = green   (kering / bak_kering)
+         *   2 = yellow  (basah / medium_basah)
+         *   3 = orange  (bak_berisi_air / benda_lain)
+         *   4 = red     (sangat_basah)
+         */
+        $condLevel = function(?string $val): int {
+            return match($val) {
+                'kering', 'bak_kering'         => 1,
+                'basah', 'medium_basah'        => 2,
+                'bak_berisi_air', 'benda_lain' => 3,
+                'sangat_basah'                 => 4,
+                default                        => 0,
+            };
+        };
+
+        $bc = $form->basket_condition;
+        $tc = $form->truck_platform_condition;
+        $fc = $form->feather_condition;
+      @endphp
+
       <div class="sum-card">
         <div class="sum-card-head qc">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
           QC Kondisi
         </div>
+
         <div class="sum-qc-row">
-          <div class="sum-qc-item">
-            <div class="sum-qc-label">Keranjang</div>
-            <div class="sum-qc-val">{{ $form->basket_condition }}</div>
-          </div>
-          <div class="sum-qc-item">
-            <div class="sum-qc-label">Platform Truck</div>
-            <div class="sum-qc-val">{{ $form->truck_platform_condition }}</div>
-          </div>
-          <div class="sum-qc-item">
-            <div class="sum-qc-label">Bulu Ayam</div>
-            <div class="sum-qc-val">{{ $form->feather_condition }}</div>
-          </div>
+
+          {{-- ── Macro: satu QC card dengan segmented bar ── --}}
+          @foreach([
+            ['label' => 'Keranjang',      'val' => $bc],
+            ['label' => 'Platform Truck', 'val' => $tc],
+            ['label' => 'Bulu Ayam',      'val' => $fc],
+          ] as $qc)
+            @php
+              $lv    = $condLevel($qc['val']);
+              $lbl   = $condLabel($qc['val']);
+              $color = $condColor($qc['val']);
+
+              // warna teks nilai sesuai level
+              $valColor = match($color) {
+                'green'  => '#166534',
+                'yellow' => '#854D0E',
+                'orange' => '#9A3412',
+                'red'    => '#991B1B',
+                default  => '#6B7280',
+              };
+
+              // border bawah card sesuai kondisi aktif
+              $cardBorder = match($color) {
+                'green'  => '#86EFAC',
+                'yellow' => '#FDE047',
+                'orange' => '#FDBA74',
+                'red'    => '#FCA5A5',
+                default  => '#E5E7EB',
+              };
+
+              // 4 segmen: [warna, ukuran-saat-inaktif, ukuran-saat-aktif]
+              $segments = [
+                1 => ['#22C55E', 10, 22],
+                2 => ['#EAB308', 10, 22],
+                3 => ['#F97316', 10, 22],
+                4 => ['#EF4444', 10, 22],
+              ];
+            @endphp
+
+            <div class="sum-qc-card" style="border-bottom-color:{{ $cardBorder }}">
+              <div class="sum-qc-card-label">{{ $qc['label'] }}</div>
+
+              {{-- Segmented bar --}}
+              <div class="sum-qc-bar">
+                @for($i = 1; $i <= 4; $i++)
+                  @php
+                    $seg     = $segments[$i];
+                    $isActive = ($lv === $i);
+                    $isPast   = ($lv > 0 && $i < $lv);   // sudah terlewati
+                    $h        = $isActive ? $seg[2] : ($isPast ? 14 : $seg[1]);
+                    $opacity  = $isActive ? 1 : ($isPast ? 0.45 : 0.18);
+                    $radius   = $isActive ? '6px' : '4px';
+                  @endphp
+                  <div class="sum-qc-seg {{ $isActive ? 'is-active' : '' }}"
+                       style="
+                         background: {{ $seg[0] }};
+                         height: {{ $h }}px;
+                         opacity: {{ $opacity }};
+                         border-radius: {{ $radius }};
+                         {{ $isActive ? 'box-shadow: 0 2px 8px '.($seg[0]).'88;' : '' }}
+                       "></div>
+                @endfor
+              </div>
+
+              {{-- Nilai teks --}}
+              <div class="sum-qc-card-val" style="color:{{ $valColor }}">
+                {{ $lbl }}
+              </div>
+            </div>
+          @endforeach
+
         </div>
       </div>
 
     </div>{{-- /col-right --}}
   </div>{{-- /grid --}}
-
-  {{-- ══ SIGNATURE ══ --}}
-  {{-- <div class="sum-sig">
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    Dibuat oleh: <strong>{{ $createdBy }}</strong>
-  </div> --}}
 
   {{-- ══ SUPERVISOR SIGNATURE ══ --}}
   <div class="sum-card" style="margin-top:14px">
@@ -293,7 +405,6 @@
     const r = canvas.getBoundingClientRect();
     const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
     const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
-    // scale for CSS size vs actual size
     return {
       x: x * (canvas.width / r.width),
       y: y * (canvas.height / r.height),
@@ -326,6 +437,15 @@
 </script>
 
 <style>
+/* ── CONDITION COLOR TOKENS ─────────────────────────────────── */
+:root {
+  --cg-bg:     #DCFCE7; --cg-border: #86EFAC; --cg-text: #166534; --cg-dot: #22C55E;
+  --cy-bg:     #FEF9C3; --cy-border: #FDE047; --cy-text: #854D0E; --cy-dot: #EAB308;
+  --co-bg:     #FFEDD5; --co-border: #FDBA74; --co-text: #9A3412; --co-dot: #F97316;
+  --cr-bg:     #FEE2E2; --cr-border: #FCA5A5; --cr-text: #991B1B; --cr-dot: #EF4444;
+  --cn-bg:     #F3F4F6; --cn-border: #D1D5DB; --cn-text: #6B7280; --cn-dot: #9CA3AF;
+}
+
 /* ── PAGE ── */
 .sum-page { max-width: 1120px; margin: 0 auto; padding: 24px 18px 32px; }
 
@@ -338,8 +458,7 @@
 .sum-icon {
   width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
   background: linear-gradient(135deg, #064e3b, #059669);
-  display: flex; align-items: center; justify-content: center;
-  color: #fff;
+  display: flex; align-items: center; justify-content: center; color: #fff;
 }
 .sum-icon svg { width: 22px; height: 22px; }
 .sum-title { font-size: 1.3rem; font-weight: 900; margin: 0 0 5px; color: #111827; }
@@ -371,7 +490,7 @@
   padding: 9px 16px; border-radius: 10px; text-decoration: none;
   font-size: .82rem; font-weight: 800;
   background: linear-gradient(135deg, #059669 0%, #0ea5a0 100%);
-  color: #fff;
+  color: #fff; border: none;
   box-shadow: 0 2px 8px rgba(5,150,105,.3);
   transition: transform .13s, box-shadow .15s, filter .15s;
 }
@@ -384,28 +503,24 @@
   display: inline-flex; align-items: center; gap: 6px;
   padding: 9px 16px; border-radius: 10px; text-decoration: none;
   font-size: .82rem; font-weight: 800;
-  background: #fff; color: #6B7280;
+  background: #fff; color: #6B7280; border: none;
   border: 1.5px solid #E5E7EB;
-  transition: border-color .15s, color .15s, background .15s;
+  transition: border-color .15s, color .15s, background .15s; cursor:pointer;
 }
 .sum-btn-back:hover { border-color: #9CA3AF; color: #374151; background: #F9FAFB; }
 
 /* ── GRID ── */
 .sum-grid {
-  display: grid;
-  grid-template-columns: 1.1fr .9fr;
-  gap: 14px;
-  align-items: start;
+  display: grid; grid-template-columns: 1.1fr .9fr;
+  gap: 14px; align-items: start;
 }
 @media (max-width: 900px) { .sum-grid { grid-template-columns: 1fr; } }
 .sum-col-right { display: flex; flex-direction: column; gap: 14px; }
 
 /* ── CARD ── */
 .sum-card {
-  background: #fff;
-  border: 1px solid #E8EAF0;
-  border-radius: 16px;
-  padding: 16px;
+  background: #fff; border: 1px solid #E8EAF0;
+  border-radius: 16px; padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
 
@@ -414,12 +529,11 @@
   display: flex; align-items: center; gap: 7px;
   font-size: .8rem; font-weight: 900; letter-spacing: .05em;
   text-transform: uppercase; color: #059669;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
+  margin-bottom: 12px; padding-bottom: 10px;
   border-bottom: 1.5px solid #D1FAE5;
 }
 .sum-card-head.retur { color: #DC2626; border-bottom-color: #FEE2E2; }
-.sum-card-head.qc { color: #7C3AED; border-bottom-color: #EDE9FE; }
+.sum-card-head.qc    { color: #7C3AED; border-bottom-color: #EDE9FE; }
 
 /* ── KV ROWS ── */
 .sum-kv-group { display: flex; flex-direction: column; gap: 0; }
@@ -438,42 +552,69 @@
 .sum-divider { height: 1px; background: #F3F4F6; margin: 12px 0; }
 
 /* ── STATS ROW ── */
-.sum-stats-row {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-}
+.sum-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .sum-stat {
-  background: #F0FDF7;
-  border: 1px solid #D1FAE5;
-  border-radius: 10px;
-  padding: 10px 8px;
-  text-align: center;
+  background: #F0FDF7; border: 1px solid #D1FAE5;
+  border-radius: 10px; padding: 10px 8px; text-align: center;
 }
 .sum-stat-val { font-size: 1.15rem; font-weight: 900; color: #065F46; line-height: 1.1; }
 .sum-stat-label { font-size: .68rem; font-weight: 800; color: #6B7280; margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
 
 /* ── RETUR ROW ── */
 .sum-retur-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.sum-retur-item {
-  border-radius: 10px; padding: 10px 8px; text-align: center;
-  border: 1px solid;
-}
-.sum-retur-item.dead { background: #FFF1F2; border-color: #FECDD3; }
+.sum-retur-item { border-radius: 10px; padding: 10px 8px; text-align: center; border: 1px solid; }
+.sum-retur-item.dead  { background: #FFF1F2; border-color: #FECDD3; }
 .sum-retur-item.retur { background: #FFFBEB; border-color: #FDE68A; }
-.sum-retur-item.kg { background: #F0F9FF; border-color: #BAE6FD; }
+.sum-retur-item.kg    { background: #F0F9FF; border-color: #BAE6FD; }
 .sum-retur-val { font-size: 1.1rem; font-weight: 900; }
-.sum-retur-item.dead .sum-retur-val { color: #B91C1C; }
+.sum-retur-item.dead  .sum-retur-val { color: #B91C1C; }
 .sum-retur-item.retur .sum-retur-val { color: #92400E; }
-.sum-retur-item.kg .sum-retur-val { color: #0369A1; }
+.sum-retur-item.kg    .sum-retur-val { color: #0369A1; }
 .sum-retur-label { font-size: .67rem; font-weight: 800; color: #6B7280; margin-top: 3px; text-transform: uppercase; letter-spacing: .04em; }
 
-/* ── QC ROW ── */
-.sum-qc-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.sum-qc-item {
-  background: #F5F3FF; border: 1px solid #DDD6FE;
-  border-radius: 10px; padding: 10px 8px; text-align: center;
+/* ══ QC KONDISI — SEGMENTED BAR ══ */
+.sum-qc-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
 }
-.sum-qc-label { font-size: .67rem; font-weight: 800; color: #6B7280; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
-.sum-qc-val { font-size: .88rem; font-weight: 900; color: #6D28D9; }
+.sum-qc-card {
+  background: #fff;
+  border: 1.5px solid #E8EAF0;
+  border-bottom-width: 3px;
+  border-radius: 14px;
+  padding: 12px 10px 10px;
+  text-align: center;
+  transition: transform .15s, box-shadow .15s;
+}
+.sum-qc-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.07); }
+
+.sum-qc-card-label {
+  font-size: .67rem; font-weight: 800;
+  color: #9CA3AF; text-transform: uppercase;
+  letter-spacing: .07em; margin-bottom: 10px;
+}
+
+/* bar wrapper: semua segmen disejajarkan bawah (align-items: flex-end) */
+.sum-qc-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+  margin-bottom: 10px;
+}
+.sum-qc-seg {
+  width: 22px;
+  flex-shrink: 0;
+  transition: height .2s ease, opacity .2s ease;
+}
+.sum-qc-seg.is-active {
+  transition: height .25s cubic-bezier(.34,1.56,.64,1), opacity .2s;
+}
+
+.sum-qc-card-val {
+  font-size: .88rem; font-weight: 900;
+  line-height: 1.15;
+}
 
 /* ── SIGNATURE ── */
 .sum-sig {
