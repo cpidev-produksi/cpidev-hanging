@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Super Admin',
                 'email' => 'superadmin@example.com',
-                'password' => Hash::make('superadmin123'),
+                'password' => Hash::make('qwerty123'),
                 'role_id' => $role?->id,
             ]
         );
