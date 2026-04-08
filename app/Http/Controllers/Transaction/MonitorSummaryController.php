@@ -97,8 +97,8 @@ class MonitorSummaryController extends Controller
     public function pdf(Request $request, MonitorControl $monitorControl)
     {
         $this->assertComplete($monitorControl);
-        $this->assertSigned($monitorControl);
-        $this->assertComplete($monitorControl);
+        // $this->assertSigned($monitorControl);
+        // $this->assertComplete($monitorControl);
 
         $form = $monitorControl->hangingForm;
         $sets = $form->lines->flatMap->sets;
@@ -119,7 +119,7 @@ class MonitorSummaryController extends Controller
             'createdBy' => $createdBy,
         ])->setPaper('A4', 'portrait');
 
-        $filename = 'rekap-' . $monitorControl->report_code . '.pdf';
+        $filename = 'Laporan-' . $monitorControl->report_code . '.pdf';
         return $pdf->download($filename);
     }
 }

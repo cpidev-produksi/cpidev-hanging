@@ -1,5 +1,20 @@
 @php
-  /** @var \Illuminate\Support\Collection $list */
+  // $listActive = $list->filter(fn($x) => ($x->hangingForm?->status ?? '') !== 'done')
+  //                    ->sortBy('truck_no')
+  //                    ->values();
+
+  // $listDone = $list->filter(fn($x) => ($x->hangingForm?->status ?? '') === 'done')
+  //                  ->sortBy('truck_no')
+  //                  ->values();
+  $activeRows = $list->filter(fn($x) => ($x->hangingForm?->status ?? '') !== 'done')
+                     ->sortBy('truck_no')
+                     ->values();
+
+  $doneRows = $list->filter(fn($x) => ($x->hangingForm?->status ?? '') === 'done')
+                   ->sortBy('truck_no')
+                   ->values();
+
+  $key = $location;
 @endphp
 
 <div class="lst-card">
@@ -18,7 +33,7 @@
   </div>
 
   <div class="lst-body">
-    @if($list->isEmpty())
+    @if($activeRows->isEmpty() && $doneRows->isEmpty())
       <div class="lst-empty">
         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
@@ -28,7 +43,7 @@
       </div>
     @else
       <div class="lst-grid">
-        @foreach($list as $it)
+        @foreach($activeRows as $it)
           @php
             $hf       = $it->hangingForm;
             $hfStatus = $hf?->status;
@@ -125,8 +140,24 @@
               @endif
             </div>
           </div>
+              @include('transaction.hanging_landing.partials.list_row', [
+            'it' => $it,
+            'hf' => $hf,
+            'hfStatus' => $hfStatus
+          ])
         @endforeach
       </div>
+
+        {{-- @include('transaction.hanging_landing.partials.list_active', [
+        'location' => $location,
+        'list'     => $listActive,
+      ]) --}}
+
+      {{-- LIST DONE --}}
+      @include('transaction.hanging_landing.partials.list_done', [
+        'rows' => $doneRows,
+        'key'  => $key
+      ])
     @endif
   </div>
 </div>

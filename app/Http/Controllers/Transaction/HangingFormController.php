@@ -10,6 +10,16 @@ use Illuminate\Support\Facades\DB;
 
 class HangingFormController extends Controller
 {
+    protected function getMaxCapacity(string $location, int $lineNo): int
+    {
+        $custom = [
+            'SH01' => [17 => 46],
+            'SH02' => [30 => 19],
+        ];
+
+        return $custom[$location][$lineNo] ?? 50;
+    }
+
     public function show(HangingForm $hangingForm)
     {
         $hangingForm->load([
@@ -19,29 +29,52 @@ class HangingFormController extends Controller
             'lines.sets',
         ]);
 
-        $allSets = $hangingForm->lines->flatMap->sets;
-        $deadCount = (int) ($hangingForm->dead_count ?? 0);
+        $location   = $hangingForm->monitorControl?->location ?? '';
+        $deadCount  = (int) ($hangingForm->dead_count ?? 0);
+        $returCount = (int) ($hangingForm->retur_count ?? 0);
 
-        $totalAyamShackle = (int) $allSets->sum(function ($s) {
-            if ($s->empty_count === null) return 0;
-            return 50 - (int)$s->empty_count;
-        });
+        $totalKosong = 0;
+        $totalAyamShackle = 0;
+        $fullBlockCount = 0;
 
-        $totalAyamBersih = max(0, $totalAyamShackle - $deadCount);
+        foreach ($hangingForm->lines as $line) {
+            $cap = $this->getMaxCapacity($location, (int) $line->line_no);
 
-        $totalKosong = (int) $allSets->sum(fn ($s) => (int) ($s->empty_count ?? 0));
+            foreach ($line->sets as $set) {
+                if ($set->empty_count === null) {
+                    continue;
+                }
+                $empty = (int) $set->empty_count;
+
+                $totalKosong += $empty;
+                $totalAyamShackle += ($cap - $empty);
+
+                if ($empty === 0) {
+                    $fullBlockCount++;
+                }
+            }
+        }
+
+        $totalAyamBersih = max(0, $totalAyamShackle - $deadCount - $returCount);
+
+        $totalChickenMC = (int) ($hangingForm->monitorControl?->total_chicken ?? 0);
+        $selisihAyam    = $totalChickenMC - $totalAyamBersih;
 
         return view('transaction.hanging_forms.show', [
-            'form' => $hangingForm,
-            'totalKosong' => $totalKosong,
-            'totalAyam' => $totalAyamBersih,
-            'ayamMati' => $deadCount,
+            'form'         => $hangingForm,
+            'totalKosong'  => $totalKosong,
+            'totalAyam'    => $totalAyamBersih,
+            'ayamMati'     => $deadCount,
+            'ayamRetur'    => $returCount,
+            'selisihAyam'  => $selisihAyam,
+            'totalChicken' => $totalChickenMC,
+            'fullBlockCount' => $fullBlockCount,
         ]);
     }
 
     public function updateCell(Request $request, HangingLineSet $hangingLineSet)
     {
-        $hangingLineSet->load('line.form');
+        $hangingLineSet->load('line.form.monitorControl');
 
         if (($hangingLineSet->line?->form?->status ?? null) === 'done') {
             return response()->json([
@@ -50,8 +83,12 @@ class HangingFormController extends Controller
             ], 422);
         }
 
+        $location = $hangingLineSet->line?->form?->monitorControl?->location ?? '';
+        $lineNo   = (int) ($hangingLineSet->line?->line_no ?? 0);
+        $maxCap   = $this->getMaxCapacity($location, $lineNo);
+
         $data = $request->validate([
-            'empty_count' => ['nullable','integer','min:0','max:50'],
+            'empty_count' => ['nullable','integer','min:0','max:' . $maxCap],
         ]);
 
         $hangingLineSet->update([
@@ -60,12 +97,13 @@ class HangingFormController extends Controller
 
         $ayam = ($hangingLineSet->empty_count === null)
             ? 0
-            : 50 - (int) $hangingLineSet->empty_count;
+            : $maxCap - (int) $hangingLineSet->empty_count;
 
         return response()->json([
             'ok' => true,
             'empty_count' => $hangingLineSet->empty_count,
             'ayam' => $ayam,
+            'max' => $maxCap,
         ]);
     }
 

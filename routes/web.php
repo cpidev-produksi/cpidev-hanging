@@ -23,6 +23,9 @@ Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::get('monitor/{location}', [LiveMonitorController::class, 'show'])->name('monitor.show');
+Route::get('monitor/{location}/data', [LiveMonitorController::class, 'data'])->name('monitor.data');
+
 Route::middleware(['auth', 'nocache'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -42,6 +45,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // Monitor Controls (Operator TS)
     Route::middleware('role:operator_ts')->group(function () {
+        Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])->name('monitor-controls.summary');
         Route::resource('monitor-controls', MonitorControlController::class)->except(['destroy','show']);
         Route::post('monitor-controls/{monitorControl}/start', [MonitorControlController::class, 'start'])->name('monitor-controls.start');
         Route::post('monitor-controls/{monitorControl}/move', [MonitorControlController::class, 'moveTruckNo'])->name('monitor-controls.move');
@@ -85,8 +89,4 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::delete('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'unsign'])->name('monitor-controls.summary.unsign');
         Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])->name('monitor-controls.summary.pdf');
     });
-
-    // Live monitor: Anda bisa biarkan semua role bisa lihat
-    Route::get('monitor/{location}', [LiveMonitorController::class, 'show'])->name('monitor.show');
-    Route::get('monitor/{location}/data', [LiveMonitorController::class, 'data'])->name('monitor.data');
 });

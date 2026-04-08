@@ -7,238 +7,279 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: DejaVu Sans, sans-serif;
-      font-size: 11px;
-      color: #1a1a2e;
+      font-size: 10.5px;
+      color: #111827;
       background: #fff;
-      padding: 0;
     }
 
-    /* ── KOP / HEADER ── */
+    /* ══ KOP ══ */
     .kop {
-      background: linear-gradient(135deg, #064e3b 0%, #065f46 60%, #047857 100%);
-      padding: 22px 28px 18px;
+      background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+      padding: 0;
       display: table;
       width: 100%;
     }
     .kop-inner { display: table-row; }
     .kop-logo-cell {
       display: table-cell; vertical-align: middle;
-      width: 72px; padding-right: 16px;
+      width: 76px; padding: 16px 0 16px 22px;
     }
     .kop-logo-cell img {
-      width: 60px; height: 60px; object-fit: contain;
-      border-radius: 10px; background: rgba(255,255,255,.12);
+      width: 48px; height: 48px; object-fit: contain;
+      border-radius: 10px;
+      background: rgba(255,255,255,.2);
       padding: 4px; display: block;
     }
-    .kop-text-cell { display: table-cell; vertical-align: middle; }
-    .kop-company {
-      font-size: 17px; font-weight: 700; color: #000000;
-      letter-spacing: .03em; line-height: 1.15;
+    .kop-text-cell {
+      display: table-cell; vertical-align: middle;
+      padding: 16px 0 16px 12px;
     }
-    .kop-tagline {
-      font-size: 9.5px; color: rgba(68,68,68,.65);
-      letter-spacing: .06em; text-transform: uppercase; margin-top: 2px;
-    }
+    .kop-company  { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.2; }
+    .kop-tagline  { font-size: 8px; color: rgba(255,255,255,.7); letter-spacing: .1em; text-transform: uppercase; margin-top: 2px; }
     .kop-right-cell {
-      display: table-cell; vertical-align: middle; text-align: right;
+      display: table-cell; vertical-align: middle;
+      text-align: right; padding: 16px 22px 16px 0;
     }
-    .kop-doc-label {
-      font-size: 8.5px; font-weight: 700; color: rgba(255,255,255,.55);
-      letter-spacing: .12em; text-transform: uppercase;
-    }
-    .kop-doc-title {
-      font-size: 19px; font-weight: 700; color: #ffffff;
-      letter-spacing: .01em; line-height: 1.1; margin-top: 2px;
-    }
+    .kop-doc-eyebrow { font-size: 7.5px; font-weight: 700; color: rgba(255,255,255,.65); letter-spacing: .15em; text-transform: uppercase; margin-bottom: 2px; }
+    .kop-doc-title   { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -.01em; line-height: 1; }
 
     /* accent bar */
     .kop-accent {
-      height: 4px;
-      background: linear-gradient(90deg, #10b981, #6ee7b7, #10b981);
+      height: 3px;
+      background: linear-gradient(90deg, #34d399, #6ee7b7, #a7f3d0);
     }
 
-    /* ── META STRIP ── */
+    /* ══ META STRIP ══ */
     .meta-strip {
-      background: #f0fdf7; border-bottom: 1px solid #d1fae5;
-      padding: 10px 28px; display: table; width: 100%;
+      background: #f0fdf4;
+      border-bottom: 1px solid #bbf7d0;
+      padding: 8px 22px;
+      display: table; width: 100%;
     }
-    .meta-item { display: table-cell; padding-right: 24px; vertical-align: middle; }
-    .meta-label {
-      font-size: 8px; font-weight: 700; color: #6b7280;
-      letter-spacing: .1em; text-transform: uppercase;
-    }
-    .meta-value { font-size: 11px; font-weight: 700; color: #064e3b; margin-top: 1px; }
+    .meta-item { display: table-cell; padding-right: 22px; vertical-align: middle; }
+    .meta-label { font-size: 7.5px; font-weight: 700; color: #6b7280; letter-spacing: .1em; text-transform: uppercase; }
+    .meta-value { font-size: 10.5px; font-weight: 700; color: #065f46; margin-top: 1px; }
     .meta-badge {
-      display: inline-block; background: #064e3b; color: #fff;
-      padding: 2px 9px; border-radius: 4px;
-      font-size: 10px; font-weight: 700; letter-spacing: .03em;
+      display: inline-block;
+      background: #059669; color: #fff;
+      padding: 2px 8px; border-radius: 4px;
+      font-size: 9.5px; font-weight: 700;
     }
 
-    /* ── BODY CONTENT ── */
-    .content { padding: 18px 28px 10px; }
+    /* ══ CONTENT ══ */
+    .content { padding: 16px 22px 10px; }
 
-    /* ── SECTION TITLE ── */
-    .section-title {
-      font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
-      text-transform: uppercase; color: #059669;
-      border-left: 3px solid #059669; padding-left: 7px;
+    /* ══ SECTION TITLE ══ */
+    .sec-title {
+      font-size: 8.5px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 4px 9px;
       margin-bottom: 7px; margin-top: 14px;
+      display: table; width: 100%;
+      border-radius: 0 4px 4px 0;
     }
-    .section-title:first-child { margin-top: 0; }
+    .sec-title:first-child { margin-top: 0; }
+    .sec-title-teal   { color: #0f766e; background: #f0fdfa; border-left: 3px solid #0d9488; }
+    .sec-title-slate  { color: #334155; background: #f8fafc; border-left: 3px solid #475569; }
 
-    /* ── TABLES ── */
+    /* ══ TABLES ══ */
     table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-    th, td { border: 1px solid #e5e7eb; padding: 6px 10px; vertical-align: top; font-size: 10.5px; }
-    th { background: #f9fafb; color: #374151; font-weight: 700; width: 38%; border-right-color: #d1fae5; }
+    th, td { border: 1px solid #e8ecf1; padding: 6px 10px; vertical-align: top; font-size: 10px; }
+    th { background: #f8fafc; color: #374151; font-weight: 700; width: 40%; border-right-color: #e2e8f0; }
     td { color: #111827; background: #fff; }
-    tr:nth-child(even) td { background: #fafffe; }
+    tr:nth-child(even) td { background: #fafbfc; }
     .td-num { font-weight: 700; color: #065f46; }
 
-    /* ── 2-COLUMN GRID ── */
-    .two-col { display: table; width: 100%; }
-    .col-l { display: table-cell; width: 50%; padding-right: 8px; vertical-align: top; }
-    .col-r { display: table-cell; width: 50%; padding-left: 8px; vertical-align: top; }
+    /* ══ TWO-COL ══ */
+    .two-col { display: table; width: 100%; border-collapse: collapse; }
+    .col-l   { display: table-cell; width: 50%; padding-right: 8px; vertical-align: top; }
+    .col-r   { display: table-cell; width: 50%; padding-left: 8px; vertical-align: top; }
 
-    /* ══════════════════════════════════════════════
-       QC KONDISI — COLOR-CODED BADGES
-       Skema warna:
-         green  → Kering / Bak Kering       (kondisi terbaik)
-         yellow → Basah / Medium Basah      (perlu perhatian)
-         orange → Bak berisi air / Benda lain (kurang baik)
-         red    → Sangat Basah              (buruk)
-    ══════════════════════════════════════════════ */
-
-    /* wrapper tabel QC */
-    .qc-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-    .qc-table td {
-      border: none; padding: 0 4px 0 0;
-      vertical-align: top; width: 33.33%;
+    /* ════════════════════════════════════════
+       ★ HIGHLIGHT 1 — Ringkasan Perhitungan
+    ════════════════════════════════════════ */
+    .hl-calc {
+      border: 1.5px solid #6ee7b7;
+      border-radius: 8px; overflow: hidden;
+      margin-bottom: 12px;
     }
-    .qc-table td:last-child { padding-right: 0; }
-
-    /* tiap item QC */
-    .qc-cell {
-      border-radius: 8px; border: 2px solid;
-      padding: 10px 8px 8px; text-align: center;
+    .hl-calc-head {
+      background: linear-gradient(90deg, #059669, #0d9488);
+      padding: 6px 12px; display: table; width: 100%;
     }
-    .qc-cell-label {
-      font-size: 7.5px; font-weight: 700; color: #6b7280;
-      text-transform: uppercase; letter-spacing: .08em;
-      margin-bottom: 6px;
-    }
-
-    /* ── segmented mini-bar (4 blok warna) ── */
-    .qc-bar {
-      display: table; margin: 0 auto 6px; border-collapse: separate;
-      border-spacing: 2px 0;
-    }
-    .qc-bar-seg {
+    .hl-calc-head-label {
       display: table-cell;
-      width: 14px; height: 8px;
-      border-radius: 3px;
+      font-size: 8.5px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: #fff;
     }
-    /* ukuran aktif lebih tinggi — simulasi via border-top */
-    .qc-bar-seg.active {
-      height: 16px; border-radius: 4px;
-      vertical-align: bottom;
-    }
-    .qc-bar-seg.past   { opacity: .45; }
-    .qc-bar-seg.future { opacity: .18; }
-
-    .seg-g { background: #22C55E; }
-    .seg-y { background: #EAB308; }
-    .seg-o { background: #F97316; }
-    .seg-r { background: #EF4444; }
-
-    .qc-dot-row {
-      text-align: center; margin-bottom: 5px;
-    }
-    .qc-dot {
-      display: inline-block;
-      width: 11px; height: 11px; border-radius: 50%;
-    }
-    .qc-cell-val {
-      font-size: 10px; font-weight: 700;
+    .hl-calc-head-sub {
+      display: table-cell; text-align: right;
+      font-size: 7.5px; color: rgba(255,255,255,.6);
     }
 
-    /* ── green ── */
-    .qc-green { background: #DCFCE7; border-color: #86EFAC; }
-    .qc-green .qc-dot  { background: #22C55E; }
-    .qc-green .qc-cell-val { color: #166534; }
+    .hl-row { display: table; width: 100%; border-bottom: 1px solid #d1fae5; }
+    .hl-row:last-child { border-bottom: none; }
+    .hl-row-total   { background: #ecfdf5; }
+    .hl-row-selisih { background: #fffbeb; }
 
-    /* ── yellow ── */
-    .qc-yellow { background: #FEF9C3; border-color: #FDE047; }
-    .qc-yellow .qc-dot  { background: #EAB308; }
-    .qc-yellow .qc-cell-val { color: #854D0E; }
-
-    /* ── orange ── */
-    .qc-orange { background: #FFEDD5; border-color: #FDBA74; }
-    .qc-orange .qc-dot  { background: #F97316; }
-    .qc-orange .qc-cell-val { color: #9A3412; }
-
-    /* ── red ── */
-    .qc-red { background: #FEE2E2; border-color: #FCA5A5; }
-    .qc-red .qc-dot  { background: #EF4444; }
-    .qc-red .qc-cell-val { color: #991B1B; }
-
-    /* ── neutral (belum diisi) ── */
-    .qc-neutral { background: #F3F4F6; border-color: #D1D5DB; }
-    .qc-neutral .qc-dot  { background: #9CA3AF; }
-    .qc-neutral .qc-cell-val { color: #6B7280; }
-
-    /* QC Legend */
-    .qc-legend {
-      display: table; width: 100%;
-      margin-bottom: 6px;
-    }
-    .qc-legend-cell {
-      display: table-cell; padding-right: 8px;
+    .hl-key {
+      display: table-cell; padding: 6px 12px;
+      width: 56%; font-size: 10px; font-weight: 500;
+      color: #374151; border-right: 1px solid #d1fae5;
       vertical-align: middle;
     }
-    .qc-legend-item {
-      display: inline-block;
-      border-radius: 4px; border: 1px solid;
-      padding: 1px 6px; font-size: 7.5px; font-weight: 700;
+    .hl-val {
+      display: table-cell; padding: 6px 12px;
+      font-size: 10px; font-weight: 700; color: #065f46;
+      text-align: right; vertical-align: middle;
     }
-    .qli-green  { background:#DCFCE7; border-color:#86EFAC; color:#166534; }
-    .qli-yellow { background:#FEF9C3; border-color:#FDE047; color:#854D0E; }
-    .qli-orange { background:#FFEDD5; border-color:#FDBA74; color:#9A3412; }
-    .qli-red    { background:#FEE2E2; border-color:#FCA5A5; color:#991B1B; }
+    .hl-val-hero   { font-size: 13px; font-weight: 700; color: #047857; }
+    .hl-val-warn   { color: #92400e; }
 
-    /* ── SIGNATURE ── */
+    .hl-badge-match {
+      display: inline-block;
+      background: #dcfce7; border: 1px solid #86efac;
+      color: #166534; border-radius: 20px;
+      padding: 2px 9px; font-size: 8.5px; font-weight: 700;
+    }
+    .hl-badge-diff {
+      display: inline-block;
+      background: #fef9c3; border: 1px solid #fde047;
+      color: #854d0e; border-radius: 20px;
+      padding: 2px 9px; font-size: 8.5px; font-weight: 700;
+    }
+
+    /* ════════════════════════════════════════
+       ★ HIGHLIGHT 2 — Ayam Retur & Mati
+    ════════════════════════════════════════ */
+    .hl-retur {
+      border: 1.5px solid #fecdd3;
+      border-radius: 8px; overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .hl-retur-head {
+      background: linear-gradient(90deg, #be123c, #e11d48);
+      padding: 6px 12px;
+      font-size: 8.5px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: #fff;
+    }
+    .hl-retur-body { display: table; width: 100%; border-collapse: collapse; }
+    .hl-retur-cell {
+      display: table-cell; width: 33.33%;
+      padding: 12px 8px; text-align: center;
+      border-right: 1px solid #fecdd3;
+      vertical-align: middle;
+    }
+    .hl-retur-cell:last-child { border-right: none; }
+    .hl-retur-val-dead  { font-size: 16px; font-weight: 700; color: #be123c; line-height: 1; }
+    .hl-retur-val-ret   { font-size: 16px; font-weight: 700; color: #92400e; line-height: 1; }
+    .hl-retur-val-kg    { font-size: 16px; font-weight: 700; color: #1e40af; line-height: 1; }
+    .hl-retur-lbl {
+      font-size: 7px; font-weight: 700; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: .07em; margin-top: 4px;
+    }
+
+    /* ════════════════════════════════════════
+       ★ HIGHLIGHT 3 — QC Kondisi
+    ════════════════════════════════════════ */
+    .hl-qc {
+      border: 1.5px solid #ddd6fe;
+      border-radius: 8px; overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .hl-qc-head {
+      background: linear-gradient(90deg, #5b21b6, #7c3aed);
+      padding: 6px 12px;
+      font-size: 8.5px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: #fff;
+    }
+    .hl-qc-legend {
+      display: table; width: 100%;
+      padding: 6px 10px;
+      border-bottom: 1px solid #ede9fe;
+      background: #faf5ff;
+    }
+    .hl-qc-legend-cell { display: table-cell; padding-right: 8px; vertical-align: middle; }
+    .hl-qc-legend-item {
+      display: inline-block; border-radius: 4px; border: 1px solid;
+      padding: 1px 6px; font-size: 7px; font-weight: 700;
+    }
+    .qli-green  { background:#dcfce7; border-color:#86efac; color:#166534; }
+    .qli-yellow { background:#fef9c3; border-color:#fde047; color:#854d0e; }
+    .qli-orange { background:#ffedd5; border-color:#fdba74; color:#9a3412; }
+    .qli-red    { background:#fee2e2; border-color:#fca5a5; color:#991b1b; }
+
+    .qc-table  { width: 100%; border-collapse: collapse; padding: 8px; }
+    .qc-table td { border: none; padding: 0 5px 0 0; vertical-align: top; width: 33.33%; }
+    .qc-table td:last-child { padding-right: 0; }
+
+    .qc-cell {
+      border-radius: 7px; border: 1.5px solid;
+      padding: 9px 8px 8px; text-align: center;
+    }
+    .qc-cell-label {
+      font-size: 7px; font-weight: 700; color: #6b7280;
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px;
+    }
+    .qc-bar { display: table; margin: 0 auto 6px; border-collapse: separate; border-spacing: 2px 0; }
+    .qc-bar-seg { display: table-cell; width: 13px; height: 7px; border-radius: 3px; }
+    .qc-bar-seg.active { height: 15px; border-radius: 4px; vertical-align: bottom; }
+    .qc-bar-seg.past   { opacity: .45; }
+    .qc-bar-seg.future { opacity: .18; }
+    .seg-g { background: #22c55e; }
+    .seg-y { background: #eab308; }
+    .seg-o { background: #f97316; }
+    .seg-r { background: #ef4444; }
+    .qc-dot-row { text-align: center; margin-bottom: 4px; }
+    .qc-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+    .qc-cell-val { font-size: 9.5px; font-weight: 700; }
+
+    .qc-green  { background: #dcfce7; border-color: #86efac; }
+    .qc-green  .qc-dot { background: #22c55e; }
+    .qc-green  .qc-cell-val { color: #166534; }
+    .qc-yellow { background: #fef9c3; border-color: #fde047; }
+    .qc-yellow .qc-dot { background: #eab308; }
+    .qc-yellow .qc-cell-val { color: #854d0e; }
+    .qc-orange { background: #ffedd5; border-color: #fdba74; }
+    .qc-orange .qc-dot { background: #f97316; }
+    .qc-orange .qc-cell-val { color: #9a3412; }
+    .qc-red    { background: #fee2e2; border-color: #fca5a5; }
+    .qc-red    .qc-dot { background: #ef4444; }
+    .qc-red    .qc-cell-val { color: #991b1b; }
+    .qc-neutral{ background: #f3f4f6; border-color: #d1d5db; }
+    .qc-neutral .qc-dot { background: #9ca3af; }
+    .qc-neutral .qc-cell-val { color: #6b7280; }
+
+    /* ══ SIGNATURE ══ */
     .sig-area {
-      margin-top: 18px; border-top: 2px solid #d1fae5;
+      margin-top: 16px; border-top: 1.5px solid #d1fae5;
       padding-top: 12px; display: table; width: 100%;
     }
-    .sig-cell {
-      display: table-cell; width: 50%; vertical-align: top; padding-right: 16px;
-    }
-    .sig-cell:last-child { padding-right: 0; padding-left: 16px; }
-    .sig-label {
-      font-size: 8.5px; font-weight: 700; letter-spacing: .08em;
-      text-transform: uppercase; color: #6b7280; margin-bottom: 36px;
-    }
-    .sig-line {
-      border-top: 1px solid #9ca3af; padding-top: 4px;
-      font-size: 10px; font-weight: 700; color: #374151;
-    }
+    .sig-cell { display: table-cell; width: 50%; vertical-align: top; padding-right: 14px; }
+    .sig-cell:last-child { padding-right: 0; padding-left: 14px; }
+    .sig-label { font-size: 8px; font-weight: 700; color: #6b7280; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
+    .sig-line  { font-size: 10px; font-weight: 700; color: #374151; }
 
-    /* ── FOOTER ── */
+    /* ══ FOOTER ══ */
     .footer {
-      margin-top: 14px; background: #064e3b;
-      padding: 8px 28px; display: table; width: 100%;
+      margin-top: 14px;
+      background: #f8fafc;
+      border-top: 1.5px solid #e2e8f0;
+      padding: 8px 22px; display: table; width: 100%;
     }
-    .footer-left  { display: table-cell; vertical-align: middle; font-size: 8.5px; color: rgba(255,255,255,.5); }
-    .footer-right { display: table-cell; vertical-align: middle; text-align: right; font-size: 8.5px; color: rgba(255,255,255,.5); }
+    .footer-left  { display: table-cell; vertical-align: middle; font-size: 8px; color: #94a3b8; }
+    .footer-right { display: table-cell; vertical-align: middle; text-align: right; font-size: 8px; color: #94a3b8; }
+
+    /* ══ WRAPPER QC BODY ══ */
+    .hl-qc-inner { padding: 8px 8px 4px; }
   </style>
 </head>
 <body>
 
 @php
-/**
- * ── HELPER: warna kondisi untuk PDF ─────────────────────────────
- * Konsisten dengan edit.blade.php dan summary.blade.php
- */
 $qcColorClass = function(?string $val): string {
     return match($val) {
         'kering', 'bak_kering'         => 'qc-green',
@@ -248,7 +289,6 @@ $qcColorClass = function(?string $val): string {
         default                        => 'qc-neutral',
     };
 };
-
 $qcLabel = function(?string $val): string {
     return match($val) {
         'sangat_basah'   => 'Sangat Basah',
@@ -261,7 +301,6 @@ $qcLabel = function(?string $val): string {
         default          => $val ?? '—',
     };
 };
-
 $qcLevel = function(?string $val): int {
     return match($val) {
         'kering', 'bak_kering'         => 1,
@@ -271,11 +310,40 @@ $qcLevel = function(?string $val): int {
         default                        => 0,
     };
 };
-
 $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
+
+$customCaps = ['SH01' => [17 => 46], 'SH02' => [30 => 19]];
+$location = $mc->location ?? '';
+$normalSetCount = 0;
+$customSetCounts = [19 => 0, 46 => 0];
+$totalKosongCalc = 0;
+$totalAyamCap = 0;
+
+foreach ($form->lines as $line) {
+    $cap = $customCaps[$location][$line->line_no] ?? 50;
+    foreach ($line->sets as $set) {
+        if ($set->empty_count === null) continue;
+        $empty = (int) $set->empty_count;
+        $totalKosongCalc += $empty;
+        $totalAyamCap += ($cap - $empty);
+        if ($cap === 50) { $normalSetCount++; }
+        else { $customSetCounts[$cap] = ($customSetCounts[$cap] ?? 0) + 1; }
+    }
+}
+
+$normalEkor  = $normalSetCount * 50;
+$customEkor  = 0;
+foreach ($customSetCounts as $cap => $count) { $customEkor += ($count * $cap); }
+
+$dead   = (int)($form->dead_count ?? 0);
+$retur  = (int)($form->retur_count ?? 0);
+$totalAyamTerimaCalc = max(0, $totalAyamCap - $dead - $retur);
+$totalEkorMC = (int)($mc->total_chicken ?? 0);
+$selisih = $totalEkorMC - $totalAyamTerimaCalc;
+$isMatch = ($selisih === 0);
 @endphp
 
-  {{-- ══ KOP SURAT ══ --}}
+  {{-- KOP --}}
   <div class="kop">
     <div class="kop-inner">
       <div class="kop-logo-cell">
@@ -283,17 +351,17 @@ $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
       </div>
       <div class="kop-text-cell">
         <div class="kop-company">PT. Charoen Pokphand Indonesia</div>
-        <div class="kop-tagline">Food Division</div>
+        <div class="kop-tagline">Food Division · SlaughterHouse Department</div>
       </div>
       <div class="kop-right-cell">
-        <div class="kop-doc-label">Dokumen</div>
+        <div class="kop-doc-eyebrow">Dokumen Resmi</div>
         <div class="kop-doc-title">Data Summary</div>
       </div>
     </div>
   </div>
   <div class="kop-accent"></div>
 
-  {{-- ══ META STRIP ══ --}}
+  {{-- META STRIP --}}
   <div class="meta-strip">
     <div class="meta-item">
       <div class="meta-label">Kode Report</div>
@@ -313,11 +381,10 @@ $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
     </div>
   </div>
 
-  {{-- ══ CONTENT ══ --}}
   <div class="content">
 
-    {{-- Kontrol Monitor ──────────────────────────────── --}}
-    <div class="section-title">Kontrol Monitor</div>
+    {{-- Kontrol Monitor --}}
+    <div class="sec-title sec-title-teal">Kontrol Monitor</div>
     <div class="two-col">
       <div class="col-l">
         <table>
@@ -332,16 +399,18 @@ $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
         <table>
           <tr><th>No Polisi</th><td>{{ $mc->plateNumber?->plate_number ?? '—' }}</td></tr>
           <tr><th>Total Ekor</th><td class="td-num">{{ number_format((int)($mc->total_chicken ?? 0)) }}</td></tr>
-          <tr><th>Total Kilo</th><td class="td-num">{{ number_format((float)($mc->total_kilo ?? 0), 2) }} Kg</td></tr>
+          <tr><th>Total Kilo (Kg)</th><td class="td-num">{{ number_format((float)($mc->total_kilo ?? 0), 2) }}</td></tr>
           <tr><th>ABW</th><td class="td-num">{{ number_format((float)($mc->abw ?? 0), 2) }}</td></tr>
+          <tr><th>No SPPA</th><td>{{ $mc->sppa_no ?? '—' }}</td></tr>
+          <tr><th>Tanggal SPPA</th><td>{{ $mc->sppa_date?->format('d/m/Y') ?? '—' }}</td></tr>
         </table>
       </div>
     </div>
 
-    {{-- Hanging & Retur ──────────────────────────────── --}}
-    <div class="two-col">
+    {{-- Hanging & Perhitungan --}}
+    <div class="two-col" style="margin-top:2px">
       <div class="col-l">
-        <div class="section-title">Hanging</div>
+        <div class="sec-title sec-title-slate">Hanging</div>
         <table>
           <tr><th>Jam Bongkar</th><td>{{ $form->unloading_time?->format('H:i') ?? '—' }}</td></tr>
           <tr><th>Jam Selesai</th><td>{{ $form->finish_time?->format('H:i') ?? '—' }}</td></tr>
@@ -350,63 +419,120 @@ $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
         </table>
       </div>
       <div class="col-r">
-        <div class="section-title">Ayam Retur &amp; Mati</div>
-        <table>
-          <tr><th>Ayam Mati</th><td class="td-num">{{ (int)($form->dead_count ?? 0) }}</td></tr>
-          <tr><th>Ayam Retur</th><td class="td-num">{{ (int)($form->retur_count ?? 0) }}</td></tr>
-          <tr><th>Total Berat Retur</th><td class="td-num">{{ number_format((float)($form->retur_total_kg ?? 0), 2) }} Kg</td></tr>
+        {{-- ★ HIGHLIGHT 1 --}}
+        <div class="sec-title sec-title-teal">Ringkasan Perhitungan Ayam</div>
+        <div class="hl-calc">
+          <div class="hl-calc-head">
+            <span class="hl-calc-head-label">Verifikasi Jumlah</span>
+            <span class="hl-calc-head-sub">Otomatis</span>
+          </div>
+          <div class="hl-row">
+            <span class="hl-key">Total Ekor</span>
+            <span class="hl-val">{{ number_format($totalEkorMC) }}</span>
+          </div>
+          <div class="hl-row">
+            <span class="hl-key">Blok Terisi Normal</span>
+            <span class="hl-val">{{ $normalSetCount }} × 50 = {{ number_format($normalEkor) }}</span>
+          </div>
+          <div class="hl-row">
+            <span class="hl-key">Kondisional Blok</span>
+            <span class="hl-val">
+              @if(($customSetCounts[19] ?? 0) > 0){{ $customSetCounts[19] }}×19 @endif
+              @if(($customSetCounts[46] ?? 0) > 0){{ $customSetCounts[46] }}×46 @endif
+              = {{ number_format($customEkor) }}
+            </span>
+          </div>
+          <div class="hl-row">
+            <span class="hl-key">Shackle Kosong</span>
+            <span class="hl-val" style="color:#6b7280">{{ number_format($totalKosongCalc) }}</span>
+          </div>
+          <div class="hl-row hl-row-total">
+            <span class="hl-key"><b>Ayam Diterima</b></span>
+            <span class="hl-val hl-val-hero">{{ number_format($totalAyamTerimaCalc) }}</span>
+          </div>
+          <div class="hl-row">
+            <span class="hl-key">Status</span>
+            <span class="hl-val">
+              @if($isMatch)
+                <span class="hl-badge-match">✓ MATCH</span>
+              @else
+                <span class="hl-badge-diff">SELISIH {{ $selisih > 0 ? '(KELEBIHAN)' : '(KEKURANGAN)' }}</span>
+              @endif
+            </span>
+          </div>
+          @if(!$isMatch)
+          <div class="hl-row hl-row-selisih">
+            <span class="hl-key">Selisih</span>
+            <span class="hl-val hl-val-warn">{{ number_format($selisih) }}</span>
+          </div>
+          @endif
+        </div>
+      </div>
+    </div>
+
+    {{-- ★ HIGHLIGHT 2: Retur & Mati --}}
+    <div class="hl-retur">
+      <div class="hl-retur-head">Ayam Retur &amp; Mati</div>
+      <div class="hl-retur-body">
+        <div class="hl-retur-cell">
+          <div class="hl-retur-val-dead">{{ (int)($form->dead_count ?? 0) }}</div>
+          <div class="hl-retur-lbl">Ayam Mati</div>
+        </div>
+        <div class="hl-retur-cell">
+          <div class="hl-retur-val-ret">{{ (int)($form->retur_count ?? 0) }}</div>
+          <div class="hl-retur-lbl">Ayam Retur</div>
+        </div>
+        <div class="hl-retur-cell">
+          <div class="hl-retur-val-kg">{{ number_format((float)($form->retur_total_kg ?? 0), 2) }}</div>
+          <div class="hl-retur-lbl">Berat Retur (Kg)</div>
+        </div>
+      </div>
+    </div>
+
+    {{-- ★ HIGHLIGHT 3: QC Kondisi --}}
+    <div class="hl-qc">
+      <div class="hl-qc-head">QC Kondisi</div>
+      {{-- <div class="hl-qc-legend">
+        <div class="hl-qc-legend-cell"><span class="hl-qc-legend-item qli-green">● Baik (Kering)</span></div>
+        <div class="hl-qc-legend-cell"><span class="hl-qc-legend-item qli-yellow">● Perlu Perhatian (Basah)</span></div>
+        <div class="hl-qc-legend-cell"><span class="hl-qc-legend-item qli-orange">● Kurang Baik</span></div>
+        <div class="hl-qc-legend-cell"><span class="hl-qc-legend-item qli-red">● Buruk (Sangat Basah)</span></div> --}}
+      </div>
+      <div class="hl-qc-inner">
+        <table class="qc-table">
+          <tr>
+            @foreach([
+              ['label' => 'Keranjang',      'val' => $form->basket_condition],
+              ['label' => 'Platform Truck', 'val' => $form->truck_platform_condition],
+              ['label' => 'Bulu Ayam',      'val' => $form->feather_condition],
+            ] as $qcItem)
+              @php $lv = $qcLevel($qcItem['val']); @endphp
+              <td>
+                <div class="qc-cell {{ $qcColorClass($qcItem['val']) }}">
+                  <div class="qc-cell-label">{{ $qcItem['label'] }}</div>
+                  <table class="qc-bar">
+                    <tr>
+                      @for($i = 1; $i <= 4; $i++)
+                        @php
+                          if ($lv === $i)   $segState = 'active';
+                          elseif ($lv > $i) $segState = 'past';
+                          else              $segState = 'future';
+                        @endphp
+                        <td class="qc-bar-seg {{ $segColors[$i-1] }} {{ $segState }}"></td>
+                      @endfor
+                    </tr>
+                  </table>
+                  <div class="qc-dot-row"><span class="qc-dot"></span></div>
+                  <div class="qc-cell-val">{{ $qcLabel($qcItem['val']) }}</div>
+                </div>
+              </td>
+            @endforeach
+          </tr>
         </table>
       </div>
     </div>
 
-    {{-- ══ QC Kondisi — COLOR CODED ══ --}}
-    <div class="section-title">QC Kondisi</div>
-
-    {{-- Legend warna --}}
-    <div class="qc-legend">
-      <div class="qc-legend-cell"><span class="qc-legend-item qli-green">● Baik (Kering)</span></div>
-      <div class="qc-legend-cell"><span class="qc-legend-item qli-yellow">● Perlu Perhatian (Basah)</span></div>
-      <div class="qc-legend-cell"><span class="qc-legend-item qli-orange">● Kurang Baik</span></div>
-      <div class="qc-legend-cell"><span class="qc-legend-item qli-red">● Buruk (Sangat Basah)</span></div>
-    </div>
-
-    <table class="qc-table">
-      <tr>
-        @foreach([
-          ['label' => 'Keranjang',      'val' => $form->basket_condition],
-          ['label' => 'Platform Truck', 'val' => $form->truck_platform_condition],
-          ['label' => 'Bulu Ayam',      'val' => $form->feather_condition],
-        ] as $qcItem)
-          @php
-            $lv = $qcLevel($qcItem['val']);
-          @endphp
-          <td>
-            <div class="qc-cell {{ $qcColorClass($qcItem['val']) }}">
-              <div class="qc-cell-label">{{ $qcItem['label'] }}</div>
-
-              {{-- Segmented bar (4 blok: hijau → kuning → oranye → merah) --}}
-              <table class="qc-bar">
-                <tr>
-                  @for($i = 1; $i <= 4; $i++)
-                    @php
-                      if ($lv === $i)      $segState = 'active';
-                      elseif ($lv > $i)    $segState = 'past';
-                      else                 $segState = 'future';
-                    @endphp
-                    <td class="qc-bar-seg {{ $segColors[$i-1] }} {{ $segState }}"></td>
-                  @endfor
-                </tr>
-              </table>
-
-              <div class="qc-dot-row"><span class="qc-dot"></span></div>
-              <div class="qc-cell-val">{{ $qcLabel($qcItem['val']) }}</div>
-            </div>
-          </td>
-        @endforeach
-      </tr>
-    </table>
-
-    {{-- Tanda Tangan ──────────────────────────────────── --}}
+    {{-- Tanda Tangan --}}
     <div class="sig-area">
       <div class="sig-cell">
         <div class="sig-label">Dibuat Oleh</div>
@@ -414,10 +540,9 @@ $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
       </div>
       <div class="sig-cell">
         <div class="sig-label">Mengetahui / Supervisor</div>
-
         @if(!empty($mc->supervisor_signature))
-          <div style="margin-bottom:8px">
-            <img src="{{ $mc->supervisor_signature }}" style="width:220px;height:auto;border:1px solid #ddd;padding:6px;border-radius:8px">
+          <div style="margin-bottom:6px">
+            <img src="{{ $mc->supervisor_signature }}" style="width:200px;height:auto;border:1px solid #e2e8f0;padding:5px;border-radius:7px">
           </div>
           <div class="sig-line">{{ $mc->supervisor_signed_name ?? '' }}</div>
         @else
@@ -428,10 +553,10 @@ $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
 
   </div>{{-- /content --}}
 
-  {{-- ══ FOOTER ══ --}}
+  {{-- FOOTER --}}
   <div class="footer">
-    <div class="footer-left">&middot; Paperless System SlaughterHouse Department &middot;</div>
-    <div class="footer-right">{{ $mc->report_code }} &middot; {{ now()->format('d/m/Y H:i') }}</div>
+    <div class="footer-left">Paperless System · SlaughterHouse Department</div>
+    <div class="footer-right">{{ $mc->report_code }} · {{ now()->format('d/m/Y H:i') }}</div>
   </div>
 
 </body>

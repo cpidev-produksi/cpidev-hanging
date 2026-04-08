@@ -305,87 +305,98 @@
         </div>
     </form>
 </div>
-
+{{-- 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
 
-<script>
-$(document).ready(function () {
+{{-- <script>
+$(function () {
 
     const SELECT2_COMMON = {
         allowClear: true,
         width: '100%',
-        minimumResultsForSearch: 0,   // search box selalu tampil
+        minimumResultsForSearch: 0,
     };
 
-    // ── Farm ──
-    $('#farm_id').select2($.extend({}, SELECT2_COMMON, {
+    // Init select2
+    const $farm = $('#farm_id').select2($.extend({}, SELECT2_COMMON, {
         placeholder: 'Cari nama farm...',
         language: { noResults: () => 'Farm tidak ditemukan' }
     }));
 
-    // ── Ekspedisi ──
-    $('#expedition_id').select2($.extend({}, SELECT2_COMMON, {
+    const $exp = $('#expedition_id').select2($.extend({}, SELECT2_COMMON, {
         placeholder: 'Cari nama ekspedisi...',
         language: { noResults: () => 'Ekspedisi tidak ditemukan' }
     }));
 
-    // ── No Polisi ──
-    // Simpan semua option SEBELUM Select2 diinit (DOM masih bersih)
     const $plate = $('#plate_number_id');
 
-    // Ambil data langsung dari atribut HTML menggunakan attr(), bukan data()
-    const allPlateData = [];
+    // Simpan master data plate dari HTML (sekali)
+    const masterPlate = [];
     $plate.find('option').each(function () {
-        allPlateData.push({
-            value: $(this).val(),
-            text:  $(this).text(),
-            expId: $(this).attr('data-expedition') || ''
+        const val = $(this).val();
+        if (!val) return; // skip placeholder
+        masterPlate.push({
+            value: val,
+            text: $(this).text(),
+            expId: String($(this).attr('data-expedition') || '')
         });
     });
 
-    $plate.select2($.extend({}, SELECT2_COMMON, {
-        placeholder: 'Cari nomor polisi...',
-        language: { noResults: () => 'No polisi tidak ditemukan' }
-    }));
-
-    function filterPlateByExpedition(restoreVal) {
-        const eid = String($('#expedition_id').val() || '');
-
-        // Rebuild <option> list dari data asli
-        $plate.empty();
-        allPlateData.forEach(function (d) {
-            // Selalu tampilkan placeholder (value kosong)
-            if (d.value === '') {
-                $plate.append(new Option(d.text, d.value, false, false));
-                return;
-            }
-            // Tampilkan hanya yang cocok dengan ekspedisi (atau semua jika ekspedisi belum dipilih)
-            if (!eid || d.expId === eid) {
-                $plate.append(new Option(d.text, d.value, false, false));
-            }
-        });
-
-        // Restore nilai jika masih ada di list
-        if (restoreVal && $plate.find('option[value="' + restoreVal + '"]').length) {
-            $plate.val(restoreVal);
-        } else {
-            $plate.val('');
+    function initPlateSelect2() {
+        // destroy dulu kalau sudah pernah init
+        if ($plate.hasClass("select2-hidden-accessible")) {
+            $plate.select2('destroy');
         }
-
-        $plate.trigger('change.select2');
+        $plate.select2($.extend({}, SELECT2_COMMON, {
+            placeholder: 'Cari nomor polisi...',
+            language: { noResults: () => 'No polisi tidak ditemukan' }
+        }));
     }
 
-    $('#expedition_id').on('change', function () {
-        filterPlateByExpedition(''); // ganti ekspedisi → reset plate
+    function rebuildPlateOptions(expeditionId, restoreVal) {
+        const eid = String(expeditionId || '');
+
+        $plate.empty();
+        $plate.append(new Option('— Pilih No Polisi —', '', false, false));
+
+        // ekspedisi belum dipilih => kosong (tetap enabled)
+        if (!eid) {
+            initPlateSelect2();
+            $plate.val('').trigger('change');
+            return;
+        }
+
+        // isi hanya yang sesuai
+        masterPlate.forEach(d => {
+            if (d.expId === eid) {
+                $plate.append(new Option(d.text, d.value, false, false));
+            }
+        });
+
+        initPlateSelect2();
+
+        // restore kalau valid
+        if (restoreVal && $plate.find('option[value="' + restoreVal + '"]').length) {
+            $plate.val(restoreVal).trigger('change');
+        } else {
+            $plate.val('').trigger('change');
+        }
+    }
+
+    // event ganti expedition (select2 & normal change)
+    $exp.on('change', function () {
+        rebuildPlateOptions($(this).val(), '');
     });
 
-    // Load awal: filter sesuai ekspedisi, lalu restore old() value
+    // load awal: expedition mungkin ada old value
+    const oldExp   = "{{ old('expedition_id') }}";
     const oldPlate = "{{ old('plate_number_id') }}";
-    filterPlateByExpedition(oldPlate);
+
+    rebuildPlateOptions(oldExp, oldPlate);
 });
-</script>
+</script> --}}
 
 <style>
 /* ── Select2 custom theme ── */

@@ -14,13 +14,14 @@ class HangingLandingController extends Controller
 {
     public function index(Request $request)
     {
-        $date = $request->query('date'); // optional YYYY-MM-DD
+        $date = $request->query('date', now('Asia/Jakarta')->toDateString());
 
         $q = MonitorControl::query()
             ->with(['farm', 'expedition', 'plateNumber', 'hangingForm'])
             ->orderBy('process_date', 'desc')
             ->orderBy('location')
-            ->orderBy('truck_no');
+            ->orderByRaw("CASE WHEN status = 'done' THEN 1 ELSE 0 END") // done di bawah
+            ->orderBy('truck_no'); // kecil ke besar
 
         if ($date) {
             $q->whereDate('process_date', $date);
@@ -28,7 +29,6 @@ class HangingLandingController extends Controller
 
         $items = $q->paginate(50);
 
-        // running per lokasi
         $runningLocations = HangingForm::query()
             ->where('status', 'running')
             ->whereHas('monitorControl', fn ($mq) => $mq->whereIn('location', ['SH01','SH02']))
@@ -42,7 +42,7 @@ class HangingLandingController extends Controller
         return view('transaction.hanging_landing.index', [
             'items' => $items,
             'date' => $date,
-            'runningLocations' => $runningLocations, // contoh: ['SH01']
+            'runningLocations' => $runningLocations,
         ]);
     }
 

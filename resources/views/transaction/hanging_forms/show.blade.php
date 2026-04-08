@@ -23,6 +23,12 @@
     $isDone   = $form->status === 'done';
     $isDraft  = $form->status === 'draft';
     $setCount = (int) $mc->set_count;
+
+    $customCaps = [
+      'SH01' => [17 => 46],
+      'SH02' => [30 => 19],
+    ];
+    $location = $mc->location ?? '';
   @endphp
 
   {{-- ── PAGE HEADER ── --}}
@@ -187,7 +193,10 @@
         Ringkasan
       </div>
 
-      <div class="sh-summary-list">
+      <div class="sh-summary-list"
+           data-dead="{{ (int)($form->dead_count ?? 0) }}"
+           data-retur="{{ (int)($form->retur_count ?? 0) }}"
+           data-total-chicken="{{ (int)($totalChicken ?? 0) }}">
         <div class="sh-summary-row">
           <span class="sh-summary-key">Total Shackle Kosong</span>
           <span class="sh-summary-val">
@@ -219,6 +228,20 @@
           <span class="sh-summary-key">Jumlah Ayam Diterima</span>
           <span class="sh-summary-val">
             <span id="total-ayam" class="sh-summary-num">{{ $totalAyam }}</span>
+            <span class="sh-summary-unit">Ekor</span>
+          </span>
+        </div>
+        <div class="sh-summary-row">
+          <span class="sh-summary-key">Jumlah Blok Terisi Penuh</span>
+          <span class="sh-summary-val">
+            <span id="blok-penuh" class="sh-summary-num">0</span>
+            <span class="sh-summary-unit">Blok</span>
+          </span>
+        </div>
+        <div class="sh-summary-row">
+          <span class="sh-summary-key">Selisih</span>
+          <span class="sh-summary-val">
+            <span id="selisih-ayam" class="sh-summary-num">{{ $selisihAyam }}</span>
             <span class="sh-summary-unit">Ekor</span>
           </span>
         </div>
@@ -257,6 +280,9 @@
 
         <tbody>
         @foreach($form->lines as $line)
+          @php
+            $maxCap = $customCaps[$location][$line->line_no] ?? 50;
+          @endphp
           <tr class="sh-tr">
             <td class="sh-td sh-td-center sh-td-no">{{ $line->line_no }}</td>
             <td class="sh-td sh-td-blok">
@@ -271,7 +297,7 @@
                 $cell     = $line->sets->firstWhere('set_no',$s);
                 $emptyRaw = $cell?->empty_count;
                 $empty    = is_null($emptyRaw) ? null : (int) $emptyRaw;
-                $ayam     = is_null($empty) ? 0 : (50 - $empty);
+                $ayam     = is_null($empty) ? 0 : ($maxCap - $empty);
               @endphp
 
               <td class="sh-td sh-td-center sh-td-ctrl">
@@ -284,6 +310,7 @@
                           value="{{ is_null($empty) ? '' : $empty }}"
                           class="sh-ctr-input"
                           inputmode="numeric"
+                          data-max="{{ $maxCap }}"
                           @disabled($isDone)
                           onchange="updateCell({{ $cell->id }}, this.value)"/>
 
@@ -295,7 +322,8 @@
 
               <td class="sh-td sh-td-center">
                 <span id="ayam-{{ $cell->id }}" class="sh-ayam-val"
-                      data-empty="{{ is_null($empty) ? '' : $empty }}">{{ $ayam }}</span>
+                      data-empty="{{ is_null($empty) ? '' : $empty }}"
+                      data-cap="{{ $maxCap }}">{{ $ayam }}</span>
               </td>
             @endfor
           </tr>
@@ -308,47 +336,85 @@
 
 <script>
 function refreshTotals() {
-  let totalKosong = 0, totalAyam = 0;
+  let totalKosong = 0, totalAyam = 0, blokPenuh = 0;
+
   document.querySelectorAll('.sh-ayam-val').forEach(el => {
     const s = el.getAttribute('data-empty');
     if (!s && s !== '0') return;
+
+    const e   = parseInt(s, 10);
+    const cap = parseInt(el.getAttribute('data-cap') || '50', 10);
+
+    if (isNaN(e) || isNaN(cap)) return;
+
+    totalKosong += e;
+    totalAyam   += (cap - e);
+  });
+
+  // Hitung jumlah SET penuh (empty_count = 0)
+  document.querySelectorAll('.sh-ayam-val').forEach(el => {
+    const s = el.getAttribute('data-empty');
+    if (!s && s !== '0') return;
+
     const e = parseInt(s, 10);
     if (isNaN(e)) return;
-    totalKosong += e;
-    totalAyam   += (50 - e);
+
+    if (e === 0) blokPenuh++;
   });
+
+  const summaryEl = document.querySelector('.sh-summary-list');
+  const dead  = parseInt(summaryEl?.getAttribute('data-dead') || '0', 10);
+  const retur = parseInt(summaryEl?.getAttribute('data-retur') || '0', 10);
+  const totalMC = parseInt(summaryEl?.getAttribute('data-total-chicken') || '0', 10);
+
+  totalAyam = Math.max(0, totalAyam - dead - retur);
+  const selisih = totalMC - totalAyam;
+
   const ke = document.getElementById('total-kosong');
   const ae = document.getElementById('total-ayam');
+  const se = document.getElementById('selisih-ayam');
+  const bp = document.getElementById('blok-penuh');
+
   if (ke) ke.textContent = totalKosong;
   if (ae) ae.textContent = totalAyam;
+  if (se) se.textContent = selisih;
+  if (bp) bp.textContent = blokPenuh;
+
+  // highlight sel kosong
+  document.querySelectorAll('.sh-td-ctrl').forEach(td => {
+    const input = td.querySelector('.sh-ctr-input');
+    if (!input) return;
+    const val = input.value === '' ? 0 : parseInt(input.value, 10);
+    td.classList.toggle('sh-has-empty', !isNaN(val) && val > 0);
+  });
 }
 
 function changeEmpty(id, delta) {
   const inputEl = document.getElementById(`empty-${id}`);
+  const max = parseInt(inputEl.dataset.max || '50', 10);
 
-  // ambil nilai terbaru dari input (kalau kosong anggap 0)
   let n = (inputEl.value === '' ? 0 : parseInt(inputEl.value, 10));
   if (isNaN(n)) n = 0;
 
   let next = n + delta;
   if (next < 0) next = 0;
-  if (next > 50) next = 50;
+  if (next > max) next = max;
 
-  // update UI langsung
   inputEl.value = String(next);
-
-  // simpan ke server (updateCell juga tetap clamp)
   updateCell(id, next);
 }
 
 async function updateCell(id, emptyCount) {
+  const inputEl = document.getElementById(`empty-${id}`);
+  const max = parseInt(inputEl?.dataset.max || '50', 10);
+
   let v = emptyCount;
   if (v === '' || v === null || v === undefined) v = null;
   if (v !== null) {
     v = parseInt(v, 10);
     if (isNaN(v)) v = 0;
     if (v < 0) v = 0;
-    if (v > 50) v = 50;
+    if (v > max) v = max;
   }
 
   const res = await fetch(`{{ url('/hanging-cells') }}/${id}`, {
@@ -370,13 +436,14 @@ async function updateCell(id, emptyCount) {
     return;
   }
 
-  const inputEl = document.getElementById(`empty-${id}`);
   const ayamEl  = document.getElementById(`ayam-${id}`);
+  const maxCap  = json?.max ?? max;
+
   inputEl.value          = json.empty_count === null ? '' : json.empty_count;
   ayamEl.textContent     = json.ayam;
   ayamEl.setAttribute('data-empty', json.empty_count === null ? '' : String(json.empty_count));
+  ayamEl.setAttribute('data-cap', String(maxCap));
 
-  // flash feedback
   ayamEl.classList.add('sh-flash');
   setTimeout(() => ayamEl.classList.remove('sh-flash'), 400);
 
@@ -636,6 +703,11 @@ document.addEventListener('DOMContentLoaded', refreshTotals);
 .sh-ctr-minus:hover:not(:disabled) { background: #fbd8d8; }
 .sh-ctr-plus  { background: #E6FAF5; color: #0CA678; }
 .sh-ctr-plus:hover:not(:disabled)  { background: #ccf5e8; }
+
+.sh-td-ctrl.sh-has-empty { background: rgba(245,159,0,.08); }
+.sh-td-ctrl.sh-has-empty .sh-ctr-input { border-color: #F59F00; }
+.sh-td-ctrl.sh-has-empty .sh-ctr-minus,
+.sh-td-ctrl.sh-has-empty .sh-ctr-plus { filter: saturate(1.2); }
 
 .sh-ctr-input {
   width: 56px; text-align: center;

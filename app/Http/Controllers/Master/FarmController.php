@@ -8,8 +8,21 @@ use Illuminate\Http\Request;
 
 class FarmController extends Controller
 {
-    public function index() {
-        $farms = Farm::query()->orderBy('name')->paginate(20);
+    public function index(Request $request) {
+        $query = Farm::query();
+ 
+        // Filter pencarian nama
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+    
+        // Filter huruf awal (alfabet)
+        if ($request->filled('letter')) {
+            $query->where('name', 'like', $request->letter . '%');
+        }
+    
+        $farms = $query->orderBy('name')->paginate(15)->withQueryString();
+    
         return view('master.farms.index', compact('farms'));
     }
 

@@ -204,10 +204,6 @@ class MonitorControlController extends Controller
         return back()->with('status', 'Kontrol monitor dihapus.');
     }
 
-    // NOTE: start existing Anda masih boleh dipakai kalau mau,
-    // tapi untuk aturan "global running lock" + landing hanging,
-    // saya sarankan start dilakukan dari HangingController baru.
-
     private function locationMeta(string $location): array
     {
         return match ($location) {

@@ -3,6 +3,20 @@
 @section('content')
 <div class="expeditions-page">
 
+    {{-- Breadcrumb --}}
+    <div class="breadcrumb">
+        <a href="{{ route('dashboard') }}" class="breadcrumb-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-8H9v8H4a2 2 0 0 1-2-2z"/>
+            </svg>
+            Dashboard
+        </a>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+        </svg>
+        <span>Data Ekspedisi</span>
+    </div>
+
     {{-- Header --}}
     <div class="page-header">
         <div class="page-title-group">
@@ -29,6 +43,94 @@
 
     {{-- Table Card --}}
     <div class="card">
+        <div class="card-header">
+            <div class="card-title">Daftar Ekspedisi</div>
+            <div class="card-meta">Total: {{ $expeditions->total() }}</div>
+        </div>
+
+        {{-- Search & Filter Toolbar --}}
+        <div class="expedition-toolbar">
+
+            {{-- Search Bar --}}
+            <form method="GET" action="{{ route('master.expeditions.index') }}" id="search-form" class="expedition-search-form">
+                @if(request('letter'))
+                    <input type="hidden" name="letter" value="{{ request('letter') }}">
+                @endif
+                <div class="expedition-search-wrap">
+                    <span class="expedition-search-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                    </span>
+                    <input
+                        type="text"
+                        name="search"
+                        id="search-input"
+                        value="{{ request('search') }}"
+                        placeholder="Cari nama ekspedisi..."
+                        autocomplete="off"
+                        class="expedition-search-input"
+                    >
+                    @if(request('search'))
+                    <button type="button" onclick="clearSearch()" class="expedition-search-clear" title="Hapus pencarian">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                    @endif
+                </div>
+                <button type="submit" class="expedition-search-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Cari
+                </button>
+            </form>
+
+            {{-- Active Filter Badge --}}
+            @if(request('search') || request('letter'))
+            <div class="expedition-filter-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                <span>
+                    @if(request('search'))
+                        "<strong>{{ request('search') }}</strong>"
+                    @endif
+                    @if(request('search') && request('letter'))&nbsp;·&nbsp;@endif
+                    @if(request('letter'))
+                        Huruf <strong>{{ request('letter') }}</strong>
+                    @endif
+                    &nbsp;·&nbsp;<strong>{{ $expeditions->total() }}</strong> hasil
+                </span>
+                <a href="{{ route('master.expeditions.index') }}" class="expedition-filter-reset">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    Reset
+                </a>
+            </div>
+            @endif
+
+        </div>
+
+        {{-- Alphabet Filter --}}
+        <div class="alpha-filter-wrap">
+            <span class="alpha-label">Filter:</span>
+            <div class="alpha-list">
+                <a href="{{ route('master.expeditions.index', array_merge(request()->only(['search']), [])) }}"
+                   class="alpha-btn {{ !request('letter') ? 'alpha-btn--active' : '' }}">
+                    Semua
+                </a>
+                @foreach(range('A', 'Z') as $letter)
+                    <a href="{{ route('master.expeditions.index', array_merge(request()->only(['search']), ['letter' => $letter])) }}"
+                       class="alpha-btn {{ request('letter') === $letter ? 'alpha-btn--active' : '' }}">
+                        {{ $letter }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
         <div class="table-wrapper">
             <table class="data-table">
                 <thead>
@@ -100,14 +202,19 @@
                 @empty
                     <tr>
                         <td colspan="3" class="empty-state">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="6" width="18" height="13" rx="2"/>
                                 <path d="M7 10h6"/>
                                 <path d="M7 14h10"/>
                                 <path d="M8 3h8"/>
                             </svg>
-                            <p>Belum ada data ekspedisi</p>
-                            <a href="{{ route('master.expeditions.create') }}" class="btn-primary-sm">+ Tambah Sekarang</a>
+                            @if(request('search') || request('letter'))
+                                <p>Tidak ada ekspedisi yang cocok dengan filter</p>
+                                <a href="{{ route('master.expeditions.index') }}" class="btn-primary-sm">Lihat Semua Ekspedisi</a>
+                            @else
+                                <p>Belum ada data ekspedisi</p>
+                                <a href="{{ route('master.expeditions.create') }}" class="btn-primary-sm">+ Tambah Sekarang</a>
+                            @endif
                         </td>
                     </tr>
                 @endforelse
@@ -115,11 +222,72 @@
             </table>
         </div>
 
+        {{-- Pagination --}}
         @if($expeditions->hasPages())
-        <div class="pagination-wrapper">
-            {{ $expeditions->links() }}
+        <div class="expedition-pagination">
+
+            {{-- Info --}}
+            <p class="pagination-info">
+                Menampilkan
+                <span class="pagination-info--highlight">{{ $expeditions->firstItem() }}–{{ $expeditions->lastItem() }}</span>
+                dari
+                <span class="pagination-info--highlight">{{ $expeditions->total() }}</span>
+                ekspedisi
+            </p>
+
+            {{-- Nav --}}
+            <div class="pagination-nav">
+
+                {{-- Prev --}}
+                @if($expeditions->onFirstPage())
+                    <span class="page-btn page-btn--disabled" aria-disabled="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </span>
+                @else
+                    <a href="{{ $expeditions->previousPageUrl() }}&{{ http_build_query(request()->only(['search', 'letter'])) }}"
+                       class="page-btn" title="Halaman sebelumnya">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </a>
+                @endif
+
+                {{-- Page Numbers --}}
+                @php
+                    $cur   = $expeditions->currentPage();
+                    $last  = $expeditions->lastPage();
+                    $pages = collect(range(1, $last))
+                        ->filter(fn($p) => $p === 1 || $p === $last || abs($p - $cur) <= 2)
+                        ->values();
+                @endphp
+
+                @foreach($pages as $i => $page)
+                    @if($i > 0 && $page - $pages[$i - 1] > 1)
+                        <span class="page-ellipsis">…</span>
+                    @endif
+
+                    @if($page === $cur)
+                        <span class="page-btn page-btn--active" aria-current="page">{{ $page }}</span>
+                    @else
+                        <a href="{{ $expeditions->url($page) }}&{{ http_build_query(request()->only(['search', 'letter'])) }}"
+                           class="page-btn">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                {{-- Next --}}
+                @if($expeditions->hasMorePages())
+                    <a href="{{ $expeditions->nextPageUrl() }}&{{ http_build_query(request()->only(['search', 'letter'])) }}"
+                       class="page-btn" title="Halaman berikutnya">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                @else
+                    <span class="page-btn page-btn--disabled" aria-disabled="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
+                @endif
+
+            </div>
         </div>
         @endif
+
     </div>
 </div>
 
@@ -142,6 +310,27 @@
     --c-warning-light: #FFF8E1;
     --radius: 12px;
     --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04);
+}
+
+/* ===== BREADCRUMB ===== */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    font-size: 0.8rem;
+    color: var(--c-muted);
+}
+.breadcrumb-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--c-muted);
+    text-decoration: none;
+    transition: color .15s;
+}
+.breadcrumb-link:hover {
+    color: var(--c-accent);
 }
 
 /* ===== PAGE LAYOUT ===== */
@@ -204,6 +393,203 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #FAFBFD;
+    border-bottom: 1px solid var(--c-border);
+}
+.card-title {
+    font-weight: 700;
+    font-size: .9rem;
+    color: var(--c-text);
+}
+.card-meta {
+    font-size: .75rem;
+    color: var(--c-muted);
+    background: #F0F1F5;
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+
+/* ===== SEARCH TOOLBAR ===== */
+.expedition-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px 12px;
+    flex-wrap: wrap;
+}
+
+.expedition-search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 220px;
+    max-width: 420px;
+}
+
+.expedition-search-wrap {
+    position: relative;
+    flex: 1;
+}
+
+.expedition-search-icon {
+    position: absolute;
+    inset-y: 0;
+    left: 0;
+    padding-left: 11px;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    color: #9ca3af;
+}
+
+.expedition-search-input {
+    width: 100%;
+    padding: 8px 32px 8px 34px;
+    font-size: 13px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+    color: #374151;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+    outline: none;
+}
+.expedition-search-input::placeholder { color: #b0b7c3; }
+.expedition-search-input:focus {
+    border-color: var(--c-accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(79,103,255,.12);
+}
+
+.expedition-search-clear {
+    position: absolute;
+    inset-y: 0;
+    right: 0;
+    padding-right: 10px;
+    display: flex;
+    align-items: center;
+    color: #9ca3af;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color .15s;
+}
+.expedition-search-clear:hover { color: #ef4444; }
+
+.expedition-search-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--c-accent);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, transform .1s;
+}
+.expedition-search-btn:hover  { background: var(--c-accent-hover); }
+.expedition-search-btn:active { transform: scale(.96); }
+
+/* Active filter badge */
+.expedition-filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+.expedition-filter-badge strong { color: #1d4ed8; }
+
+.expedition-filter-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ef4444;
+    background: #fff1f1;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+}
+.expedition-filter-reset:hover { background: #fee2e2; color: #dc2626; }
+
+/* ===== ALPHABET FILTER ===== */
+.alpha-filter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px 14px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.alpha-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.alpha-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.alpha-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 28px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    background: #f3f4f6;
+    border: 1.5px solid transparent;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background .13s, color .13s, border-color .13s;
+    user-select: none;
+}
+.alpha-btn:hover {
+    background: #e0e7ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+}
+.alpha-btn--active {
+    background: var(--c-accent);
+    color: #fff;
+    border-color: var(--c-accent);
+    box-shadow: 0 1px 4px rgba(79,103,255,.3);
+}
+.alpha-btn--active:hover {
+    background: var(--c-accent-hover);
+    border-color: var(--c-accent-hover);
+    color: #fff;
 }
 
 /* ===== TABLE ===== */
@@ -299,10 +685,107 @@
 .empty-state p { font-size: .9rem; margin: 0 0 16px; }
 
 /* ===== PAGINATION ===== */
-.pagination-wrapper {
-    padding: 14px 16px;
-    border-top: 1px solid var(--c-border);
-    background: #FAFBFD;
+.expedition-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.pagination-info {
+    font-size: 12px;
+    color: #9ca3af;
+}
+.pagination-info--highlight {
+    font-weight: 600;
+    color: #374151;
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #4b5563;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 7px;
+    text-decoration: none;
+    transition: background .13s, color .13s, border-color .13s, box-shadow .13s;
+    cursor: pointer;
+    user-select: none;
+}
+.page-btn:hover {
+    background: #eef2ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+}
+
+.page-btn--active {
+    background: var(--c-accent);
+    color: #fff;
+    border-color: var(--c-accent);
+    box-shadow: 0 1px 6px rgba(79,103,255,.35);
+    font-weight: 600;
+    cursor: default;
+}
+.page-btn--active:hover {
+    background: var(--c-accent);
+    color: #fff;
+    border-color: var(--c-accent);
+}
+
+.page-btn--disabled {
+    background: #f9fafb;
+    color: #d1d5db;
+    border-color: #f3f4f6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 32px;
+    font-size: 13px;
+    color: #9ca3af;
+    letter-spacing: .1em;
 }
 </style>
+
+<script>
+function clearSearch() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('search');
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+}
+
+// Auto-submit dengan debounce 600ms
+let searchTimer;
+document.getElementById('search-input')?.addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    const val = this.value;
+    searchTimer = setTimeout(() => {
+        if (val.length === 0 || val.length >= 2) {
+            this.closest('form').submit();
+        }
+    }, 600);
+});
+</script>
 @endsection

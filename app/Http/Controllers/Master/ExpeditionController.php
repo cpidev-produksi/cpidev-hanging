@@ -10,9 +10,18 @@ use Illuminate\Support\Facades\DB;
 
 class ExpeditionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $expeditions = Expedition::query()->orderBy('name')->paginate(20);
+        $query = Expedition::query();
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+        
+        if ($request->filled('letter')) {
+            $query->where('name', 'like', $request->letter . '%');
+        }
+        
+        $expeditions = $query->withCount('plateNumbers')->paginate(10);
         return view('master.expeditions.index', compact('expeditions'));
     }
 
