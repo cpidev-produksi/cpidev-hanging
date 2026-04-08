@@ -49,15 +49,14 @@ class HangingFormController extends Controller
                 $totalKosong += $empty;
                 $totalAyamShackle += ($cap - $empty);
 
-                if ($empty === 0) {
+                if ($cap === 50 && $empty === 0) {
                     $fullBlockCount++;
                 }
             }
         }
 
-        $totalAyamBersih = max(0, $totalAyamShackle - $deadCount - $returCount);
-
         $totalChickenMC = (int) ($hangingForm->monitorControl?->total_chicken ?? 0);
+        $totalAyamBersih = max(0, $totalChickenMC - $deadCount - $returCount);
         $selisihAyam    = $totalChickenMC - $totalAyamBersih;
 
         return view('transaction.hanging_forms.show', [

@@ -50,9 +50,9 @@ foreach ($customSetCounts as $cap => $count) { $customEkor += ($count * $cap); }
 
 $dead   = (int)($form->dead_count ?? 0);
 $retur  = (int)($form->retur_count ?? 0);
-$totalAyamTerimaCalc = max(0, $totalAyamCap - $dead - $retur);
 $totalEkorMC = (int)($mc->total_chicken ?? 0);
-$selisih = $totalEkorMC - $totalAyamTerimaCalc;
+$totalAyamTerimaCalc = max(0, $totalEkorMC - $dead - $retur);
+$selisih = $totalEkorMC - ($totalAyamTerimaCalc + $dead + $retur);
 $isMatch = ($selisih === 0);
 
 $condLevel = function(?string $val): int {
@@ -245,7 +245,7 @@ $fc = $form->feather_condition;
         {{-- Total hero row --}}
         <div class="sm-total-row">
           <span class="sm-total-label">Jumlah Ayam Diterima</span>
-          <span class="sm-total-val">{{ number_format($totalAyamTerimaCalc) }}</span>
+          <span class="sm-kv-val sm-val-green">{{ $totalAyamTerimaCalc }}</span>
         </div>
 
         <div class="sm-kv-group" style="margin-top:10px">

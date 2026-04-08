@@ -337,9 +337,9 @@ foreach ($customSetCounts as $cap => $count) { $customEkor += ($count * $cap); }
 
 $dead   = (int)($form->dead_count ?? 0);
 $retur  = (int)($form->retur_count ?? 0);
-$totalAyamTerimaCalc = max(0, $totalAyamCap - $dead - $retur);
 $totalEkorMC = (int)($mc->total_chicken ?? 0);
-$selisih = $totalEkorMC - $totalAyamTerimaCalc;
+$totalAyamTerimaCalc = max(0, $totalEkorMC - $dead - $retur);
+$selisih = $totalEkorMC - ($totalAyamTerimaCalc + $dead + $retur);
 $isMatch = ($selisih === 0);
 @endphp
 

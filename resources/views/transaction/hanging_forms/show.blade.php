@@ -234,7 +234,7 @@
         <div class="sh-summary-row">
           <span class="sh-summary-key">Jumlah Blok Terisi Penuh</span>
           <span class="sh-summary-val">
-            <span id="blok-penuh" class="sh-summary-num">0</span>
+            <span id="blok-penuh" class="sh-summary-num">{{ $fullBlockCount }}</span>
             <span class="sh-summary-unit">Blok</span>
           </span>
         </div>
@@ -356,10 +356,11 @@ function refreshTotals() {
     const s = el.getAttribute('data-empty');
     if (!s && s !== '0') return;
 
-    const e = parseInt(s, 10);
-    if (isNaN(e)) return;
+    const e   = parseInt(s, 10);
+    const cap = parseInt(el.getAttribute('data-cap') || '50', 10);
+    if (isNaN(e) || isNaN(cap)) return;
 
-    if (e === 0) blokPenuh++;
+    if (cap === 50 && e === 0) blokPenuh++;
   });
 
   const summaryEl = document.querySelector('.sh-summary-list');
@@ -367,8 +368,8 @@ function refreshTotals() {
   const retur = parseInt(summaryEl?.getAttribute('data-retur') || '0', 10);
   const totalMC = parseInt(summaryEl?.getAttribute('data-total-chicken') || '0', 10);
 
-  totalAyam = Math.max(0, totalAyam - dead - retur);
-  const selisih = totalMC - totalAyam;
+  const totalAyam = Math.max(0, totalMC - dead - retur);
+  const selisih   = totalMC - totalAyam;
 
   const ke = document.getElementById('total-kosong');
   const ae = document.getElementById('total-ayam');

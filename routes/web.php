@@ -80,11 +80,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/conditions/open/{monitorControl}', [ConditionController::class, 'open'])->name('conditions.open');
         Route::get('/conditions/{hangingForm}', [ConditionController::class, 'edit'])->name('conditions.edit');
         Route::post('/conditions/{hangingForm}', [ConditionController::class, 'update'])->name('conditions.update');
+        Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])->name('monitor-controls.summary');
     });
 
     // Summary + Sign + PDF (Supervisor only)
     Route::middleware('supervisor')->group(function () {
-        Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])->name('monitor-controls.summary');
         Route::post('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'sign'])->name('monitor-controls.summary.sign');
         Route::delete('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'unsign'])->name('monitor-controls.summary.unsign');
         Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])->name('monitor-controls.summary.pdf');
