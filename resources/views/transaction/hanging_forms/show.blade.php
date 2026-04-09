@@ -336,7 +336,7 @@
 
 <script>
 function refreshTotals() {
-  let totalKosong = 0, totalAyam = 0, blokPenuh = 0;
+  let totalKosong = 0, blokPenuh = 0;
 
   document.querySelectorAll('.sh-ayam-val').forEach(el => {
     const s = el.getAttribute('data-empty');
