@@ -336,7 +336,9 @@
 
 <script>
 function refreshTotals() {
-  let totalKosong = 0, blokPenuh = 0;
+  let totalKosong = 0;
+  let totalAyamShackle = 0;
+  let blokPenuh = 0;
 
   document.querySelectorAll('.sh-ayam-val').forEach(el => {
     const s = el.getAttribute('data-empty');
@@ -348,17 +350,7 @@ function refreshTotals() {
     if (isNaN(e) || isNaN(cap)) return;
 
     totalKosong += e;
-    totalAyam   += (cap - e);
-  });
-
-  // Hitung jumlah SET penuh (empty_count = 0)
-  document.querySelectorAll('.sh-ayam-val').forEach(el => {
-    const s = el.getAttribute('data-empty');
-    if (!s && s !== '0') return;
-
-    const e   = parseInt(s, 10);
-    const cap = parseInt(el.getAttribute('data-cap') || '50', 10);
-    if (isNaN(e) || isNaN(cap)) return;
+    totalAyamShackle += (cap - e);
 
     if (cap === 50 && e === 0) blokPenuh++;
   });
@@ -368,8 +360,8 @@ function refreshTotals() {
   const retur = parseInt(summaryEl?.getAttribute('data-retur') || '0', 10);
   const totalMC = parseInt(summaryEl?.getAttribute('data-total-chicken') || '0', 10);
 
-  const totalAyam = Math.max(0, totalMC - dead - retur);
-  const selisih   = totalMC - totalAyam;
+  const targetMC = totalMC - dead - retur; // target bersih dari MC
+  const selisih  = targetMC - totalAyamShackle;
 
   const ke = document.getElementById('total-kosong');
   const ae = document.getElementById('total-ayam');
@@ -377,7 +369,7 @@ function refreshTotals() {
   const bp = document.getElementById('blok-penuh');
 
   if (ke) ke.textContent = totalKosong;
-  if (ae) ae.textContent = totalAyam;
+  if (ae) ae.textContent = totalAyamShackle;
   if (se) se.textContent = selisih;
   if (bp) bp.textContent = blokPenuh;
 
