@@ -15,14 +15,13 @@ class FarmController extends Controller
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
-    
+
         // Filter huruf awal (alfabet)
         if ($request->filled('letter')) {
             $query->where('name', 'like', $request->letter . '%');
         }
-    
+
         $farms = $query->orderBy('name')->paginate(15)->withQueryString();
-    
         return view('master.farms.index', compact('farms'));
     }
 
@@ -44,9 +43,6 @@ class FarmController extends Controller
             'address.required' => 'Alamat farm wajib diisi.',
             'city.required' => 'Kota wajib diisi.',
             'vendor_code.required' => 'Vendor Code wajib diisi.',
-            // 'area_category.required' => 'Kategori area wajib dipilih.',
-            // 'area_category.in' => 'Kategori area harus 1, 2, 3, atau 4.',
-            // 'distance.required' => 'Jarak wajib diisi.',
         ]);
 
         Farm::create($data);
@@ -72,9 +68,6 @@ class FarmController extends Controller
             'address.required' => 'Alamat farm wajib diisi.',
             'city.required' => 'Kota wajib diisi.',
             'vendor_code.required' => 'Vendor Code wajib diisi.',
-            // 'area_category.required' => 'Kategori area wajib dipilih.',
-            // 'area_category.in' => 'Kategori area harus 1, 2, 3, atau 4.',
-            // 'distance.required' => 'Jarak wajib diisi.',
         ]);
 
         $farm->update($data);

@@ -109,8 +109,67 @@
     ])
   </div>
 
+  {{-- ── PAGINATION YANG RAPI ── --}}
   @if($items->hasPages())
-    <div class="rm-pagination">{{ $items->links() }}</div>
+    <div class="rm-pagination">
+      {{-- Info --}}
+      <p class="pagination-info">
+        Menampilkan
+        <span class="pagination-info--highlight">{{ $items->firstItem() }}–{{ $items->lastItem() }}</span>
+        dari
+        <span class="pagination-info--highlight">{{ $items->total() }}</span>
+        data
+      </p>
+
+      {{-- Nav --}}
+      <div class="pagination-nav">
+        {{-- Prev --}}
+        @if($items->onFirstPage())
+          <span class="page-btn page-btn--disabled" aria-disabled="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </span>
+        @else
+          <a href="{{ $items->previousPageUrl() }}&{{ http_build_query(request()->only(['date'])) }}"
+             class="page-btn" title="Halaman sebelumnya">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </a>
+        @endif
+
+        {{-- Page Numbers --}}
+        @php
+          $cur   = $items->currentPage();
+          $last  = $items->lastPage();
+          $pages = collect(range(1, $last))
+              ->filter(fn($p) => $p === 1 || $p === $last || abs($p - $cur) <= 2)
+              ->values();
+        @endphp
+
+        @foreach($pages as $i => $page)
+          @if($i > 0 && $page - $pages[$i - 1] > 1)
+            <span class="page-ellipsis">…</span>
+          @endif
+
+          @if($page === $cur)
+            <span class="page-btn page-btn--active" aria-current="page">{{ $page }}</span>
+          @else
+            <a href="{{ $items->url($page) }}&{{ http_build_query(request()->only(['date'])) }}"
+               class="page-btn">{{ $page }}</a>
+          @endif
+        @endforeach
+
+        {{-- Next --}}
+        @if($items->hasMorePages())
+          <a href="{{ $items->nextPageUrl() }}&{{ http_build_query(request()->only(['date'])) }}"
+             class="page-btn" title="Halaman berikutnya">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        @else
+          <span class="page-btn page-btn--disabled" aria-disabled="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        @endif
+      </div>
+    </div>
   @endif
 </div>
 
@@ -204,7 +263,102 @@
 .rm-pane { display:none; padding-top:16px; }
 .rm-pane.active { display:block; }
 
-/* PAGINATION */
-.rm-pagination { margin-top:16px; padding:14px 18px; background:var(--rm-surface); border:1px solid var(--rm-border); border-radius:var(--rm-r); }
+/* ===== PAGINATION YANG RAPI ===== */
+.rm-pagination {
+  margin-top: 24px;
+  padding: 14px 20px;
+  background: var(--rm-surface);
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-r);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pagination-info {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.pagination-info--highlight {
+  font-weight: 600;
+  color: #374151;
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b5563;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 7px;
+  text-decoration: none;
+  transition: background .13s, color .13s, border-color .13s, box-shadow .13s;
+  cursor: pointer;
+  user-select: none;
+}
+
+.page-btn:hover {
+  background: #eef2ff;
+  color: #4338ca;
+  border-color: #c7d2fe;
+}
+
+.page-btn--active {
+  background: var(--rm-accent);
+  color: #fff;
+  border-color: var(--rm-accent);
+  box-shadow: 0 1px 6px rgba(232,93,47,.35);
+  font-weight: 600;
+  cursor: default;
+}
+
+.page-btn--active:hover {
+  background: var(--rm-accent);
+  color: #fff;
+  border-color: var(--rm-accent);
+}
+
+.page-btn--disabled {
+  background: #f9fafb;
+  color: #d1d5db;
+  border-color: #f3f4f6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 32px;
+  font-size: 13px;
+  color: #9ca3af;
+  letter-spacing: .1em;
+}
+
+/* Responsive */
+@media (max-width: 680px) {
+  .rm-pagination {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
 </style>
 @endsection

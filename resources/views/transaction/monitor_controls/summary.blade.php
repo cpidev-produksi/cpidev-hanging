@@ -206,7 +206,23 @@ $fc = $form->feather_condition;
           </div>
         </div>
       </div>
-
+      {{-- Card: Hanging --}}
+      <div class="sm-card">
+        <div class="sm-card-head sm-head-slate">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="2" x2="12" y2="6"/><path d="M12 6a6 6 0 0 1 6 6v6H6v-6a6 6 0 0 1 6-6z"/></svg>
+          Hanging
+        </div>
+        <div class="sm-kv-group">
+          <div class="sm-kv">
+            <span class="sm-kv-key">Jam Bongkar</span>
+            <span class="sm-kv-val">{{ $form->unloading_time?->format('H:i') ?? '—' }}</span>
+          </div>
+          <div class="sm-kv">
+            <span class="sm-kv-key">Jam Selesai</span>
+            <span class="sm-kv-val">{{ $form->finish_time?->format('H:i') ?? '—' }}</span>
+          </div>
+        </div>
+      </div>
     </div>{{-- /kol kiri --}}
 
     {{-- ── KOLOM KANAN ── --}}
@@ -271,33 +287,6 @@ $fc = $form->feather_condition;
           @endif
         </div>
       </div>
-
-      {{-- Card: Hanging --}}
-      <div class="sm-card">
-        <div class="sm-card-head sm-head-slate">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="2" x2="12" y2="6"/><path d="M12 6a6 6 0 0 1 6 6v6H6v-6a6 6 0 0 1 6-6z"/></svg>
-          Hanging
-        </div>
-        <div class="sm-kv-group">
-          <div class="sm-kv">
-            <span class="sm-kv-key">Jam Bongkar</span>
-            <span class="sm-kv-val">{{ $form->unloading_time?->format('H:i') ?? '—' }}</span>
-          </div>
-          <div class="sm-kv">
-            <span class="sm-kv-key">Jam Selesai</span>
-            <span class="sm-kv-val">{{ $form->finish_time?->format('H:i') ?? '—' }}</span>
-          </div>
-          <div class="sm-kv">
-            <span class="sm-kv-key">Total Shackle Kosong</span>
-            <span class="sm-kv-val sm-val-green">{{ $totalKosong }}</span>
-          </div>
-          <div class="sm-kv">
-            <span class="sm-kv-key">Jumlah Ayam Diterima</span>
-            <span class="sm-kv-val sm-val-green">{{ $totalAyamTerima }}</span>
-          </div>
-        </div>
-      </div>
-
       {{-- ★ HIGHLIGHT 2: Ayam Retur & Mati --}}
       <div class="sm-card sm-card-highlight sm-card-retur">
         <div class="sm-card-head sm-head-rose">
@@ -392,8 +381,7 @@ $fc = $form->feather_condition;
             </div>
           @endforeach
         </div>
-      </div>
-
+      </div>    
     </div>{{-- /kol kanan --}}
   </div>{{-- /grid --}}
 </div>

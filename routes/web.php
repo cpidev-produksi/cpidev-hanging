@@ -47,14 +47,15 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::middleware('role:operator_ts')->group(function () {
         Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])->name('monitor-controls.summary');
         Route::resource('monitor-controls', MonitorControlController::class)->except(['destroy','show']);
+        Route::delete('monitor-controls/{monitorControl}', [MonitorControlController::class, 'destroy'])->name('monitor-controls.destroy');
         Route::post('monitor-controls/{monitorControl}/start', [MonitorControlController::class, 'start'])->name('monitor-controls.start');
         Route::post('monitor-controls/{monitorControl}/move', [MonitorControlController::class, 'moveTruckNo'])->name('monitor-controls.move');
     });
 
     // Delete monitor-controls (Supervisor only)
-    Route::delete('monitor-controls/{monitorControl}', [MonitorControlController::class, 'destroy'])
-        ->middleware('supervisor')
-        ->name('monitor-controls.destroy');
+    // Route::delete('monitor-controls/{monitorControl}', [MonitorControlController::class, 'destroy'])
+    //     ->middleware('supervisor')
+    //     ->name('monitor-controls.destroy');
 
     // Hanging (Checker Hanging)
     Route::middleware('role:checker_hanging')->group(function () {

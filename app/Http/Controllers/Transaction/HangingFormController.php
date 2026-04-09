@@ -74,8 +74,10 @@ class HangingFormController extends Controller
     public function updateCell(Request $request, HangingLineSet $hangingLineSet)
     {
         $hangingLineSet->load('line.form.monitorControl');
+        $slug = $request->user()?->role?->slug;
 
-        if (($hangingLineSet->line?->form?->status ?? null) === 'done') {
+        if (($hangingLineSet->line?->form?->status ?? null) === 'done'
+            && !in_array($slug, ['supervisor','superadmin'], true)) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Form sudah DONE dan tidak bisa diubah.',
@@ -108,7 +110,9 @@ class HangingFormController extends Controller
 
     public function finish(Request $request, HangingForm $hangingForm)
     {
-        if ($hangingForm->status === 'done') {
+        $slug = $request->user()?->role?->slug;
+
+        if ($hangingForm->status === 'done' && !in_array($slug, ['supervisor','superadmin'], true)) {
             return back()->withErrors(['finish' => 'Form sudah DONE dan tidak bisa diselesaikan ulang.']);
         }
 

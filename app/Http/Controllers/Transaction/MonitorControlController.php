@@ -34,7 +34,7 @@ class MonitorControlController extends Controller
             ->orderByDesc('process_date')
             ->orderBy('location')
             ->orderByRaw("FIELD(shift,'pagi','malam')")
-            ->orderBy('truck_no') // kecil ke besar
+            ->orderBy('truck_no')
             ->paginate(100);
 
         return view('transaction.monitor_controls.index', compact('items', 'runningLocations'));
@@ -69,8 +69,6 @@ class MonitorControlController extends Controller
             'plate_number_id' => ['required', 'exists:plate_numbers,id'],
 
             'farm_id' => ['required', 'exists:farms,id'],
-            // 'farm_fee_amount' => ['required', 'numeric', 'min:0'],
-
             'seal_no' => ['nullable', 'string', 'max:50'],
             'truck_arrival_time' => ['nullable', 'date_format:H:i'],
             'catch_date' => ['nullable', 'date'],
@@ -122,10 +120,13 @@ class MonitorControlController extends Controller
         });
     }
 
-    public function edit(MonitorControl $monitorControl)
+    public function edit(Request $request, MonitorControl $monitorControl)
     {
-        if ($monitorControl->status !== 'draft') {
-            return redirect()->route('monitor-controls.index')->with('status', 'Tidak bisa edit jika sudah running/done.');
+        $slug = $request->user()?->role?->slug;
+
+        if ($monitorControl->status !== 'draft' && !in_array($slug, ['supervisor','superadmin'], true)) {
+            return redirect()->route('monitor-controls.index')
+                ->with('status', 'Tidak bisa edit jika sudah running/done.');
         }
 
         $monitorControl->load(['expedition', 'plateNumber', 'farm']);
@@ -152,7 +153,9 @@ class MonitorControlController extends Controller
 
     public function update(Request $request, MonitorControl $monitorControl)
     {
-        if ($monitorControl->status !== 'draft') {
+        $slug = $request->user()?->role?->slug;
+
+        if ($monitorControl->status !== 'draft' && !in_array($slug, ['supervisor','superadmin'], true)) {
             return back()->with('status', 'Tidak bisa edit jika sudah running/done.');
         }
 
@@ -165,7 +168,6 @@ class MonitorControlController extends Controller
             'plate_number_id' => ['required', 'exists:plate_numbers,id'],
 
             'farm_id' => ['required', 'exists:farms,id'],
-            // 'farm_fee_amount' => ['required', 'numeric', 'min:0'],
 
             'seal_no' => ['nullable', 'string', 'max:50'],
             'truck_arrival_time' => ['nullable', 'date_format:H:i'],
@@ -194,9 +196,11 @@ class MonitorControlController extends Controller
         return redirect()->route('monitor-controls.index')->with('status', 'Kontrol monitor diupdate.');
     }
 
-    public function destroy(MonitorControl $monitorControl)
+    public function destroy(Request $request, MonitorControl $monitorControl)
     {
-        if ($monitorControl->status !== 'draft') {
+        $slug = $request->user()?->role?->slug;
+
+        if ($monitorControl->status !== 'draft' && !in_array($slug, ['supervisor','superadmin'], true)) {
             return back()->with('status', 'Tidak bisa hapus jika sudah running/done.');
         }
 
