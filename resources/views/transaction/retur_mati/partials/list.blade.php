@@ -40,8 +40,6 @@
       return $truckA <=> $truckB;
     })->values();
   };
-@endphp
-
   $shifts = [
     ['list' => $sortByPriority($listPagi), 'label' => 'Shift Pagi', 'key' => 'pagi'],
     ['list' => $sortByPriority($listMalam), 'label' => 'Shift Malam', 'key' => 'malam'],
