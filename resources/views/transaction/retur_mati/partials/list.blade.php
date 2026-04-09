@@ -10,7 +10,6 @@
   $themeBd    = $theme === 'sh01' ? 'rgba(232,93,47,.22)'  : 'rgba(124,58,237,.22)';
   $themeLight = $theme === 'sh01' ? 'rgba(232,93,47,.03)'  : 'rgba(124,58,237,.03)';
 
- @php
   $sortByPriority = function($collection) {
     return $collection->sort(function($a, $b) {
       $statusA = $a->hangingForm?->status ?? null;
