@@ -1,15 +1,18 @@
 @php
-  $runningRows = $list->filter(fn($x) => ($x->hangingForm?->status ?? '') === 'running')
-                      ->sortBy('truck_no')
-                      ->values();
+  $runningRows = $list->filter(function($x) {
+      $hfStatus = $x->hangingForm?->status;
+      return $hfStatus ? $hfStatus === 'running' : $x->status === 'running';
+  })->sortBy('truck_no')->values();
 
-  $draftRows = $list->filter(fn($x) => ($x->hangingForm?->status ?? '') === 'draft')
-                    ->sortBy('truck_no')
-                    ->values();
+  $draftRows = $list->filter(function($x) {
+      $hfStatus = $x->hangingForm?->status;
+      return $hfStatus ? $hfStatus === 'draft' : $x->status === 'draft';
+  })->sortBy('truck_no')->values();
 
-  $doneRows = $list->filter(fn($x) => ($x->hangingForm?->status ?? '') === 'done')
-                   ->sortBy('truck_no')
-                   ->values();
+  $doneRows = $list->filter(function($x) {
+      $hfStatus = $x->hangingForm?->status;
+      return $hfStatus ? $hfStatus === 'done' : $x->status === 'done';
+  })->sortBy('truck_no')->values();
 
   $key = $location;
 @endphp
