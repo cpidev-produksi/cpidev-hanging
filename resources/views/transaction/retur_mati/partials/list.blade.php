@@ -10,42 +10,38 @@
   $themeBd    = $theme === 'sh01' ? 'rgba(232,93,47,.22)'  : 'rgba(124,58,237,.22)';
   $themeLight = $theme === 'sh01' ? 'rgba(232,93,47,.03)'  : 'rgba(124,58,237,.03)';
 
-  // Fungsi untuk sorting berdasarkan priority: running -> draft (no urut) -> done
+ @php
   $sortByPriority = function($collection) {
     return $collection->sort(function($a, $b) {
-      // Get status hanging form
       $statusA = $a->hangingForm?->status ?? null;
       $statusB = $b->hangingForm?->status ?? null;
-      
-      // Cek apakah sudah isi data (dead_count tidak null)
-      $hasDataA = !is_null($a->hangingForm) && !is_null($a->hangingForm->dead_count);
-      $hasDataB = !is_null($b->hangingForm) && !is_null($b->hangingForm->dead_count);
-      
-      // Priority 1: RUNNING (hangingForm status = 'running')
+
       $isRunningA = $statusA === 'running';
       $isRunningB = $statusB === 'running';
-      
+
       if ($isRunningA && !$isRunningB) return -1;
       if (!$isRunningA && $isRunningB) return 1;
-      
-      // Priority 2: DRAFT / BELUM ISI (hangingForm null ATAU dead_count null)
+
       $isDraftA = is_null($a->hangingForm) || is_null($a->hangingForm->dead_count);
       $isDraftB = is_null($b->hangingForm) || is_null($b->hangingForm->dead_count);
-      
+
       if ($isDraftA && !$isDraftB) return -1;
       if (!$isDraftA && $isDraftB) return 1;
-      
-      // Priority 3: DONE (status = 'done')
+
       $isDoneA = $statusA === 'done';
       $isDoneB = $statusB === 'done';
-      
-      if ($isDoneA && !$isDoneB) return 1;  // Done di bawah
+
+      if ($isDoneA && !$isDoneB) return 1;
       if (!$isDoneA && $isDoneB) return -1;
-      
-      // Jika dalam kategori yang sama, urutkan berdasarkan truck_no (ascending)
-      return ($a->truck_no ?? 0) <=> ($b->truck_no ?? 0);
+
+      // fallback aman
+      $truckA = is_numeric($a->truck_no ?? null) ? (int)$a->truck_no : 0;
+      $truckB = is_numeric($b->truck_no ?? null) ? (int)$b->truck_no : 0;
+
+      return $truckA <=> $truckB;
     })->values();
   };
+@endphp
 
   $shifts = [
     ['list' => $sortByPriority($listPagi), 'label' => 'Shift Pagi', 'key' => 'pagi'],
