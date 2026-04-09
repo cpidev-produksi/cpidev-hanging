@@ -18,13 +18,14 @@ class ConditionController extends Controller
             ->with(['farm','expedition','plateNumber','hangingForm'])
             ->orderBy('process_date', 'desc')
             ->orderBy('location')
+            ->orderByRaw("FIELD(shift,'pagi','malam')") // supaya pagi dulu
             ->orderBy('truck_no');
 
         if ($date !== null && $date !== '') {
             $q->whereDate('process_date', $date);
         }
 
-        $items = $q->paginate(50)->withQueryString();
+        $items = $q->paginate(200)->withQueryString(); // <-- naikkan limit
 
         return view('transaction.conditions.landing', [
             'items' => $items,
