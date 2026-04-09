@@ -12,25 +12,26 @@ class ReturMatiLandingController extends Controller
 {
     public function index(Request $request)
     {
-        $date = $request->query('date'); // optional YYYY-MM-DD
+        $date = $request->query('date'); // optional
 
         $q = MonitorControl::query()
             ->with([
                 'farm',
                 'expedition',
                 'plateNumber',
-                'hangingForm',          // to show summary
-                'hangingForm.returItems' // optional, if you want detail count safe; we already store retur_count though
+                'hangingForm',
+                'hangingForm.returItems',
             ])
-            ->orderBy('process_date', 'desc')
+            ->orderByDesc('process_date')
             ->orderBy('location')
+            ->orderByRaw("FIELD(shift,'pagi','malam')")
             ->orderBy('truck_no');
 
-        if ($date) {
+        if ($date !== null && $date !== '') {
             $q->whereDate('process_date', $date);
         }
 
-        $items = $q->paginate(50);
+        $items = $q->paginate(50)->withQueryString();
 
         return view('transaction.retur_mati.landing', [
             'items' => $items,
