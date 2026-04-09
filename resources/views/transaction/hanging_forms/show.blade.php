@@ -279,55 +279,62 @@
         </thead>
 
         <tbody>
-        @foreach($form->lines as $line)
           @php
-            $maxCap = $customCaps[$location][$line->line_no] ?? 50;
+            $lastLineNo = (int) ($form->lines->max('line_no') ?? 0);
+            $lastSetNo = (int) $setCount;
           @endphp
-          <tr class="sh-tr">
-            <td class="sh-td sh-td-center sh-td-no">{{ $line->line_no }}</td>
-            <td class="sh-td sh-td-blok">
-              <span class="sh-blok-label">{{ $line->shackle_label }}</span>
-            </td>
-            <td class="sh-td sh-td-center">
-              <span class="sh-rule">{{ $line->rule_min }}–{{ $line->rule_max }}</span>
-            </td>
 
-            @for($s=1;$s<=$setCount;$s++)
-              @php
-                $cell     = $line->sets->firstWhere('set_no',$s);
-                $emptyRaw = $cell?->empty_count;
-                $empty    = is_null($emptyRaw) ? null : (int) $emptyRaw;
-                $ayam     = is_null($empty) ? 0 : ($maxCap - $empty);
-              @endphp
-
-              <td class="sh-td sh-td-center sh-td-ctrl">
-                <div class="sh-counter">
-                  <button type="button" class="sh-ctr-btn sh-ctr-minus"
-                          @disabled($isDone)
-                          onclick="changeEmpty({{ $cell->id }}, -1)">−</button>
-
-                  <input  id="empty-{{ $cell->id }}"
-                          value="{{ is_null($empty) ? '' : $empty }}"
-                          class="sh-ctr-input"
-                          inputmode="numeric"
-                          data-max="{{ $maxCap }}"
-                          @disabled($isDone)
-                          onchange="updateCell({{ $cell->id }}, this.value)"/>
-
-                  <button type="button" class="sh-ctr-btn sh-ctr-plus"
-                          @disabled($isDone)
-                          onclick="changeEmpty({{ $cell->id }}, 1)">+</button>
-                </div>
+          @foreach($form->lines as $line)
+            @php
+              $maxCap = $customCaps[$location][$line->line_no] ?? 50;
+            @endphp
+            <tr class="sh-tr">
+              <td class="sh-td sh-td-center sh-td-no">{{ $line->line_no }}</td>
+              <td class="sh-td sh-td-blok">
+                <span class="sh-blok-label">{{ $line->shackle_label }}</span>
               </td>
-
               <td class="sh-td sh-td-center">
-                <span id="ayam-{{ $cell->id }}" class="sh-ayam-val"
-                      data-empty="{{ is_null($empty) ? '' : $empty }}"
-                      data-cap="{{ $maxCap }}">{{ $ayam }}</span>
+                <span class="sh-rule">{{ $line->rule_min }}–{{ $line->rule_max }}</span>
               </td>
-            @endfor
-          </tr>
-        @endforeach
+
+              @for($s=1;$s<=$setCount;$s++)
+                @php
+                  $cell     = $line->sets->firstWhere('set_no',$s);
+                  $emptyRaw = $cell?->empty_count;
+                  $empty    = is_null($emptyRaw) ? null : (int) $emptyRaw;
+                  $ayam     = is_null($empty) ? 0 : ($maxCap - $empty);
+                  $isLastSet = ((int) $line->line_no === $lastLineNo) && ((int) $s === $lastSetNo);
+                @endphp
+
+                <td class="sh-td sh-td-center sh-td-ctrl">
+                  <div class="sh-counter">
+                    <button type="button" class="sh-ctr-btn sh-ctr-minus"
+                            @disabled($isDone)
+                            onclick="changeEmpty({{ $cell->id }}, -1)">−</button>
+
+                    <input  id="empty-{{ $cell->id }}"
+                            value="{{ is_null($empty) ? '' : $empty }}"
+                            class="sh-ctr-input"
+                            inputmode="numeric"
+                            data-max="{{ $maxCap }}"
+                            @disabled($isDone)
+                            onchange="updateCell({{ $cell->id }}, this.value)"/>
+
+                    <button type="button" class="sh-ctr-btn sh-ctr-plus"
+                            @disabled($isDone)
+                            onclick="changeEmpty({{ $cell->id }}, 1)">+</button>
+                  </div>
+                </td>
+
+                <td class="sh-td sh-td-center">
+                  <span id="ayam-{{ $cell->id }}" class="sh-ayam-val"
+                        data-empty="{{ is_null($empty) ? '' : $empty }}"
+                        data-cap="{{ $maxCap }}"
+                        data-last-set="{{ $isLastSet ? '1' : '0' }}">{{ $ayam }}</span>
+                </td>
+              @endfor
+            </tr>
+          @endforeach
         </tbody>
       </table>
     </div>
@@ -342,17 +349,24 @@ function refreshTotals() {
 
   document.querySelectorAll('.sh-ayam-val').forEach(el => {
     const s = el.getAttribute('data-empty');
+    const cap = parseInt(el.getAttribute('data-cap') || '50', 10);
+    const isLastSet = el.getAttribute('data-last-set') === '1';
+
+    if (isLastSet) {
+      blokPenuh++;
+    }
+
     if (!s && s !== '0') return;
 
-    const e   = parseInt(s, 10);
-    const cap = parseInt(el.getAttribute('data-cap') || '50', 10);
-
+    const e = parseInt(s, 10);
     if (isNaN(e) || isNaN(cap)) return;
 
     totalKosong += e;
     totalAyamShackle += (cap - e);
 
-    if (cap === 50 && e === 0) blokPenuh++;
+    if (cap === 50 && e === 0 && !isLastSet) {
+      blokPenuh++;
+    }
   });
 
   const summaryEl = document.querySelector('.sh-summary-list');
@@ -360,7 +374,7 @@ function refreshTotals() {
   const retur = parseInt(summaryEl?.getAttribute('data-retur') || '0', 10);
   const totalMC = parseInt(summaryEl?.getAttribute('data-total-chicken') || '0', 10);
 
-  const targetMC = totalMC - dead - retur; // target bersih dari MC
+  const targetMC = totalMC - dead - retur;
   const selisih  = targetMC - totalAyamShackle;
 
   const ke = document.getElementById('total-kosong');

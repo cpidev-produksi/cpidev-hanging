@@ -84,7 +84,6 @@ class MonitorControlController extends Controller
             'truck_arrival_time.date_format' => 'Format jam truk datang harus HH:MM.',
         ]);
 
-        // plate number harus milik ekspedisi tsb
         $ok = PlateNumber::query()
             ->where('id', $data['plate_number_id'])
             ->where('expedition_id', $data['expedition_id'])
@@ -113,6 +112,18 @@ class MonitorControlController extends Controller
             $data['report_code'] = $this->generateReportCode($data['location'], $data['process_date'], $data['shift']);
 
             $monitor = MonitorControl::create($data);
+
+            // HangingForm::firstOrCreate(
+            //     ['monitor_control_id' => $monitor->id],
+            //     [
+            //         'status' => 'draft',
+            //         'unloading_time' => null,
+            //         'finish_time' => null,
+            //         'dead_count' => 0,
+            //         'retur_count' => 0,
+            //         'retur_total_kg' => 0,
+            //     ]
+            // );
 
             return redirect()
                 ->route('monitor-controls.index')

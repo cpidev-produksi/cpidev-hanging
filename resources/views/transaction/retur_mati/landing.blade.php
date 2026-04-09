@@ -21,18 +21,13 @@
     <form method="GET" class="rm-filter">
       <div class="rm-input-wrap">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" class="rm-input-icon">
+            stroke="currentColor" stroke-width="2" class="rm-input-icon">
           <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
         </svg>
         <input type="date" name="date" value="{{ $date ?? '' }}" class="rm-date-input">
       </div>
-      <button class="rm-btn-filter" type="submit">
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/>
-          <line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
-        </svg>
-        Filter
-      </button>
+      <button class="rm-btn-filter" type="submit">Filter</button>
+      <a href="{{ route('retur-mati.landing') }}" class="rm-btn-reset">Reset</a>
     </form>
   </div>
 
@@ -310,6 +305,25 @@
   transition: background .13s, color .13s, border-color .13s, box-shadow .13s;
   cursor: pointer;
   user-select: none;
+}
+
+.rm-btn-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: .84rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .18s;
+}
+.rm-btn-reset:hover {
+  background: #e5e7eb;
 }
 
 .page-btn:hover {

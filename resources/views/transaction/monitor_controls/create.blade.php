@@ -8,9 +8,7 @@
         <a href="{{ route('monitor-controls.index') }}" class="breadcrumb-link">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="4" width="18" height="14" rx="2"/>
-                <path d="M7 20h10"/>
-                <path d="M9 16v4"/>
-                <path d="M15 16v4"/>
+                <path d="M7 20h10"/><path d="M9 16v4"/><path d="M15 16v4"/>
             </svg>
             Kontrol Monitor
         </a>
@@ -26,21 +24,23 @@
             <div class="page-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="14" rx="2"/>
-                    <path d="M8 8h8"/>
-                    <path d="M8 12h5"/>
-                    <path d="M7 20h10"/>
+                    <path d="M8 8h8"/><path d="M8 12h5"/><path d="M7 20h10"/>
                 </svg>
             </div>
         </div>
         <div>
             <h1 class="page-title">Buat Kontrol Monitor</h1>
-            <p class="page-subtitle">Isi formulir di bawah untuk membuat draft kontrol monitor</p>
+            <p class="page-subtitle">
+                Isi formulir di bawah untuk membuat draft kontrol monitor
+                <span class="badge-auto">No. urut truk otomatis per lokasi &amp; tanggal</span>
+            </p>
         </div>
     </div>
 
     <form method="POST" action="{{ route('monitor-controls.store') }}" class="form-card">
         @csrf
 
+        {{-- ===== INFORMASI PROSES ===== --}}
         <div class="form-section-title">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -49,6 +49,7 @@
         </div>
 
         <div class="form-grid">
+
             {{-- Lokasi --}}
             <div class="form-group">
                 <label class="form-label" for="location">Lokasi <span class="required">*</span></label>
@@ -98,7 +99,7 @@
                         </svg>
                     </div>
                     <select id="shift" name="shift" class="form-input form-select">
-                        <option value="pagi" @selected(old('shift', 'pagi') === 'pagi')>Pagi</option>
+                        <option value="pagi"  @selected(old('shift', 'pagi') === 'pagi')>Pagi</option>
                         <option value="malam" @selected(old('shift') === 'malam')>Malam</option>
                     </select>
                     <div class="select-arrow">
@@ -114,10 +115,7 @@
                 <div class="input-wrapper select-wrapper @error('size') has-error @enderror">
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 2v20"/>
-                            <path d="M7 6h10"/>
-                            <path d="M7 12h10"/>
-                            <path d="M7 18h10"/>
+                            <path d="M12 2v20"/><path d="M7 6h10"/><path d="M7 12h10"/><path d="M7 18h10"/>
                         </svg>
                     </div>
                     <select id="size" name="size" class="form-input form-select">
@@ -132,166 +130,194 @@
                 @error('size')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
-            {{-- No Urut Truk (readonly) --}}
+            {{-- Farm — datalist native --}}
             <div class="form-group">
-                <label class="form-label" for="truck_no">No Urut Truk</label>
-                <div class="input-wrapper">
+                <label class="form-label" for="farm_name_input">Farm <span class="required">*</span></label>
+                <div class="input-wrapper @error('farm_id') has-error @enderror">
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/>
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
                         </svg>
                     </div>
-                    <input id="truck_no" type="text" class="form-input" value="(Auto setelah simpan)" readonly>
-                </div>
-                <div class="field-hint">No urut truk otomatis reset per lokasi + tanggal.</div>
-            </div>
-
-            {{-- Farm --}}
-            <div class="form-group">
-                <label class="form-label" for="farm_id">Farm <span class="required">*</span></label>
-                <div class="@error('farm_id') has-error @enderror">
-                    <select id="farm_id" name="farm_id" class="form-input">
-                        <option value="">— Cari atau Pilih Farm —</option>
+                    {{-- visible input --}}
+                    <input list="farm-list" id="farm_name_input" class="form-input"
+                           autocomplete="off" placeholder="Ketik atau pilih farm…"
+                           value="{{ old('_farm_name') }}">
+                    {{-- hidden id untuk submit --}}
+                    <input type="hidden" id="farm_id" name="farm_id" value="{{ old('farm_id') }}">
+                    <datalist id="farm-list">
                         @foreach($farms as $f)
-                            <option value="{{ $f->id }}" @selected(old('farm_id') == $f->id)>
-                                {{ $f->name }}
-                            </option>
+                            <option data-id="{{ $f->id }}" value="{{ $f->name }}">
                         @endforeach
-                    </select>
+                    </datalist>
                 </div>
                 @error('farm_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
-            {{-- Ekspedisi dengan Select2 --}}
-            <div class="form-group full-width">
-                <label class="form-label" for="expedition_id">Ekspedisi <span class="required">*</span></label>
-                <div class="@error('expedition_id') has-error @enderror">
-                    <select id="expedition_id" name="expedition_id" class="form-input">
-                        <option value="">— Cari atau Pilih Ekspedisi —</option>
+            {{-- Ekspedisi — datalist native --}}
+            <div class="form-group">
+                <label class="form-label" for="expedition_name_input">Ekspedisi <span class="required">*</span></label>
+                <div class="input-wrapper @error('expedition_id') has-error @enderror">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="3" width="15" height="13" rx="1"/>
+                            <path d="M16 8h4l3 5v3h-7V8z"/>
+                            <circle cx="5.5" cy="18.5" r="2.5"/>
+                            <circle cx="18.5" cy="18.5" r="2.5"/>
+                        </svg>
+                    </div>
+                    <input list="expedition-list" id="expedition_name_input" class="form-input"
+                           autocomplete="off" placeholder="Ketik atau pilih ekspedisi…"
+                           value="{{ old('_expedition_name') }}">
+                    <input type="hidden" id="expedition_id" name="expedition_id" value="{{ old('expedition_id') }}">
+                    <datalist id="expedition-list">
                         @foreach($expeditions as $e)
-                            <option value="{{ $e->id }}" @selected(old('expedition_id') == $e->id)>
-                                {{ $e->name }}
-                            </option>
+                            <option data-id="{{ $e->id }}" value="{{ $e->name }}">
                         @endforeach
-                    </select>
+                    </datalist>
                 </div>
                 @error('expedition_id')<div class="form-error">{{ $message }}</div>@enderror
+            </div>
 
-                <div style="height:12px"></div>
-
-                {{-- No Polisi dengan Select2 --}}
-                <label class="form-label" for="plate_number_id">No Polisi <span class="required">*</span></label>
-                <div class="@error('plate_number_id') has-error @enderror">
-                    <select id="plate_number_id" name="plate_number_id" class="form-input">
-                        <option value="">— Pilih No Polisi —</option>
-                        @foreach($expeditions as $e)
-                            @foreach($e->plateNumbers as $pn)
-                                <option value="{{ $pn->id }}" data-expedition="{{ $e->id }}"
-                                    @selected(old('plate_number_id') == $pn->id)>
-                                    {{ $pn->plate_number }} ({{ $e->name }})
-                                </option>
-                            @endforeach
-                        @endforeach
-                    </select>
+            {{-- No Polisi — datalist native, difilter JS --}}
+            <div class="form-group">
+                <label class="form-label" for="plate_name_input">No Polisi <span class="required">*</span></label>
+                <div class="input-wrapper @error('plate_number_id') has-error @enderror">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="10" rx="2"/>
+                            <path d="M6 11h.01M18 11h.01M10 11h4"/>
+                        </svg>
+                    </div>
+                    <input list="plate-list" id="plate_name_input" class="form-input"
+                           autocomplete="off" placeholder="Pilih ekspedisi dulu…"
+                           value="{{ old('_plate_name') }}" disabled>
+                    <input type="hidden" id="plate_number_id" name="plate_number_id" value="{{ old('plate_number_id') }}">
+                    <datalist id="plate-list">
+                        {{-- diisi oleh JS --}}
+                    </datalist>
                 </div>
                 @error('plate_number_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
-            {{-- ========== DATA TAMBAHAN PRODUKSI ========== --}}
-            <div class="form-section-title full-width" style="margin-top: 6px;">
+            {{-- ===== DATA TRUK & DOKUMEN ===== --}}
+            <div class="form-section-title full-width" style="margin-top:6px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 16V8"/><path d="M17 16V8"/><path d="M7 16V8"/><path d="M3 16V8"/><path d="M10 20h4"/><path d="M12 4v16"/>
+                    <path d="M21 16V8"/><path d="M17 16V8"/><path d="M7 16V8"/><path d="M3 16V8"/>
+                    <path d="M10 20h4"/><path d="M12 4v16"/>
                 </svg>
-                Data Truk & Dokumen
+                Data Truk &amp; Dokumen
             </div>
 
+            {{-- No. Segel --}}
             <div class="form-group">
                 <label class="form-label" for="seal_no">No. Segel</label>
                 <div class="input-wrapper @error('seal_no') has-error @enderror">
                     <div class="input-icon">#</div>
-                    <input id="seal_no" name="seal_no" type="text" value="{{ old('seal_no') }}" class="form-input" placeholder="No segel">
+                    <input id="seal_no" name="seal_no" type="text"
+                           value="{{ old('seal_no') }}" class="form-input" placeholder="No segel">
                 </div>
                 @error('seal_no')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- Jam Truk Datang — format 24 jam --}}
             <div class="form-group">
                 <label class="form-label" for="truck_arrival_time">Jam Truk Datang</label>
                 <div class="input-wrapper @error('truck_arrival_time') has-error @enderror">
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l3 2"/></svg>
                     </div>
-                    <input id="truck_arrival_time" name="truck_arrival_time" type="time" value="{{ old('truck_arrival_time', isset($data) ? \Carbon\Carbon::parse($data->truck_arrival_time)->format('H:i') : '') }}" class="form-input">
+                    <input id="truck_arrival_time" name="truck_arrival_time" type="time"
+                           value="{{ old('truck_arrival_time') }}"
+                           step="60"
+                           class="form-input time-24">
                 </div>
                 @error('truck_arrival_time')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- Tgl Tangkap --}}
             <div class="form-group">
                 <label class="form-label" for="catch_date">Tgl Tangkap</label>
                 <div class="input-wrapper @error('catch_date') has-error @enderror">
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                     </div>
-                    <input id="catch_date" name="catch_date" type="date" value="{{ old('catch_date') }}" class="form-input">
+                    <input id="catch_date" name="catch_date" type="date"
+                           value="{{ old('catch_date') }}" class="form-input">
                 </div>
                 @error('catch_date')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- Total Ekor --}}
             <div class="form-group">
                 <label class="form-label" for="total_chicken">Total Ekor</label>
                 <div class="input-wrapper @error('total_chicken') has-error @enderror">
                     <div class="input-icon">Σ</div>
-                    <input id="total_chicken" name="total_chicken" type="number" step="1" value="{{ old('total_chicken') }}" class="form-input" placeholder="0">
+                    <input id="total_chicken" name="total_chicken" type="number" step="1"
+                           value="{{ old('total_chicken') }}" class="form-input" placeholder="0">
                 </div>
                 @error('total_chicken')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- Total Kilo --}}
             <div class="form-group">
                 <label class="form-label" for="total_kilo">Total Kilo</label>
                 <div class="input-wrapper @error('total_kilo') has-error @enderror">
                     <div class="input-icon">kg</div>
-                    <input id="total_kilo" name="total_kilo" type="number" step="0.01" value="{{ old('total_kilo') }}" class="form-input" placeholder="0.00">
+                    <input id="total_kilo" name="total_kilo" type="number" step="0.01"
+                           value="{{ old('total_kilo') }}" class="form-input" placeholder="0.00">
                 </div>
                 @error('total_kilo')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- ABW --}}
             <div class="form-group">
                 <label class="form-label" for="abw">ABW</label>
                 <div class="input-wrapper @error('abw') has-error @enderror">
                     <div class="input-icon">abw</div>
-                    <input id="abw" name="abw" type="number" step="0.01" value="{{ old('abw') }}" class="form-input" placeholder="0.00">
+                    <input id="abw" name="abw" type="number" step="0.01"
+                           value="{{ old('abw') }}" class="form-input" placeholder="0.00">
                 </div>
                 @error('abw')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- No. SPPA --}}
             <div class="form-group">
                 <label class="form-label" for="sppa_no">No. SPPA</label>
                 <div class="input-wrapper @error('sppa_no') has-error @enderror">
                     <div class="input-icon">#</div>
-                    <input id="sppa_no" name="sppa_no" type="text" value="{{ old('sppa_no') }}" class="form-input" placeholder="No SPPA">
+                    <input id="sppa_no" name="sppa_no" type="text"
+                           value="{{ old('sppa_no') }}" class="form-input" placeholder="No SPPA">
                 </div>
                 @error('sppa_no')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- Order ID --}}
             <div class="form-group">
                 <label class="form-label" for="order_id">Order ID</label>
                 <div class="input-wrapper @error('order_id') has-error @enderror">
                     <div class="input-icon">ID</div>
-                    <input id="order_id" name="order_id" type="text" value="{{ old('order_id') }}" class="form-input" placeholder="Order ID (string)">
+                    <input id="order_id" name="order_id" type="text"
+                           value="{{ old('order_id') }}" class="form-input" placeholder="Order ID">
                 </div>
                 @error('order_id')<div class="form-error">{{ $message }}</div>@enderror
             </div>
 
+            {{-- Tanggal SPPA --}}
             <div class="form-group">
                 <label class="form-label" for="sppa_date">Tanggal SPPA</label>
                 <div class="input-wrapper @error('sppa_date') has-error @enderror">
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                     </div>
-                    <input id="sppa_date" name="sppa_date" type="date" value="{{ old('sppa_date') }}" class="form-input">
+                    <input id="sppa_date" name="sppa_date" type="date"
+                           value="{{ old('sppa_date') }}" class="form-input">
                 </div>
                 @error('sppa_date')<div class="form-error">{{ $message }}</div>@enderror
             </div>
-        </div>
+
+        </div>{{-- /form-grid --}}
 
         <div class="form-footer">
             <a href="{{ route('monitor-controls.index') }}" class="btn-cancel">
@@ -305,189 +331,146 @@
         </div>
     </form>
 </div>
-{{-- 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
 
-{{-- <script>
-$(function () {
+{{-- ============================================================
+     Master data ekspedisi → plat nomor (untuk filtering JS)
+     Diembed sebagai JSON supaya tidak ada request AJAX
+     ============================================================ --}}
+@php
+    $expeditionsJson = $expeditions->map(fn ($e) => [
+        'id'     => $e->id,
+        'name'   => $e->name,
+        'plates' => $e->plateNumbers->map(fn ($pn) => [
+            'id'    => $pn->id,
+            'plate' => $pn->plate_number,
+        ])->values(),
+    ])->values();
+@endphp
+<script>
+(function () {
+    // ── Master data dari Blade ──────────────────────────────────────────────
+    const EXPEDITIONS = @json($expeditionsJson);
 
-    const SELECT2_COMMON = {
-        allowClear: true,
-        width: '100%',
-        minimumResultsForSearch: 0,
-    };
+    // ── Elemen ─────────────────────────────────────────────────────────────
+    const farmNameInput  = document.getElementById('farm_name_input');
+    const farmIdHidden   = document.getElementById('farm_id');
+    const farmDatalist   = document.getElementById('farm-list');
 
-    // Init select2
-    const $farm = $('#farm_id').select2($.extend({}, SELECT2_COMMON, {
-        placeholder: 'Cari nama farm...',
-        language: { noResults: () => 'Farm tidak ditemukan' }
-    }));
+    const expNameInput   = document.getElementById('expedition_name_input');
+    const expIdHidden    = document.getElementById('expedition_id');
+    const expDatalist    = document.getElementById('expedition-list');
 
-    const $exp = $('#expedition_id').select2($.extend({}, SELECT2_COMMON, {
-        placeholder: 'Cari nama ekspedisi...',
-        language: { noResults: () => 'Ekspedisi tidak ditemukan' }
-    }));
+    const plateNameInput = document.getElementById('plate_name_input');
+    const plateIdHidden  = document.getElementById('plate_number_id');
+    const plateDatalist  = document.getElementById('plate-list');
 
-    const $plate = $('#plate_number_id');
-
-    // Simpan master data plate dari HTML (sekali)
-    const masterPlate = [];
-    $plate.find('option').each(function () {
-        const val = $(this).val();
-        if (!val) return; // skip placeholder
-        masterPlate.push({
-            value: val,
-            text: $(this).text(),
-            expId: String($(this).attr('data-expedition') || '')
-        });
-    });
-
-    function initPlateSelect2() {
-        // destroy dulu kalau sudah pernah init
-        if ($plate.hasClass("select2-hidden-accessible")) {
-            $plate.select2('destroy');
+    // ── Helper: resolve datalist option → id ───────────────────────────────
+    function resolveId(inputEl, datalistEl, hiddenEl) {
+        const val = inputEl.value.trim();
+        const opts = datalistEl.querySelectorAll('option');
+        for (const opt of opts) {
+            if (opt.value === val) {
+                hiddenEl.value = opt.dataset.id ?? '';
+                return opt.dataset.id ?? '';
+            }
         }
-        $plate.select2($.extend({}, SELECT2_COMMON, {
-            placeholder: 'Cari nomor polisi...',
-            language: { noResults: () => 'No polisi tidak ditemukan' }
-        }));
+        hiddenEl.value = '';
+        return '';
     }
 
-    function rebuildPlateOptions(expeditionId, restoreVal) {
-        const eid = String(expeditionId || '');
+    // ── Farm ───────────────────────────────────────────────────────────────
+    farmNameInput.addEventListener('input', () => resolveId(farmNameInput, farmDatalist, farmIdHidden));
+    farmNameInput.addEventListener('change', () => resolveId(farmNameInput, farmDatalist, farmIdHidden));
 
-        $plate.empty();
-        $plate.append(new Option('— Pilih No Polisi —', '', false, false));
+    // ── Ekspedisi + rebuild plat ────────────────────────────────────────────
+    function buildPlateDatalist(expId) {
+        // kosongkan
+        plateDatalist.innerHTML = '';
+        plateNameInput.value = '';
+        plateIdHidden.value  = '';
 
-        // ekspedisi belum dipilih => kosong (tetap enabled)
-        if (!eid) {
-            initPlateSelect2();
-            $plate.val('').trigger('change');
+        if (!expId) {
+            plateNameInput.disabled    = true;
+            plateNameInput.placeholder = 'Pilih ekspedisi dulu…';
             return;
         }
 
-        // isi hanya yang sesuai
-        masterPlate.forEach(d => {
-            if (d.expId === eid) {
-                $plate.append(new Option(d.text, d.value, false, false));
-            }
+        const exp = EXPEDITIONS.find(e => String(e.id) === String(expId));
+        if (!exp || !exp.plates.length) {
+            plateNameInput.disabled    = true;
+            plateNameInput.placeholder = 'Tidak ada plat untuk ekspedisi ini';
+            return;
+        }
+
+        exp.plates.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value        = p.plate;
+            opt.dataset.id   = p.id;
+            plateDatalist.appendChild(opt);
         });
 
-        initPlateSelect2();
-
-        // restore kalau valid
-        if (restoreVal && $plate.find('option[value="' + restoreVal + '"]').length) {
-            $plate.val(restoreVal).trigger('change');
-        } else {
-            $plate.val('').trigger('change');
-        }
+        plateNameInput.disabled    = false;
+        plateNameInput.placeholder = 'Ketik atau pilih nomor polisi…';
     }
 
-    // event ganti expedition (select2 & normal change)
-    $exp.on('change', function () {
-        rebuildPlateOptions($(this).val(), '');
-    });
+    function onExpeditionChange() {
+        const expId = resolveId(expNameInput, expDatalist, expIdHidden);
+        buildPlateDatalist(expId);
+    }
 
-    // load awal: expedition mungkin ada old value
-    const oldExp   = "{{ old('expedition_id') }}";
-    const oldPlate = "{{ old('plate_number_id') }}";
+    expNameInput.addEventListener('input',  onExpeditionChange);
+    expNameInput.addEventListener('change', onExpeditionChange);
 
-    rebuildPlateOptions(oldExp, oldPlate);
-});
-</script> --}}
+    // ── Plat nomor ─────────────────────────────────────────────────────────
+    plateNameInput.addEventListener('input',  () => resolveId(plateNameInput, plateDatalist, plateIdHidden));
+    plateNameInput.addEventListener('change', () => resolveId(plateNameInput, plateDatalist, plateIdHidden));
+
+    // ── Restore old() values saat validation gagal ─────────────────────────
+    const oldExpId   = "{{ old('expedition_id') }}";
+    const oldPlateId = "{{ old('plate_number_id') }}";
+
+    if (oldExpId) {
+        const exp = EXPEDITIONS.find(e => String(e.id) === oldExpId);
+        if (exp) {
+            expNameInput.value = exp.name;
+            expIdHidden.value  = exp.id;
+            buildPlateDatalist(exp.id);
+
+            if (oldPlateId) {
+                const plate = exp.plates.find(p => String(p.id) === oldPlateId);
+                if (plate) {
+                    plateNameInput.value = plate.plate;
+                    plateIdHidden.value  = plate.id;
+                }
+            }
+        }
+    }
+})();
+</script>
 
 <style>
-/* ── Select2 custom theme ── */
-.select2-container { width: 100% !important; }
-
-.select2-container--default .select2-selection--single {
-    height: 44px;
-    border: 1.5px solid #E2E5EE;
-    border-radius: 10px;
-    background: #FAFBFD;
-    display: flex;
+/* ── Badge auto no urut ─────────────────────────────── */
+.badge-auto {
+    display: inline-flex;
     align-items: center;
-    padding: 0 12px;
-    transition: border-color .2s, box-shadow .2s;
-}
-.select2-container--default.select2-container--open .select2-selection--single,
-.select2-container--default.select2-container--focus .select2-selection--single {
-    border-color: #E85D2F;
-    box-shadow: 0 0 0 3px rgba(232,93,47,.12);
-    outline: none;
-}
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #0D1117;
-    line-height: 44px;
-    padding: 0;
-    font-size: 14px;
-}
-.select2-container--default .select2-selection--single .select2-selection__placeholder {
-    color: #9CA3AF;
-}
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 42px;
-    right: 10px;
-}
-.select2-container--default .select2-selection--single .select2-selection__clear {
-    margin-right: 6px;
-    color: #9CA3AF;
-    font-size: 16px;
-}
-
-/* Dropdown */
-.select2-dropdown {
-    border: 1.5px solid #E2E5EE;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.1);
-    overflow: hidden;
-    margin-top: 4px;
-}
-.select2-search--dropdown {
-    padding: 10px;
-    border-bottom: 1px solid #F1F3F9;
-}
-.select2-search--dropdown .select2-search__field {
-    border: 1.5px solid #E2E5EE !important;
-    border-radius: 8px !important;
-    padding: 8px 12px !important;
-    font-size: 13px;
-    transition: border-color .2s, box-shadow .2s;
-    width: 100%;
-}
-.select2-search--dropdown .select2-search__field:focus {
-    border-color: #E85D2F !important;
-    box-shadow: 0 0 0 3px rgba(232,93,47,.1) !important;
-    outline: none !important;
-}
-.select2-results__option {
-    padding: 10px 14px;
-    font-size: 13.5px;
-    color: #374151;
-    transition: background .15s;
-}
-.select2-container--default .select2-results__option--highlighted[aria-selected] {
-    background: #E85D2F;
-    color: #fff;
-}
-.select2-container--default .select2-results__option[aria-selected=true] {
-    background: #FEF0EB;
-    color: #E85D2F;
+    gap: 4px;
+    font-size: .72rem;
     font-weight: 600;
-}
-.select2-results__options {
-    max-height: 240px;
-    overflow-y: auto;
+    color: #6366F1;
+    background: #EEF2FF;
+    border: 1px solid #C7D2FE;
+    border-radius: 20px;
+    padding: 2px 10px;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: .01em;
 }
 
-/* Error state */
-.has-error .select2-container--default .select2-selection--single {
-    border-color: #EF4444;
-}
+/* ── Jam 24 jam: sembunyikan AM/PM di browser yg mendukung ── */
+.time-24::-webkit-datetime-edit-ampm-field { display: none !important; }
+input[type="time"].time-24 { letter-spacing: .05em; }
 
-/* Misc */
+/* ── Misc ───────────────────────────────────────────── */
 .field-hint { font-size: .74rem; color: #9CA3AF; margin-top: 6px; font-weight: 600; }
 </style>
 @endsection

@@ -37,6 +37,9 @@ class HangingFormController extends Controller
         $totalAyamShackle = 0;
         $fullBlockCount = 0;
 
+        $lastLineNo = (int) ($hangingForm->lines->max('line_no') ?? 0);
+        $lastSetNo  = (int) ($hangingForm->monitorControl?->set_count ?? 0);
+
         foreach ($hangingForm->lines as $line) {
             $cap = $this->getMaxCapacity($location, (int) $line->line_no);
 
@@ -49,20 +52,34 @@ class HangingFormController extends Controller
                 $totalKosong += $empty;
                 $totalAyamShackle += ($cap - $empty);
 
-                if ($cap === 50 && $empty === 0) {
+                $isLastSet = ((int) $line->line_no === $lastLineNo)
+                    && ((int) $set->set_no === $lastSetNo);
+
+                if ($set->empty_count === null) {
+                    if ($isLastSet) {
+                        $fullBlockCount++;
+                    }
+                    continue;
+                }
+
+                $empty = (int) $set->empty_count;
+                $totalKosong += $empty;
+                $totalAyamShackle += ($cap - $empty);
+
+                if (($cap === 50 && $empty === 0) || $isLastSet) {
                     $fullBlockCount++;
                 }
             }
         }
 
         $totalChickenMC = (int) ($hangingForm->monitorControl?->total_chicken ?? 0);
-        $totalAyamBersih = max(0, $totalChickenMC - $deadCount - $returCount);
-        $selisihAyam    = $totalChickenMC - $totalAyamBersih;
+        $targetMC = max(0, $totalChickenMC - $deadCount - $returCount);
+        $selisihAyam = $targetMC - $totalAyamShackle;
 
         return view('transaction.hanging_forms.show', [
             'form'         => $hangingForm,
             'totalKosong'  => $totalKosong,
-            'totalAyam'    => $totalAyamBersih,
+            'totalAyam'    => $totalAyamShackle,
             'ayamMati'     => $deadCount,
             'ayamRetur'    => $returCount,
             'selisihAyam'  => $selisihAyam,

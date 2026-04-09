@@ -5,11 +5,40 @@ namespace App\Http\Controllers\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\HangingForm;
 use App\Models\HangingReturItem;
+use App\Models\MonitorControl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReturMatiController extends Controller
-{
+    {
+        public function index(Request $request)
+        {
+            $date = $request->query('date') ?? now()->toDateString();
+
+            $q = MonitorControl::query()
+                ->with([
+                    'farm',
+                    'expedition',
+                    'plateNumber',
+                    'hangingForm',
+                    'hangingForm.returItems'
+                ])
+                ->orderBy('process_date', 'desc')
+                ->orderBy('location')
+                ->orderBy('truck_no');
+
+            if ($date) {
+                $q->whereDate('process_date', $date);
+            }
+
+            $items = $q->paginate(50);
+
+            return view('transaction.retur_mati.landing', [
+                'items' => $items,
+                'date' => $date,
+            ]);
+        }
+        
     public function edit(HangingForm $hangingForm)
     {
         $hangingForm->load([
