@@ -131,7 +131,7 @@
   @endforeach
 
   @if($items->hasPages())
-    <div class="kd-pagination">{{ $items->links() }}</div>
+    <div class="kd-pagination">{{ $items->withQueryString()->links() }}</div>
   @endif
 </div>
 

@@ -20,9 +20,11 @@ class ConditionController extends Controller
             ->orderBy('location')
             ->orderBy('truck_no');
 
-        if ($date) $q->whereDate('process_date', $date);
+        if ($date !== null && $date !== '') {
+            $q->whereDate('process_date', $date);
+        }
 
-        $items = $q->paginate(50);
+        $items = $q->paginate(50)->withQueryString();
 
         return view('transaction.conditions.landing', [
             'items' => $items,
