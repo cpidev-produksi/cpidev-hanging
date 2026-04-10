@@ -1,4 +1,25 @@
-@php /** @var \Illuminate\Support\Collection $list */ @endphp
+@php /** @var \Illuminate\Pagination\LengthAwarePaginator $list */ @endphp
+
+@php
+  $col = $list->getCollection();
+
+  $sorted = $col->sort(function($a, $b) {
+    $doneA = $a->hangingForm && $a->hangingForm->status === 'done';
+    $doneB = $b->hangingForm && $b->hangingForm->status === 'done';
+
+    if ($doneA && !$doneB) return 1;
+    if (!$doneA && $doneB) return -1;
+
+    $truckA = is_numeric($a->truck_no ?? null) ? (int)$a->truck_no : 0;
+    $truckB = is_numeric($b->truck_no ?? null) ? (int)$b->truck_no : 0;
+    return $truckA <=> $truckB;
+  })->values();
+
+  $activeRows = $sorted->filter(fn($it) => !($it->hangingForm && $it->hangingForm->status === 'done'));
+  $doneRows   = $sorted->filter(fn($it) =>  ($it->hangingForm && $it->hangingForm->status === 'done'));
+
+  $domId = 'done-'.strtolower($location).'-'.uniqid();
+@endphp
 
 <div class="kl-card">
   <div class="kl-card-head">
@@ -11,101 +32,79 @@
     </div>
     <div class="kl-card-meta">
       <span class="kl-stat">
-        {{ $list->filter(fn($it) => $it->hangingForm && $it->hangingForm->basket_condition && $it->hangingForm->truck_platform_condition && $it->hangingForm->feather_condition)->count() }}
-        <span style="color:#9CA3AF;font-weight:600">/ {{ $list->count() }} terisi</span>
+        {{ $sorted->filter(fn($it) => $it->hangingForm && $it->hangingForm->basket_condition && $it->hangingForm->truck_platform_condition && $it->hangingForm->feather_condition)->count() }}
+        <span style="color:#9CA3AF;font-weight:600">/ {{ $sorted->count() }} terisi</span>
       </span>
     </div>
   </div>
 
   <div class="kl-body">
-    @if($list->isEmpty())
-      <div class="kl-empty">
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="1.3"><rect x="1" y="3" width="15" height="13" rx="2"/>
-          <path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-        </svg>
-        <span>Belum ada data untuk {{ $location }}.</span>
-      </div>
+    @if($sorted->isEmpty())
+      <div class="kl-empty">Belum ada data untuk {{ $location }}.</div>
     @else
       <div class="kl-list">
-        @foreach($list as $it)
-          @php
-            $hf     = $it->hangingForm;
-            $filled = $hf && $hf->basket_condition && $hf->truck_platform_condition && $hf->feather_condition;
-            $isDone = $hf && $hf->status === 'done';
-          @endphp
-
-          <div class="kl-row {{ $isDone ? 'kl-row-done' : '' }}">
-
-            {{-- Truck number --}}
-            <div class="kl-truck-col">
-              <div class="kl-truck-num">#{{ $it->truck_no ?? '–' }}</div>
-            </div>
-
-            {{-- Main info --}}
-            <div class="kl-info">
-              <div class="kl-info-top">
-                <code class="kl-code">{{ $it->report_code }}</code>
-                <span class="kl-pill {{ $filled ? 'kl-pill-ok' : 'kl-pill-warn' }}">
-                  {{ $filled ? 'Sudah Terisi' : 'Belum Diisi' }}
-                </span>
-                @if($isDone)
-                  <span class="kl-done-badge">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    DONE
-                  </span>
-                @endif
-              </div>
-              <div class="kl-info-bottom">
-                <span class="kl-meta">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
-                       stroke="currentColor" stroke-width="2.2">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
-                  {{ $it->process_date?->format('d/m/Y') ?? '–' }}
-                </span>
-                <span class="kl-dot">·</span>
-                <span class="kl-meta">{{ $it->expedition?->name ?? '–' }}</span>
-                <span class="kl-dot">·</span>
-                <code class="kl-plate">{{ $it->plateNumber?->plate_number ?? '–' }}</code>
-                <span class="kl-dot">·</span>
-                <span class="kl-meta">{{ $it->farm?->name ?? '–' }}</span>
-              </div>
-            </div>
-
-            {{-- Action --}}
-            <div class="kl-actions">
-              <form method="POST" action="{{ route('conditions.open', $it) }}" style="display:inline">
-                @csrf
-                <button type="submit" class="kl-btn {{ $isDone ? 'kl-btn-view' : 'kl-btn-input' }}">
-                  @if($isDone)
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                    Lihat
-                  @else
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                    Input Kondisi
-                  @endif
-                </button>
-              </form>
-            </div>
-
-          </div>
+        @foreach($activeRows as $it)
+          @include('transaction.conditions.partials.row', ['it' => $it])
         @endforeach
       </div>
+
+      {{-- DONE TOGGLE (Improved) --}}
+      @if($doneRows->isNotEmpty())
+        <div class="kl-done-section">
+          <button type="button"
+                  class="kl-done-toggle"
+                  id="toggle-btn-{{ $domId }}"
+                  aria-expanded="false"
+                  aria-controls="{{ $domId }}"
+                  onclick="kdToggle('{{ $domId }}')">
+            <div class="kl-done-toggle-left">
+              <div class="kl-done-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="kl-done-label">Selesai</span>
+              <span class="kl-done-count">{{ $doneRows->count() }}</span>
+            </div>
+            <div class="kl-done-chevron" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </button>
+
+          <div id="{{ $domId }}" class="kl-done-body" aria-hidden="true">
+            <div class="kl-list kl-done-list">
+              @foreach($doneRows as $it)
+                @include('transaction.conditions.partials.row', ['it' => $it])
+              @endforeach
+            </div>
+          </div>
+        </div>
+      @endif
     @endif
   </div>
 </div>
 
+<script>
+function kdToggle(id) {
+  const body   = document.getElementById(id);
+  const btn    = document.getElementById('toggle-btn-' + id);
+  const isOpen = body.classList.contains('kl-done-open');
+
+  body.classList.toggle('kl-done-open', !isOpen);
+  btn.setAttribute('aria-expanded', !isOpen);
+  body.setAttribute('aria-hidden', isOpen);
+}
+</script>
+
 <style>
 /* ── CARD ── */
+.kl-btn-edit {
+  background:#F59F00;
+  color:#fff;
+  border-color:#F59F00;
+}
+.kl-btn-edit:hover { background:#D97706; border-color:#D97706; }
+
 .kl-card {
   background:#fff;
   border:1px solid #E2E5EE;
@@ -140,7 +139,6 @@
   padding:16px 12px; color:#9CA3AF;
   font-size:.82rem; font-weight:700;
 }
-.kl-empty svg { opacity:.35; flex-shrink:0; }
 
 /* ── ROW ── */
 .kl-row {
@@ -211,9 +209,90 @@
   font-size:.78rem; font-weight:700;
   border:1.5px solid transparent;
   cursor:pointer; transition:all .14s;
+  text-decoration:none;
 }
 .kl-btn-input { background:#0D1117; color:#fff; border-color:#0D1117; }
 .kl-btn-input:hover { background:#1E2330; border-color:#1E2330; }
 .kl-btn-view { background:#fff; color:#6B7896; border-color:#E2E5EE; }
 .kl-btn-view:hover { background:#F0F2F7; border-color:#C5CAD8; }
+
+/* ── DONE SECTION ── */
+.kl-done-section { margin-top:10px; }
+
+.kl-done-toggle {
+  width:100%;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px;
+  border-radius:12px;
+  border:1.5px dashed rgba(16,185,129,.35);
+  background:rgba(16,185,129,.04);
+  cursor:pointer;
+  transition:background .18s, border-color .18s;
+  user-select:none;
+  appearance:none; -webkit-appearance:none;
+  font-family:inherit;
+}
+.kl-done-toggle:hover {
+  background:rgba(16,185,129,.08);
+  border-color:rgba(16,185,129,.55);
+}
+.kl-done-toggle[aria-expanded="true"] {
+  background:rgba(16,185,129,.07);
+  border-style:solid;
+  border-color:rgba(16,185,129,.4);
+  border-radius:12px 12px 0 0;
+}
+
+.kl-done-toggle-left { display:flex; align-items:center; gap:10px; }
+
+.kl-done-icon {
+  width:28px; height:28px; border-radius:8px;
+  background:rgba(16,185,129,.12);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  color:#059669;
+}
+
+.kl-done-label {
+  font-size:.82rem; font-weight:700; color:#065F46;
+}
+
+.kl-done-count {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:22px; height:20px; padding:0 7px;
+  background:rgba(16,185,129,.15); color:#059669;
+  border-radius:10px; font-size:.72rem; font-weight:900;
+}
+
+.kl-done-chevron {
+  width:26px; height:26px; border-radius:7px;
+  background:rgba(16,185,129,.1);
+  display:flex; align-items:center; justify-content:center;
+  transition:transform .25s ease, background .18s;
+  color:#059669; flex-shrink:0;
+}
+.kl-done-toggle[aria-expanded="true"] .kl-done-chevron {
+  transform:rotate(180deg);
+  background:rgba(16,185,129,.2);
+}
+
+/* ── DONE BODY (animated) ── */
+.kl-done-body {
+  overflow:hidden;
+  max-height:0;
+  opacity:0;
+  transition:max-height .32s ease, opacity .25s ease, padding .2s ease;
+  padding:0 0;
+  border:1.5px solid transparent;
+  border-top:none;
+  border-radius:0 0 12px 12px;
+}
+.kl-done-body.kl-done-open {
+  max-height:2000px;
+  opacity:1;
+  padding:10px 0 0 0;
+  border-color:rgba(16,185,129,.3);
+  background:rgba(16,185,129,.025);
+}
+
+.kl-done-list { padding:8px 10px 10px; }
 </style>

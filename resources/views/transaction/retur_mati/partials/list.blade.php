@@ -14,32 +14,22 @@
     return $collection->sort(function($a, $b) {
       $statusA = $a->hangingForm?->status ?? null;
       $statusB = $b->hangingForm?->status ?? null;
-
-      $isRunningA = $statusA === 'running';
-      $isRunningB = $statusB === 'running';
-
-      if ($isRunningA && !$isRunningB) return -1;
-      if (!$isRunningA && $isRunningB) return 1;
-
-      $isDraftA = is_null($a->hangingForm) || is_null($a->hangingForm->dead_count);
-      $isDraftB = is_null($b->hangingForm) || is_null($b->hangingForm->dead_count);
-
-      if ($isDraftA && !$isDraftB) return -1;
-      if (!$isDraftA && $isDraftB) return 1;
-
+      
       $isDoneA = $statusA === 'done';
       $isDoneB = $statusB === 'done';
-
-      if ($isDoneA && !$isDoneB) return 1;
+      
+      // Jika A belum done dan B sudah done → A di atas (lebih prioritas)
       if (!$isDoneA && $isDoneB) return -1;
+      // Jika A sudah done dan B belum done → B di atas
+      if ($isDoneA && !$isDoneB) return 1;
 
-      // fallback aman
-      $truckA = is_numeric($a->truck_no ?? null) ? (int)$a->truck_no : 0;
-      $truckB = is_numeric($b->truck_no ?? null) ? (int)$b->truck_no : 0;
-
+      $truckA = is_numeric($a->truck_no ?? null) ? (int)$a->truck_no : 999999;
+      $truckB = is_numeric($b->truck_no ?? null) ? (int)$b->truck_no : 999999;
+      
       return $truckA <=> $truckB;
     })->values();
   };
+  
   $shifts = [
     ['list' => $sortByPriority($listPagi), 'label' => 'Shift Pagi', 'key' => 'pagi'],
     ['list' => $sortByPriority($listMalam), 'label' => 'Shift Malam', 'key' => 'malam'],
@@ -60,8 +50,13 @@
       $cntPartial = $cntTotal - $cntDone - $cntBelum - $cntRunning;
 
       // Pisahkan item berdasarkan status untuk toggle
-      $activeItems = $sList->filter(fn($it) => $it->hangingForm?->status !== 'done');
-      $doneItems   = $sList->filter(fn($it) => $it->hangingForm?->status === 'done');
+      // Urutkan active items berdasarkan truck_no ASC
+      $activeItems = $sList->filter(fn($it) => $it->hangingForm?->status !== 'done')
+                          ->sortBy('truck_no')
+                          ->values();
+      $doneItems   = $sList->filter(fn($it) => $it->hangingForm?->status === 'done')
+                          ->sortBy('truck_no')
+                          ->values();
       $hasDone     = $doneItems->count() > 0;
     @endphp
 
@@ -127,7 +122,7 @@
         </div>
       @endif
 
-      {{-- ACTIVE ITEMS (RUNNING + DRAFT/PROSES) --}}
+      {{-- ACTIVE ITEMS (BELUM DONE) --}}
       <div class="rl-body rl-active-section">
         @if($activeItems->isEmpty())
           <div class="rl-empty">
@@ -189,7 +184,7 @@
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    Partial
+                    Terisi
                   @endif
                 </div>
               </div>
@@ -362,6 +357,44 @@
   @endforeach
 </div>
 
+<script>
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggles = document.querySelectorAll('.rl-done-toggle:not([data-init])');
+
+    toggles.forEach(btn => {
+      btn.dataset.init = '1'; // tandai sudah diinisialisasi
+      const targetId = btn.dataset.toggle;
+      const target = document.getElementById(targetId);
+
+      if (!target) return;
+
+      target.style.display = 'none';
+      btn.setAttribute('aria-expanded', 'false');
+
+      const savedState = localStorage.getItem(`toggle_${targetId}`);
+      if (savedState === 'open') {
+        target.style.display = 'flex';
+        btn.setAttribute('aria-expanded', 'true');
+      }
+
+      btn.addEventListener('click', function() {
+        const isOpen = btn.getAttribute('aria-expanded') === 'true';
+        if (isOpen) {
+          target.style.display = 'none';
+          btn.setAttribute('aria-expanded', 'false');
+          localStorage.setItem(`toggle_${targetId}`, 'closed');
+        } else {
+          target.style.display = 'flex';
+          btn.setAttribute('aria-expanded', 'true');
+          localStorage.setItem(`toggle_${targetId}`, 'open');
+        }
+      });
+    });
+  });
+})();
+</script>
+
 <style>
 .rl-wrap { display:flex; flex-direction:column; }
 
@@ -518,41 +551,3 @@
   .rl-actions { width:100%; justify-content:flex-start; }
 }
 </style>
-
-<script>
-(function() {
-  // Inisialisasi semua toggle button
-  const toggles = document.querySelectorAll('.rl-done-toggle');
-
-  toggles.forEach(btn => {
-    const targetId = btn.dataset.toggle;
-    const target = document.getElementById(targetId);
-
-    if (target) {
-      // Set initial state (default collapsed)
-      target.style.display = 'none';
-      btn.setAttribute('aria-expanded', 'false');
-
-      // Cek localStorage untuk remember state
-      const savedState = localStorage.getItem(`toggle_${targetId}`);
-      if (savedState === 'open') {
-        target.style.display = 'flex';
-        btn.setAttribute('aria-expanded', 'true');
-      }
-
-      btn.addEventListener('click', () => {
-        const isOpen = btn.getAttribute('aria-expanded') === 'true';
-        if (isOpen) {
-          target.style.display = 'none';
-          btn.setAttribute('aria-expanded', 'false');
-          localStorage.setItem(`toggle_${targetId}`, 'closed');
-        } else {
-          target.style.display = 'flex';
-          btn.setAttribute('aria-expanded', 'true');
-          localStorage.setItem(`toggle_${targetId}`, 'open');
-        }
-      });
-    }
-  });
-})();
-</script>

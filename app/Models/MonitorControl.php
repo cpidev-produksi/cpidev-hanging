@@ -56,4 +56,22 @@ class MonitorControl extends Model
     public function plateNumber() { return $this->belongsTo(PlateNumber::class); }
 
     public function hangingForm() { return $this->hasOne(HangingForm::class); }
+    protected $appends = ['calculated_abw']; // optional
+
+    public function getCalculatedAbwAttribute()
+    {
+        if ($this->total_chicken && $this->total_chicken > 0 && $this->total_kilo) {
+            return round($this->total_kilo / $this->total_chicken, 2);
+        }
+        return null;
+    }
+    // Auto-calculate ABW before save
+    protected static function booted()
+    {
+        static::saving(function ($model) {
+            if ($model->total_chicken && $model->total_chicken > 0 && $model->total_kilo) {
+                $model->abw = round($model->total_kilo / $model->total_chicken, 2);
+            }
+        });
+    }
 }

@@ -471,7 +471,7 @@
                     href="{{ route('hanging.landing') }}">
                         Form Hanging Ayam
                     </a>
-                    <a class="dropdown-item {{ request()->routeIs('retur-mati.*') ? 'active' : '' }}"
+                    <a class="dropdown-item {{ request()->routeIs('retur-mati.landing') ? 'active' : '' }}"
                     href="{{ route('retur-mati.landing') }}">
                         Ayam Retur &amp; Mati
                     </a>

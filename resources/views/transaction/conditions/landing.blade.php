@@ -33,11 +33,8 @@
   </div>
 
   @php
-    $col      = $items->getCollection();
-    $grouped  = $col->groupBy(fn($x) => $x->location)
-                    ->map(fn($lg) => $lg->groupBy(fn($x) => $x->shift));
     $locations = ['SH01', 'SH02'];
-    $countFilled = fn($list) => $list->filter(fn($it) =>
+    $countFilled = fn($paginator) => $paginator->getCollection()->filter(fn($it) =>
       $it->hangingForm && $it->hangingForm->basket_condition &&
       $it->hangingForm->truck_platform_condition && $it->hangingForm->feather_condition
     )->count();
@@ -47,13 +44,13 @@
   <div class="kd-tab-bar">
     @foreach($locations as $loc)
       @php
-        $lg     = $grouped->get($loc, collect());
-        $total  = $lg->flatten()->count();
-        $filled = $countFilled($lg->flatten());
-        $isFirst = $loop->first;
+        $pagi  = $data[$loc]['pagi'];
+        $malam = $data[$loc]['malam'];
+        $total  = $pagi->total() + $malam->total();
+        $filled = $countFilled($pagi) + $countFilled($malam);
       @endphp
       <button type="button"
-              class="kd-tab {{ $isFirst ? 'kd-tab-active' : '' }}"
+              class="kd-tab {{ $loop->first ? 'kd-tab-active' : '' }}"
               data-tab="tab-{{ strtolower($loc) }}">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/>
@@ -71,9 +68,8 @@
   {{-- ── PANES ── --}}
   @foreach($locations as $loc)
     @php
-      $lg    = $grouped->get($loc, collect());
-      $pagi  = $lg->get('pagi',  collect())->sortBy('truck_no')->values();
-      $malam = $lg->get('malam', collect())->sortBy('truck_no')->values();
+      $pagi  = $data[$loc]['pagi'];
+      $malam = $data[$loc]['malam'];
     @endphp
 
     <div id="tab-{{ strtolower($loc) }}" class="kd-pane {{ $loop->first ? 'active' : '' }}">
@@ -97,11 +93,12 @@
             <div class="kd-shift-stats">
               <span class="kd-stat-filled">{{ $countFilled($pagi) }} terisi</span>
               <span class="kd-stat-sep">·</span>
-              <span class="kd-stat-total">{{ $pagi->count() }} truk</span>
+              <span class="kd-stat-total">{{ $pagi->total() }} truk</span>
             </div>
           </div>
           <div class="kd-shift-body">
             @include('transaction.conditions.partials.list', ['location' => $loc, 'list' => $pagi])
+            <div class="kd-pagination">{{ $pagi->links() }}</div>
           </div>
         </div>
 
@@ -118,21 +115,17 @@
             <div class="kd-shift-stats">
               <span class="kd-stat-filled">{{ $countFilled($malam) }} terisi</span>
               <span class="kd-stat-sep">·</span>
-              <span class="kd-stat-total">{{ $malam->count() }} truk</span>
+              <span class="kd-stat-total">{{ $malam->total() }} truk</span>
             </div>
           </div>
           <div class="kd-shift-body">
             @include('transaction.conditions.partials.list', ['location' => $loc, 'list' => $malam])
+            <div class="kd-pagination">{{ $malam->links() }}</div>
           </div>
         </div>
-
       </div>
     </div>
   @endforeach
-
-  @if($items->hasPages())
-    <div class="kd-pagination">{{ $items->withQueryString()->links() }}</div>
-  @endif
 </div>
 
 <script>

@@ -4,15 +4,6 @@
 <div class="ke-wrap">
   @php
     $mc = $form->monitorControl;
-
-    /**
-     * ── HELPER: warna kondisi ──────────────────────────────────────
-     * Mengembalikan key CSS class untuk setiap nilai kondisi.
-     *   'green'  → Kering / Bak Kering
-     *   'yellow' → Basah / Medium Basah
-     *   'orange' → Bak berisi air / Benda lain-lain
-     *   'red'    → Sangat Basah
-     */
     $condColor = function(string $val): string {
         return match($val) {
             'kering', 'bak_kering'              => 'green',
@@ -74,23 +65,6 @@
       Form sudah <strong>DONE</strong>. Data tidak bisa diubah.
     </div>
   @endif
-
-  {{-- ── COLOR LEGEND ── --}}
-  <div class="ke-legend">
-    <span class="ke-legend-title">Keterangan warna:</span>
-    <span class="ke-legend-item cond-green">
-      <span class="ke-legend-dot"></span>Kondisi Baik
-    </span>
-    <span class="ke-legend-item cond-yellow">
-      <span class="ke-legend-dot"></span>Perlu Perhatian
-    </span>
-    <span class="ke-legend-item cond-orange">
-      <span class="ke-legend-dot"></span>Kurang Baik
-    </span>
-    <span class="ke-legend-item cond-red">
-      <span class="ke-legend-dot"></span>Buruk
-    </span>
-  </div>
 
   {{-- ── FORM CARD ── --}}
   <form method="POST" action="{{ route('conditions.update', $form) }}" class="ke-card">

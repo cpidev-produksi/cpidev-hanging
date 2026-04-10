@@ -446,6 +446,34 @@
         }
     }
 })();
+
+const totalChickenInput = document.getElementById('total_chicken');
+const totalKiloInput = document.getElementById('total_kilo');
+const abwInput = document.getElementById('abw');
+
+function calculateAbw() {
+    const totalChicken = parseFloat(totalChickenInput?.value) || 0;
+    const totalKilo = parseFloat(totalKiloInput?.value) || 0;
+    
+    if (totalChicken > 0 && totalKilo > 0) {
+        const abw = totalKilo / totalChicken;
+        if (abwInput) {
+            abwInput.value = abw.toFixed(2);
+            // Optional: disable ABW agar tidak bisa di-edit manual
+            // abwInput.readOnly = true;
+        }
+    } else if (abwInput && !abwInput.readOnly) {
+        // Kosongkan jika tidak ada data, tapi tidak override jika manual
+        // abwInput.value = '';
+    }
+}
+if (totalChickenInput && totalKiloInput && abwInput) {
+    totalChickenInput.addEventListener('input', calculateAbw);
+    totalKiloInput.addEventListener('input', calculateAbw);
+    
+    // Hitung saat pertama kali load (untuk edit page)
+    calculateAbw();
+}
 </script>
 
 <style>
