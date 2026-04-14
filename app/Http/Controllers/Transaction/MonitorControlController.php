@@ -286,7 +286,6 @@ class MonitorControlController extends Controller
 
     public function moveTruckNo(Request $request, MonitorControl $monitorControl)
     {
-        // hanya boleh adjust kalau masih draft (atau running juga? saya sarankan: draft saja)
         if ($monitorControl->status !== 'draft') {
             return back()->withErrors(['move' => 'Hanya draft yang boleh diubah urutannya.']);
         }
@@ -299,7 +298,6 @@ class MonitorControlController extends Controller
             $location = $monitorControl->location;
             $date = $monitorControl->process_date->format('Y-m-d');
 
-            // ambil list draft pada lokasi + tanggal yang sama, urut truck_no
             $list = MonitorControl::query()
                 ->where('location', $location)
                 ->whereDate('process_date', $date)
@@ -308,7 +306,7 @@ class MonitorControlController extends Controller
                 ->lockForUpdate()
                 ->get();
 
-            // kalau truck_no null (data lama), normalize dulu
+            // normalize jika ada null
             $i = 1;
             foreach ($list as $mc) {
                 if (!$mc->truck_no) {
@@ -328,7 +326,7 @@ class MonitorControlController extends Controller
                 $a = $list[$idx];
                 $b = $list[$idx + 1];
             } else {
-                return back(); // sudah paling atas/bawah
+                return back();
             }
 
             // swap truck_no
@@ -337,24 +335,6 @@ class MonitorControlController extends Controller
             $b->truck_no = $tmp;
             $a->save();
             $b->save();
-
-            // optional: renumber ulang supaya rapi (1..n)
-            $sorted = MonitorControl::query()
-                ->where('location', $location)
-                ->whereDate('process_date', $date)
-                ->where('status', 'draft')
-                ->orderBy('truck_no')
-                ->lockForUpdate()
-                ->get();
-
-            $n = 1;
-            foreach ($sorted as $mc) {
-                if ($mc->truck_no !== $n) {
-                    $mc->truck_no = $n;
-                    $mc->save();
-                }
-                $n++;
-            }
 
             return back()->with('status', 'Urutan truk berhasil diubah.');
         });
