@@ -18,43 +18,41 @@
         <p class="mc-sub">Kelola urutan truk dan input DTA</p>
       </div>
     </div>
-    <a href="{{ route('monitor-controls.create') }}" class="mc-btn-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.8"><line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5" y1="12" x2="19" y2="12"/>
-      </svg>
-      Buat Kontrol
-    </a>
+
+    <div class="mc-header-right">
+      <form method="GET" class="mc-filter-row">
+        <div class="mc-input-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2" class="mc-input-icon">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <input type="date" name="date" value="{{ $date ?? '' }}" class="mc-input">
+        </div>
+        <button class="mc-btn-filter" type="submit">Filter</button>
+        {{-- <a href="{{ route('monitor-controls.index') }}" class="mc-btn-reset">Reset</a> --}}
+      </form>
+
+      <a href="{{ route('monitor-controls.create') }}" class="mc-btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.8"><line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Buat Kontrol
+      </a>
+    </div>
   </div>
 
   @php
-    $col      = $items->getCollection();
-    $grouped  = $col
-      ->groupBy(fn($x) => $x->location)
-      ->map(fn($locItems) => $locItems->groupBy(fn($x) => $x->shift));
-    $locations = ['SH01','SH02'];
     $filterActive = fn($list) => $list->filter(fn($x) => $x->status !== 'done')->sortBy('truck_no')->values();
     $filterDone   = fn($list) => $list->filter(fn($x) => $x->status === 'done')->sortBy('truck_no')->values();
-
-    // summary totals
-    $allActive = 0; $allDone = 0;
-    foreach($locations as $_loc) {
-      $lg = $grouped->get($_loc, collect());
-      foreach(['pagi','malam'] as $_sh) {
-        $s = $lg->get($_sh, collect());
-        $allActive += $filterActive($s)->count();
-        $allDone   += $filterDone($s)->count();
-      }
-    }
   @endphp
 
   {{-- ── LOCATION TABS ── --}}
   <div class="mc-tab-bar">
     @foreach($locations as $loc)
       @php
-        $lg = $grouped->get($loc, collect());
-        $cntActive = 0;
-        foreach(['pagi','malam'] as $sh) { $cntActive += $filterActive($lg->get($sh, collect()))->count(); }
+        $cntActive = ($stats[$loc]['pagi']['active'] ?? 0) + ($stats[$loc]['malam']['active'] ?? 0);
         $isFirst = $loop->first;
       @endphp
       <button type="button"
@@ -70,20 +68,19 @@
         @endif
       </button>
     @endforeach
-    {{-- filler border-bottom line --}}
     <div class="mc-tab-filler"></div>
   </div>
 
   {{-- ── LOCATION PANES ── --}}
   @foreach($locations as $loc)
     @php
-      $lg    = $grouped->get($loc, collect());
-      $pagi  = $lg->get('pagi',  collect());
-      $malam = $lg->get('malam', collect());
-      $activePagi  = $filterActive($pagi);
-      $activeMalam = $filterActive($malam);
-      $donePagi    = $filterDone($pagi);
-      $doneMalam   = $filterDone($malam);
+      $pagi  = $data[$loc]['pagi'];
+      $malam = $data[$loc]['malam'];
+
+      $activePagi  = $filterActive($pagi->getCollection());
+      $activeMalam = $filterActive($malam->getCollection());
+      $donePagi    = $filterDone($pagi->getCollection());
+      $doneMalam   = $filterDone($malam->getCollection());
     @endphp
 
     <div id="tab-{{ strtolower($loc) }}" class="mc-pane {{ $loop->first ? 'active' : '' }}">
@@ -105,16 +102,17 @@
               Shift Pagi
             </div>
             <div class="mc-shift-stats">
-              <span class="mc-stat-active">{{ $activePagi->count() }} aktif</span>
-              @if($donePagi->count())
+              <span class="mc-stat-active">{{ $stats[$loc]['pagi']['active'] ?? 0 }} aktif</span>
+              @if(($stats[$loc]['pagi']['done'] ?? 0) > 0)
                 <span class="mc-stat-sep">·</span>
-                <span class="mc-stat-done">{{ $donePagi->count() }} selesai</span>
+                <span class="mc-stat-done">{{ $stats[$loc]['pagi']['done'] }} selesai</span>
               @endif
             </div>
           </div>
           <div class="mc-shift-body">
             @include('transaction.monitor_controls.partials.list', ['rows' => $activePagi, 'showMove' => true])
             @include('transaction.monitor_controls.partials.done', ['rows' => $donePagi, 'key' => $loc.'-pagi'])
+            @include('transaction.monitor_controls.partials.pagination', ['list' => $pagi])
           </div>
         </div>
 
@@ -129,41 +127,39 @@
               Shift Malam
             </div>
             <div class="mc-shift-stats">
-              <span class="mc-stat-active">{{ $activeMalam->count() }} aktif</span>
-              @if($doneMalam->count())
+              <span class="mc-stat-active">{{ $stats[$loc]['malam']['active'] ?? 0 }} aktif</span>
+              @if(($stats[$loc]['malam']['done'] ?? 0) > 0)
                 <span class="mc-stat-sep">·</span>
-                <span class="mc-stat-done">{{ $doneMalam->count() }} selesai</span>
+                <span class="mc-stat-done">{{ $stats[$loc]['malam']['done'] }} selesai</span>
               @endif
             </div>
           </div>
           <div class="mc-shift-body">
             @include('transaction.monitor_controls.partials.list', ['rows' => $activeMalam, 'showMove' => true])
             @include('transaction.monitor_controls.partials.done', ['rows' => $doneMalam, 'key' => $loc.'-malam'])
+            @include('transaction.monitor_controls.partials.pagination', ['list' => $malam])
           </div>
         </div>
 
-      </div>{{-- /.mc-two-col --}}
-    </div>{{-- /.mc-pane --}}
+      </div>
+    </div>
   @endforeach
 
-  @if($items->hasPages())
-    <div class="mc-pagination">{{ $items->links() }}</div>
-  @endif
   {{-- ── SUMMARY ── --}}
   <div class="mc-summary-row" style="justify-content:flex-end; margin-top:30px">
     <div class="mc-pill mc-pill-active">
       <span class="mc-pill-dot" style="background:#E85D2F"></span>
       Aktif &amp; Proses
-      <strong>{{ $allActive }}</strong>
+      <strong>{{ $summaryActive }}</strong>
     </div>
     <div class="mc-pill mc-pill-done">
       <span class="mc-pill-dot" style="background:#10B981"></span>
       Selesai
-      <strong>{{ $allDone }}</strong>
+      <strong>{{ $summaryDone }}</strong>
     </div>
     <div class="mc-pill mc-pill-total">
       Total hari ini
-      <strong>{{ $allActive + $allDone }}</strong>
+      <strong>{{ $summaryActive + $summaryDone }}</strong>
     </div>
   </div>
 </div>
@@ -203,6 +199,7 @@
 /* HEADER */
 .mc-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
 .mc-header-left { display:flex; align-items:center; gap:16px; }
+.mc-header-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .mc-icon { width:52px; height:52px; flex-shrink:0; background:var(--mc-acc-xl); color:var(--mc-accent); border-radius:14px; display:flex; align-items:center; justify-content:center; }
 .mc-title { font-size:1.45rem; font-weight:800; color:var(--mc-text); margin:0 0 3px; letter-spacing:-.01em; }
 .mc-sub   { font-size:.8rem; color:var(--mc-muted); margin:0; }
@@ -213,6 +210,33 @@
   box-shadow:0 2px 10px rgba(232,93,47,.28); transition:all .18s;
 }
 .mc-btn-primary:hover { background:var(--mc-acc-hv); transform:translateY(-1px); }
+
+/* FILTER */
+.mc-filter-row { display:flex; align-items:center; gap:10px; }
+.mc-input-wrap {
+  display:flex; align-items:center; gap:8px;
+  padding:0 12px;
+  border:1.5px solid var(--mc-border);
+  border-radius:10px;
+  background:#fff;
+}
+.mc-input-icon { color:var(--mc-muted); flex-shrink:0; }
+.mc-input { border:none; outline:none; padding:10px 0; font-size:.85rem; color:var(--mc-text); background:transparent; }
+.mc-btn-filter {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 18px; background:var(--mc-accent); color:#fff;
+  border:none; border-radius:10px; font-size:.84rem; font-weight:700; cursor:pointer;
+  box-shadow:0 2px 8px rgba(232,93,47,.28); transition:all .18s;
+}
+.mc-btn-filter:hover { background:var(--mc-acc-hv); transform:translateY(-1px); }
+.mc-btn-reset {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:10px 18px; background:#F3F4F6; color:#374151;
+  border:1.5px solid #E5E7EB; border-radius:10px;
+  font-size:.84rem; font-weight:700; cursor:pointer; text-decoration:none;
+  transition:all .18s;
+}
+.mc-btn-reset:hover { background:#E5E7EB; }
 
 /* SUMMARY */
 .mc-summary-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
@@ -253,7 +277,7 @@
   background: var(--mc-surface);
   color: var(--mc-accent);
   border-color: var(--mc-border);
-  border-bottom-color: var(--mc-surface); /* "erases" the bottom border */
+  border-bottom-color: var(--mc-surface);
 }
 .mc-tab-filler {
   flex: 1;
@@ -289,7 +313,42 @@
 .mc-stat-done   { color:#10B981; }
 .mc-shift-body  { padding:12px 14px; }
 
-/* PAGINATION */
-.mc-pagination { margin-top:16px; padding:14px 18px; background:var(--mc-surface); border:1px solid var(--mc-border); border-radius:var(--mc-r); }
+/* PAGINATION (theme) */
+.mc-pagination {
+  margin-top:16px;
+  padding:14px 18px;
+  background:var(--mc-surface);
+  border:1px solid var(--mc-border);
+  border-radius:var(--mc-r);
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+}
+.mc-pagination-info { font-size:12px; color:#9CA3AF; }
+.mc-pagination-highlight { font-weight:600; color:#374151; }
+.mc-pagination-nav { display:flex; align-items:center; gap:4px; }
+.mc-page-btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:32px; height:32px; padding:0 6px;
+  font-size:12px; font-weight:500; color:#4B5563;
+  background:#fff; border:1.5px solid #E5E7EB; border-radius:7px;
+  text-decoration:none; transition:background .13s, color .13s, border-color .13s, box-shadow .13s;
+  cursor:pointer; user-select:none;
+}
+.mc-page-btn:hover { background:#EEF2FF; color:#4338CA; border-color:#C7D2FE; }
+.mc-page-btn--active {
+  background:var(--mc-accent); color:#fff; border-color:var(--mc-accent);
+  box-shadow:0 1px 6px rgba(232,93,47,.35); font-weight:600; cursor:default;
+}
+.mc-page-btn--active:hover { background:var(--mc-accent); color:#fff; border-color:var(--mc-accent); }
+.mc-page-btn--disabled {
+  background:#F9FAFB; color:#D1D5DB; border-color:#F3F4F6;
+  cursor:not-allowed; pointer-events:none;
+}
+.mc-page-ellipsis {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:32px; font-size:13px; color:#9CA3AF; letter-spacing:.1em;
+}
+@media (max-width:680px) {
+  .mc-pagination { flex-direction:column; align-items:center; text-align:center; }
+}
 </style>
 @endsection

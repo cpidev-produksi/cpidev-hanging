@@ -12,30 +12,48 @@ class ReturMatiLandingController extends Controller
 {
     public function index(Request $request)
     {
-        $date = $request->query('date'); // optional
-
-        $q = MonitorControl::query()
-            ->with([
-                'farm',
-                'expedition',
-                'plateNumber',
-                'hangingForm',
-                'hangingForm.returItems',
-            ])
-            ->orderByDesc('process_date')
-            ->orderBy('location')
-            ->orderByRaw("FIELD(shift,'pagi','malam')")
-            ->orderBy('truck_no');
-
-        if ($date !== null && $date !== '') {
-            $q->whereDate('process_date', $date);
+        $date = $request->query('date');
+        if ($date === null || $date === '') {
+            $date = now()->toDateString(); // default: tanggal operasional hari ini
         }
 
-        $items = $q->paginate(50)->withQueryString();
+        $perPage = $request->query('per_page', 20);
+        $locations = ['SH01', 'SH02'];
+
+        $baseQuery = function () use ($date) {
+            return MonitorControl::query()
+                ->with([
+                    'farm',
+                    'expedition',
+                    'plateNumber',
+                    'hangingForm',
+                    'hangingForm.returItems',
+                ])
+                ->whereDate('process_date', $date);
+        };
+
+        $paginateShift = function (string $loc, string $sh, string $pageParam) use ($baseQuery, $perPage) {
+            return $baseQuery()
+                ->where('location', $loc)
+                ->where('shift', $sh)
+                ->orderByRaw("FIELD(shift,'pagi','malam')")
+                ->orderBy('truck_no')
+                ->paginate($perPage, ['*'], $pageParam)
+                ->withQueryString();
+        };
+
+        $data = [];
+        foreach ($locations as $loc) {
+            foreach (['pagi', 'malam'] as $sh) {
+                $data[$loc][$sh] = $paginateShift($loc, $sh, "page_{$loc}_{$sh}");
+            }
+        }
 
         return view('transaction.retur_mati.landing', [
-            'items' => $items,
+            'data' => $data,
             'date' => $date,
+            'locations' => $locations,
+            'perPage' => $perPage,
         ]);
     }
 

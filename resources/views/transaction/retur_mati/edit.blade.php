@@ -3,7 +3,24 @@
 @section('content')
 <div class="ed-wrap">
 
-  @php $mc = $form->monitorControl; @endphp
+  @php
+  $mc = $form->monitorControl;
+  $oldWeights = old('retur_weights');
+  $oldPhotos  = old('retur_photo_existing');
+
+  if (is_array($oldWeights)) {
+      $weights = $oldWeights;
+      $photos  = is_array($oldPhotos) ? $oldPhotos : [];
+  } else {
+      $weights = $form->returItems->pluck('weight_kg')->toArray();
+      $photos  = $form->returItems->pluck('photo_path')->toArray();
+  }
+
+  if (count($weights) === 0) {
+      $weights = [''];
+      $photos  = [''];
+  }
+  @endphp
 
   {{-- ── BREADCRUMB ── --}}
   <nav class="ed-bc">
@@ -39,7 +56,7 @@
         </div>
       </div>
     </div>
-    <a class="ed-btn-back" href="{{ route('hanging-forms.show', $form) }}">
+    <a class="ed-btn-back" href="{{ route('retur-mati.landing', $form) }}">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/>
         <polyline points="12 19 5 12 12 5"/>
@@ -59,7 +76,7 @@
     </div>
   @endif
 
-  <form method="POST" action="{{ route('retur-mati.update', $form) }}">
+  <form method="POST" action="{{ route('retur-mati.update', $form) }}" enctype="multipart/form-data">
     @csrf
 
     <div class="ed-grid">
@@ -116,24 +133,10 @@
             <div class="ed-card-title">Berat Ayam Retur</div>
             <div class="ed-card-sub">Input berat per ekor dalam Kg</div>
           </div>
-          <button type="button" class="ed-btn-add" onclick="addRow()"
-                  @disabled($form->status === 'done') id="btnAdd">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.8"><line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Tambah
-          </button>
         </div>
 
         <div class="ed-card-body">
           <div id="returList" class="ed-retur-list">
-            @php
-              $old     = old('retur_weights');
-              $weights = is_array($old) ? $old : $form->returItems->pluck('weight_kg')->toArray();
-              if (count($weights) === 0) $weights = [''];
-            @endphp
-
             @foreach($weights as $idx => $w)
               <div class="ed-retur-row">
                 <div class="ed-row-num">{{ $idx + 1 }}</div>
@@ -151,6 +154,68 @@
                          @disabled($form->status === 'done')>
                   <span class="ed-input-suffix">Kg</span>
                 </div>
+
+                {{-- PHOTO --}}
+                <div class="ed-photo">
+                  <input type="hidden" name="retur_photo_existing[]" value="{{ $photos[$idx] ?? '' }}">
+                  <input type="hidden" name="retur_photo_remove[]" value="0" class="retur-photo-remove">
+
+                  <input type="file"
+                        name="retur_photos[]"
+                        accept="image/jpeg"
+                        class="retur-photo-input"
+                        style="display:none"
+                        @disabled($form->status === 'done')>
+
+                  @if($form->status !== 'done')
+                  <div class="ed-photo-trigger">
+                    <button type="button" class="ed-photo-btn-main" title="Foto">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2.5">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                      </svg>
+                      <span>Foto</span>
+                      <svg class="ed-caret" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="ed-photo-menu">
+                      <button type="button" class="ed-photo-menu-item" data-camera="0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5">
+                          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                          <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        Upload dari Galeri
+                      </button>
+                      <button type="button" class="ed-photo-menu-item" data-camera="1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                          <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        Ambil dari Kamera
+                      </button>
+                    </div>
+                  </div>
+                  @endif
+
+                  <div class="ed-photo-preview">
+                    @if(!empty($photos[$idx]))
+                      <div class="ed-photo-thumb">
+                        <img src="{{ asset('storage/'.$photos[$idx]) }}" alt="photo">
+                        @if($form->status !== 'done')
+                        <button type="button" class="ed-photo-remove" onclick="removePhoto(this)">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                               stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                          </svg>
+                        </button>
+                        @endif
+                      </div>
+                    @endif
+                  </div>
+                </div>
+
                 <button type="button" class="ed-btn-remove"
                         onclick="removeRow(this, true)"
                         @disabled($form->status === 'done')
@@ -165,6 +230,14 @@
             @endforeach
           </div>
 
+          <div class="ed-retur-actions" style="margin-top:12px;text-align:right;">
+            <button type="button" class="ed-btn-add" onclick="addRow()" @disabled($form->status === 'done')>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Tambah
+            </button>
+          </div>
           @error('retur_weights')    <p class="ed-error">{{ $message }}</p>@enderror
           @error('retur_weights.*')  <p class="ed-error">{{ $message }}</p>@enderror
         </div>
@@ -198,7 +271,6 @@
 </div>
 
 <script>
-/* ── DEAD COUNTER ── */
 function stepDead(delta) {
   const inp = document.getElementById('dead_count');
   let v = parseInt(inp.value, 10) || 0;
@@ -206,7 +278,6 @@ function stepDead(delta) {
   inp.value = v;
 }
 
-/* ── RECALC SUMMARY ── */
 function recalc() {
   let count = 0, total = 0;
   document.querySelectorAll('.retur-weight').forEach(i => {
@@ -218,7 +289,6 @@ function recalc() {
   renumberRows();
 }
 
-/* ── RENUMBER ── */
 function renumberRows() {
   document.querySelectorAll('.ed-retur-row').forEach((row, i) => {
     const num = row.querySelector('.ed-row-num');
@@ -226,7 +296,6 @@ function renumberRows() {
   });
 }
 
-/* ── ADD ROW ── */
 function addRow() {
   const list  = document.getElementById('returList');
   const count = list.querySelectorAll('.ed-retur-row').length;
@@ -242,25 +311,57 @@ function addRow() {
       <input type="number" step="0.01" min="0"
              class="ed-input retur-weight"
              name="retur_weights[]"
+             value=""
              placeholder="0.00">
       <span class="ed-input-suffix">Kg</span>
     </div>
-    <button type="button" class="ed-btn-remove" onclick="removeRow(this, true)" title="Hapus baris ini">
+
+    <div class="ed-photo">
+      <input type="hidden" name="retur_photo_existing[]" value="">
+      <input type="hidden" name="retur_photo_remove[]" value="0" class="retur-photo-remove">
+      <input type="file" name="retur_photos[]" accept="image/jpeg" class="retur-photo-input" style="display:none">
+      <div class="ed-photo-trigger">
+        <button type="button" class="ed-photo-btn-main" title="Foto">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <span>Foto</span>
+          <svg class="ed-caret" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="ed-photo-menu">
+          <button type="button" class="ed-photo-menu-item" data-camera="0">Upload dari Galeri</button>
+          <button type="button" class="ed-photo-menu-item" data-camera="1">Ambil dari Kamera</button>
+        </div>
+      </div>
+      <div class="ed-photo-preview"></div>
+    </div>
+
+    <button type="button" class="ed-btn-remove" title="Hapus baris ini">
       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/>
-        <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-        <path d="M9 6V4h6v2"/>
+        <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
       </svg>
     </button>
   `;
   list.appendChild(row);
-  // animate in
-  requestAnimationFrame(() => row.classList.add('ed-row-visible'));
-  row.querySelector('input').focus();
+
+  const removeBtn = row.querySelector('.ed-btn-remove');
+  if (removeBtn) removeBtn.onclick = () => removeRow(removeBtn, true);
+
+  bindPhotoInput(row);
+
+  requestAnimationFrame(() => {
+    row.classList.add('ed-row-visible');
+    const weightInput = row.querySelector('.retur-weight');
+    if (weightInput) weightInput.focus();
+  });
+
   recalc();
 }
 
-/* ── REMOVE ROW ── */
 function removeRow(btn, ask) {
   if (ask && !confirm('Hapus input ayam retur ini?')) return;
   const row = btn.closest('.ed-retur-row');
@@ -270,6 +371,108 @@ function removeRow(btn, ask) {
   row.style.transform  = 'translateX(12px)';
   setTimeout(() => { row.remove(); recalc(); }, 200);
 }
+
+function togglePhotoMenu(btn, event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  const trigger = btn.closest('.ed-photo-trigger');
+  const isOpen = trigger.classList.contains('open');
+
+  document.querySelectorAll('.ed-photo-trigger.open').forEach(t => {
+    t.classList.remove('open');
+    const m = t.querySelector('.ed-photo-menu');
+    if (m) m.style.display = 'none';
+  });
+
+  if (!isOpen) {
+    trigger.classList.add('open');
+    const menu = trigger.querySelector('.ed-photo-menu');
+    menu.style.display = 'block';
+  }
+}
+
+function pickPhoto(menuItem, useCamera, event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  const trigger = menuItem.closest('.ed-photo-trigger');
+  const row = trigger.closest('.ed-retur-row');
+  const input = row.querySelector('.retur-photo-input');
+  trigger.classList.remove('open');
+  const menu = trigger.querySelector('.ed-photo-menu');
+  if (menu) menu.style.display = 'none';
+
+  if (!input) return;
+  if (useCamera) input.setAttribute('capture', 'environment');
+  else input.removeAttribute('capture');
+  input.click();
+}
+
+function bindPhotoInput(row) {
+  const input = row.querySelector('.retur-photo-input');
+  const preview = row.querySelector('.ed-photo-preview');
+  const removeFlag = row.querySelector('.retur-photo-remove');
+  const trigger = row.querySelector('.ed-photo-trigger');
+  if (!input) return;
+
+  input.addEventListener('change', () => {
+    preview.innerHTML = '';
+    if (input.files && input.files[0]) {
+      const thumb = document.createElement('div');
+      thumb.className = 'ed-photo-thumb';
+
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(input.files[0]);
+      thumb.appendChild(img);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'ed-photo-remove';
+      removeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      removeBtn.onclick = (e) => { e.stopPropagation(); removePhoto(removeBtn); };
+      thumb.appendChild(removeBtn);
+
+      preview.appendChild(thumb);
+      if (removeFlag) removeFlag.value = '0';
+      if (trigger) trigger.classList.add('has-photo');
+    }
+  });
+}
+
+function removePhoto(btn) {
+  const row = btn.closest('.ed-retur-row');
+  const preview = row.querySelector('.ed-photo-preview');
+  const input = row.querySelector('.retur-photo-input');
+  const removeFlag = row.querySelector('.retur-photo-remove');
+  const existing = row.querySelector('input[name="retur_photo_existing[]"]');
+  const trigger = row.querySelector('.ed-photo-trigger');
+
+  if (input) input.value = '';
+  if (preview) preview.innerHTML = '';
+  if (removeFlag) removeFlag.value = '1';
+  if (existing) existing.value = '';
+  if (trigger) trigger.classList.remove('has-photo');
+}
+
+// === GLOBAL HANDLER (works for new rows) ===
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('.ed-photo-btn-main');
+  if (btn) { togglePhotoMenu(btn, e); return; }
+
+  const item = e.target.closest('.ed-photo-menu-item');
+  if (item) {
+    const useCamera = item.getAttribute('data-camera') === '1';
+    pickPhoto(item, useCamera, e);
+    return;
+  }
+
+  if (!e.target.closest('.ed-photo-trigger')) {
+    document.querySelectorAll('.ed-photo-trigger.open').forEach(t => {
+      t.classList.remove('open');
+      const m = t.querySelector('.ed-photo-menu');
+      if (m) m.style.display = 'none';
+    });
+  }
+});
+
+document.querySelectorAll('.ed-retur-row').forEach(bindPhotoInput);
 
 document.addEventListener('input', e => {
   if (e.target?.classList.contains('retur-weight')) recalc();
@@ -299,8 +502,99 @@ document.addEventListener('DOMContentLoaded', recalc);
   --ed-sh:       0 1px 4px rgba(0,0,0,.05), 0 6px 20px rgba(0,0,0,.05);
 }
 
+.ed-retur-actions { margin-top: 10px; display:flex; }
+.ed-btn-add-bottom {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 14px;
+  border:1.5px solid rgba(232,93,47,.3); border-radius:9px;
+  background:var(--ed-acc-xl); color:var(--ed-accent);
+  font-size:.8rem; font-weight:700; cursor:pointer;
+  transition:all .15s;
+}
+.ed-btn-add-bottom:hover:not(:disabled){ background:var(--ed-accent); color:#fff; border-color:var(--ed-accent); }
+.ed-btn-add-bottom:disabled{ opacity:.4; cursor:not-allowed; }
+
+.ed-photo { display:flex; flex-direction:column; gap:6px; }
+
+/* ── PHOTO TRIGGER (1 button + dropdown) ── */
+.ed-photo-trigger { position: relative; display: inline-block; }
+
+.ed-photo-btn-main {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 11px;
+  border-radius: 9px;
+  border: 1.5px solid rgba(16,185,129,.35);
+  background: rgba(16,185,129,.07);
+  color: #059669;
+  font-size: .75rem; font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.ed-photo-btn-main:hover { background: #059669; color: #fff; border-color: #059669; }
+.ed-photo-trigger.has-photo .ed-photo-btn-main {
+  border-color: rgba(16,185,129,.5);
+  background: rgba(16,185,129,.12);
+}
+.ed-caret { transition: transform .15s; flex-shrink: 0; }
+.ed-photo-trigger.open .ed-caret { transform: rotate(180deg); }
+
+/* dropdown menu */
+.ed-photo-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 180px;
+  background: #fff;
+  border: 1.5px solid var(--ed-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 9999;
+  overflow: hidden;
+  animation: menuIn .12s ease;
+}
+
+@keyframes menuIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+.ed-photo-trigger.open .ed-photo-menu { display: block; }
+
+.ed-photo-menu-item {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 10px 14px;
+  border: none; background: transparent;
+  font-size: .8rem; font-weight: 600; color: var(--ed-text);
+  cursor: pointer; text-align: left;
+  transition: background .12s;
+}
+.ed-photo-menu-item:hover { background: #F3F4F8; }
+.ed-photo-menu-item + .ed-photo-menu-item { border-top: 1px solid var(--ed-border); }
+.ed-photo-menu-item svg { flex-shrink: 0; color: var(--ed-muted); }
+
+/* Thumbnail */
+.ed-photo-preview { display: flex; flex-wrap: wrap; gap: 6px; }
+.ed-photo-thumb {
+  position: relative; display: inline-block;
+}
+.ed-photo-thumb img {
+  width: 64px; height: 64px; object-fit: cover;
+  border-radius: 8px; border: 1.5px solid var(--ed-border);
+  display: block;
+}
+.ed-photo-remove {
+  position: absolute; top: -5px; right: -5px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid #ef4444;
+  background: #fff; color: #ef4444;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all .15s;
+}
+.ed-photo-remove:hover { background: #ef4444; color: #fff; }
+
 /* ── LAYOUT ── */
-.ed-wrap { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+.ed-wrap { max-width: 1240px; margin: 0 auto; padding: 32px 24px; }
 
 /* ── BREADCRUMB ── */
 .ed-bc {
@@ -376,13 +670,13 @@ document.addEventListener('DOMContentLoaded', recalc);
   border-radius: var(--ed-r);
   box-shadow: var(--ed-sh);
   display: flex; flex-direction: column;
-  overflow: hidden;
 }
 .ed-card-head {
   display: flex; align-items: center; gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--ed-border);
   background: #FAFBFD;
+  border-radius: var(--ed-r) var(--ed-r) 0 0;
 }
 .ed-card-icon {
   width: 36px; height: 36px; flex-shrink: 0;
@@ -430,8 +724,8 @@ document.addEventListener('DOMContentLoaded', recalc);
 
 /* ── RETUR ROW ── */
 .ed-retur-row {
-  display: grid; grid-template-columns: 28px 1fr 36px;
-  align-items: center; gap: 8px;
+  display: grid; grid-template-columns: 28px 1fr auto 36px;
+  align-items: start; gap: 8px;
 }
 .ed-row-new { opacity: 0; transform: translateY(-6px); transition: opacity .2s, transform .2s; }
 .ed-row-visible { opacity: 1; transform: translateY(0); }

@@ -4,9 +4,21 @@ namespace App\Http\Controllers\Monitor;
 
 use App\Http\Controllers\Controller;
 use App\Models\MonitorControl;
+use App\Models\PlanningLb;
+use Illuminate\Http\Request;
 
 class LiveMonitorController extends Controller
 {
+    protected function getMaxCapacity(string $location, int $lineNo): int
+    {
+        $custom = [
+            'SH01' => [17 => 46],
+            'SH02' => [30 => 19],
+        ];
+
+        return $custom[$location][$lineNo] ?? 50;
+    }
+
     public function show(string $location)
     {
         abort_unless(in_array($location, ['SH01','SH02']), 404);
@@ -23,25 +35,45 @@ class LiveMonitorController extends Controller
             ->with(['expedition','plateNumber','farm','hangingForm.lines.sets'])
             ->first();
 
-        // Counter harian (semua status, berdasarkan process_date hari ini)
-        $todayAyam = MonitorControl::query()
+        // Ambil total planning untuk hari ini
+        $todayPlanning = PlanningLb::query()
             ->where('location', $location)
-            ->whereDate('process_date', date('Y-m-d'))
-            ->with(['hangingForm.lines.sets'])
-            ->get()
-            ->sum(function ($mc) {
-                if (!$mc->hangingForm) return 0;
-                $sets = $mc->hangingForm->lines->flatMap->sets;
-                return (int) $sets->sum(function ($s) {
-                    if ($s->empty_count === null) return 0;
-                    return 50 - (int)$s->empty_count;
-                });
-            });
+            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
+            ->first();
 
-        $todayTruckCount = (int) MonitorControl::query()
+        $totalPlanningAyam = $todayPlanning ? (int) $todayPlanning->total_plan_chicken : 0;
+        $totalPlanningTruk = $todayPlanning ? (int) $todayPlanning->total_plan_truck : 0;
+
+        // Ambil semua MonitorControl hari ini
+        $allTodayControls = MonitorControl::query()
             ->where('location', $location)
-            ->whereDate('process_date', date('Y-m-d'))
-            ->whereHas('hangingForm', fn($q) => $q->whereIn('status', ['running','done']))
+            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
+            ->with(['hangingForm.lines.sets'])
+            ->get();
+
+        // Total ayam diterima (shackle saja, TANPA dikurangi dead)
+        $todayAyam = $allTodayControls->sum(function ($mc) {
+            if (!$mc->hangingForm) return 0;
+
+            $location = $mc->location ?? '';
+            $totalShackle = 0;
+
+            foreach ($mc->hangingForm->lines as $line) {
+                $cap = $this->getMaxCapacity($location, (int) $line->line_no);
+
+                foreach ($line->sets as $set) {
+                    if ($set->empty_count === null) continue;
+                    $totalShackle += ($cap - (int) $set->empty_count);
+                }
+            }
+
+            return $totalShackle;
+        });
+
+        $todayTruckCount = MonitorControl::query()
+            ->where('location', $location)
+            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
+            ->whereHas('hangingForm', fn($q) => $q->whereIn('status', ['running', 'done']))
             ->whereHas('hangingForm.lines.sets', fn($q) => $q->whereNotNull('empty_count'))
             ->count();
 
@@ -49,26 +81,27 @@ class LiveMonitorController extends Controller
             return response()->json([
                 'active' => false,
                 'location' => $location,
-                'today_total_ayam' => (int) $todayAyam,
+                'today_total_ayam' => $todayAyam,
                 'today_truck_count' => $todayTruckCount,
+                'total_planning_ayam' => $totalPlanningAyam,
+                'total_planning_truk' => $totalPlanningTruk,
             ]);
         }
 
-        $sets = $active->hangingForm->lines->flatMap->sets;
+        $totalAyamShackle = 0;
+        foreach ($active->hangingForm->lines as $line) {
+            $cap = $this->getMaxCapacity($location, (int) $line->line_no);
 
-        // $totalAyamRunning = (int) $sets->sum(function ($s) {
-        //     if ($s->empty_count === null) return 0;
-        //     return 50 - (int) $s->empty_count;
-        // });
+            foreach ($line->sets as $set) {
+                if ($set->empty_count === null) continue;
+                $totalAyamShackle += ($cap - (int) $set->empty_count);
+            }
+        }
 
         $deadCount = (int) ($active->hangingForm->dead_count ?? 0);
 
-        $totalAyamShackle = (int) $sets->sum(function ($s) {
-            if ($s->empty_count === null) return 0;
-            return 50 - (int) $s->empty_count;
-        });
-
-        $totalAyamBersih = max(0, $totalAyamShackle - $deadCount);
+        // Hero = total shackle (tanpa dikurangi dead)
+        $totalAyamBersih = $totalAyamShackle;
 
         return response()->json([
             'active' => true,
@@ -91,8 +124,12 @@ class LiveMonitorController extends Controller
             'farm_name' => optional($active->farm)->name,
 
             // footer counters (hari ini)
-            'today_total_ayam' => (int) $todayAyam,
+            'today_total_ayam' => $todayAyam,
             'today_truck_count' => $todayTruckCount,
+            
+            // total planning
+            'total_planning_ayam' => $totalPlanningAyam,
+            'total_planning_truk' => $totalPlanningTruk,
         ]);
     }
 }

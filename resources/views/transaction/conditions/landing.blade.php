@@ -29,6 +29,7 @@
         <input type="date" name="date" value="{{ $date ?? '' }}" class="kd-input">
       </div>
       <button class="kd-btn-primary" type="submit">Filter</button>
+      <a href="{{ route('conditions.landing') }}" class="kd-btn-reset">Reset</a>
     </form>
   </div>
 
@@ -98,7 +99,7 @@
           </div>
           <div class="kd-shift-body">
             @include('transaction.conditions.partials.list', ['location' => $loc, 'list' => $pagi])
-            <div class="kd-pagination">{{ $pagi->links() }}</div>
+            @include('transaction.conditions.partials.pagination', ['list' => $pagi])
           </div>
         </div>
 
@@ -120,7 +121,7 @@
           </div>
           <div class="kd-shift-body">
             @include('transaction.conditions.partials.list', ['location' => $loc, 'list' => $malam])
-            <div class="kd-pagination">{{ $malam->links() }}</div>
+            @include('transaction.conditions.partials.pagination', ['list' => $malam])
           </div>
         </div>
       </div>
@@ -189,6 +190,14 @@
   box-shadow:0 2px 10px rgba(79,103,255,.28); transition:all .18s;
 }
 .kd-btn-primary:hover { background:var(--kd-acc-hv); transform:translateY(-1px); }
+.kd-btn-reset {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:10px 18px; background:#F3F4F6; color:#374151;
+  border:1.5px solid #E5E7EB; border-radius:10px;
+  font-size:.84rem; font-weight:700; cursor:pointer; text-decoration:none;
+  transition:all .18s;
+}
+.kd-btn-reset:hover { background:#E5E7EB; }
 
 /* ── TABS ── */
 .kd-tab-bar {
@@ -227,8 +236,7 @@
 .kd-pane.active { display:block; }
 
 /* ── TWO COLUMN ── */
-.kd-two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-@media (max-width:900px) { .kd-two-col { grid-template-columns:1fr; } }
+.kd-two-col { display:grid; grid-template-columns:1fr; gap:16px; }
 
 /* ── SHIFT CARD ── */
 .kd-shift-card {
@@ -257,7 +265,46 @@
 .kd-stat-total  { color:var(--kd-muted); }
 .kd-shift-body  { padding:12px 14px; }
 
-/* ── PAGINATION ── */
-.kd-pagination { margin-top:16px; padding:14px 18px; background:var(--kd-surface); border:1px solid var(--kd-border); border-radius:var(--kd-r); }
+/* ── PAGINATION (THEME) ── */
+.kd-pagination {
+  margin-top:16px;
+  padding:14px 18px;
+  background:var(--kd-surface);
+  border:1px solid var(--kd-border);
+  border-radius:var(--kd-r);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.kd-pagination-info { font-size:12px; color:#9CA3AF; }
+.kd-pagination-highlight { font-weight:600; color:#374151; }
+.kd-pagination-nav { display:flex; align-items:center; gap:4px; }
+.kd-page-btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:32px; height:32px; padding:0 6px;
+  font-size:12px; font-weight:500; color:#4B5563;
+  background:#fff; border:1.5px solid #E5E7EB; border-radius:7px;
+  text-decoration:none; transition:background .13s, color .13s, border-color .13s, box-shadow .13s;
+  cursor:pointer; user-select:none;
+}
+.kd-page-btn:hover { background:#EEF2FF; color:#4338CA; border-color:#C7D2FE; }
+.kd-page-btn--active {
+  background:var(--kd-accent); color:#fff; border-color:var(--kd-accent);
+  box-shadow:0 1px 6px rgba(79,103,255,.35); font-weight:600; cursor:default;
+}
+.kd-page-btn--active:hover { background:var(--kd-accent); color:#fff; border-color:var(--kd-accent); }
+.kd-page-btn--disabled {
+  background:#F9FAFB; color:#D1D5DB; border-color:#F3F4F6;
+  cursor:not-allowed; pointer-events:none;
+}
+.kd-page-ellipsis {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:32px; font-size:13px; color:#9CA3AF; letter-spacing:.1em;
+}
+@media (max-width:680px) {
+  .kd-pagination { flex-direction:column; align-items:center; text-align:center; }
+}
 </style>
 @endsection

@@ -13,7 +13,10 @@ class ConditionController extends Controller
     public function landing(Request $request)
     {
         $date = $request->query('date');
-        
+        if ($date === null || $date === '') {
+            $date = now()->toDateString(); // default: tanggal operasional hari ini
+        }
+
         // Ambil parameter filter & sort
         $search = $request->query('search');
         $location = $request->query('location');
@@ -29,7 +32,7 @@ class ConditionController extends Controller
                     // Pastikan ada hanging form
                 }, '>=', 0);
 
-            // Filter date
+            // Filter date (process_date = tanggal operasional)
             if ($date !== null && $date !== '') {
                 $q->whereDate('process_date', $date);
             }

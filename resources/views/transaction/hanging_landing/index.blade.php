@@ -34,6 +34,7 @@
         </svg>
         Filter
       </button>
+      <a href="{{ route('hanging.landing') }}" class="lp-btn-reset">Reset</a>
     </form>
   </div>
 
@@ -41,61 +42,51 @@
 @php
   $runningSH01 = in_array('SH01', $runningLocations ?? [], true);
   $runningSH02 = in_array('SH02', $runningLocations ?? [], true);
-  $collection  = $items->getCollection();
-  $byLocation  = $collection->groupBy('location');
-
-  $mkSplit = function($locItems) {
-    $byShift = $locItems->groupBy('shift');
-    return [
-      'pagi'  => $byShift->get('pagi',  collect())->sortBy('truck_no')->values(),
-      'malam' => $byShift->get('malam', collect())->sortBy('truck_no')->values(),
-    ];
-  };
-
-  $sh01 = $mkSplit($byLocation->get('SH01', collect()));
-  $sh02 = $mkSplit($byLocation->get('SH02', collect()));
-
-  $sh01Total = $sh01['pagi']->count() + $sh01['malam']->count();
-  $sh02Total = $sh02['pagi']->count() + $sh02['malam']->count();
 @endphp
 
   {{-- ── TABS ── --}}
   <div class="lp-tab-bar">
-    <button type="button" class="lp-tab active" data-tab="tab-sh01">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/>
-        <path d="M16 7V5a2 2 0 0 0-4 0v2"/></svg>
-      SH01
-      <span class="lp-tab-count">{{ $sh01Total }}</span>
-    </button>
-    <button type="button" class="lp-tab" data-tab="tab-sh02">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/>
-        <path d="M16 7V5a2 2 0 0 0-4 0v2"/></svg>
-      SH02
-      <span class="lp-tab-count">{{ $sh02Total }}</span>
-    </button>
+    @foreach($locations as $loc)
+      @php
+        $pagi = $data[$loc]['pagi'];
+        $malam = $data[$loc]['malam'];
+        $total = $pagi->total() + $malam->total();
+      @endphp
+      <button type="button" class="lp-tab {{ $loop->first ? 'active' : '' }}" data-tab="tab-{{ strtolower($loc) }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 7V5a2 2 0 0 0-4 0v2"/></svg>
+        {{ $loc }}
+        <span class="lp-tab-count">{{ $total }}</span>
+      </button>
+    @endforeach
     <div class="lp-tab-filler"></div>
   </div>
 
   {{-- ── TAB PANES ── --}}
   @php
     $currentHour = now('Asia/Jakarta')->hour;
-    $isPagiFirst = $currentHour >= 6 && $currentHour < 18; // pagi: 06:00–17:59 WIB
+    $isPagiFirst = $currentHour >= 6 && $currentHour < 18;
   @endphp
 
-  @foreach(['sh01' => $sh01, 'sh02' => $sh02] as $tabKey => $shiftData)
-    @php $loc = strtoupper($tabKey); @endphp
+  @foreach($locations as $loc)
+    @php
+      $tabKey = strtolower($loc);
+      $pagi = $data[$loc]['pagi'];
+      $malam = $data[$loc]['malam'];
+
+      $firstShift  = $isPagiFirst ? 'pagi'  : 'malam';
+      $secondShift = $isPagiFirst ? 'malam' : 'pagi';
+
+      $shiftMap = [
+        'pagi'  => $pagi,
+        'malam' => $malam,
+      ];
+    @endphp
+
     <div id="tab-{{ $tabKey }}" class="lp-pane {{ $loop->first ? 'active' : '' }}">
       <div class="lp-shift-stack">
-
-        @php
-          $firstShift  = $isPagiFirst ? 'pagi'  : 'malam';
-          $secondShift = $isPagiFirst ? 'malam' : 'pagi';
-        @endphp
-
         @foreach([$firstShift, $secondShift] as $shift)
-          @php $isFirst = $loop->first; @endphp
           <div class="lp-shift-block">
             <div class="lp-shift-head {{ $shift === 'pagi' ? 'lp-sh-pagi' : 'lp-sh-malam' }}">
               <div class="lp-shift-label">
@@ -116,29 +107,22 @@
                   Shift Malam
                 @endif
               </div>
-              {{-- @if($isFirst)
-                <span class="lp-shift-now-badge {{ $shift === 'malam' ? 'lp-shift-now-malam' : '' }}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="currentColor"
-                       stroke="none"><circle cx="12" cy="12" r="12"/></svg>
-                  Sekarang
-                </span>
-              @endif --}}
-              <span class="lp-shift-count">{{ $shiftData[$shift]->count() }} truk</span>
+              <span class="lp-shift-count">{{ $shiftMap[$shift]->total() }} truk</span>
             </div>
+
             @include('transaction.hanging_landing.partials.list', [
               'location' => $loc,
-              'list'     => $shiftData[$shift],
+              'list'     => $shiftMap[$shift]->getCollection(),
+            ])
+
+            @include('transaction.hanging_landing.partials.pagination', [
+              'list' => $shiftMap[$shift]
             ])
           </div>
         @endforeach
-
       </div>
     </div>
   @endforeach
-
-  @if($items->hasPages())
-    <div class="lp-pagination">{{ $items->links() }}</div>
-  @endif
 </div>
 
 <script>
@@ -229,39 +213,14 @@
 }
 .lp-btn-filter:hover { background: var(--lp-accent-hv); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,93,47,.35); }
 .lp-btn-filter:active { transform: translateY(0); }
-
-/* ── STATUS CARDS ── */
-.lp-status-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-.lp-status-card {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: 1.5px solid transparent;
-  font-weight: 700;
-  font-size: .82rem;
+.lp-btn-reset {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:10px 18px; background:#F3F4F6; color:#374151;
+  border:1.5px solid #E5E7EB; border-radius:10px;
+  font-size:.84rem; font-weight:700; cursor:pointer; text-decoration:none;
+  transition:all .18s;
 }
-.lp-status-card.is-running {
-  background: var(--lp-run-xl);
-  border-color: rgba(245,159,0,.25);
-  color: #92400E;
-}
-.lp-status-card.is-ready {
-  background: var(--lp-ready-xl);
-  border-color: rgba(16,185,129,.2);
-  color: #065F46;
-}
-.lp-status-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-}
-.is-running .lp-status-dot { background: var(--lp-run); box-shadow: 0 0 0 3px rgba(245,159,0,.3); animation: pulse-run 1.5s ease infinite; }
-.is-ready   .lp-status-dot { background: var(--lp-ready); }
-@keyframes pulse-run {
-  0%,100% { box-shadow: 0 0 0 0 rgba(245,159,0,.4); }
-  50%      { box-shadow: 0 0 0 5px rgba(245,159,0,0); }
-}
-.lp-status-loc   { font-weight: 900; letter-spacing: .04em; }
-.lp-status-label { opacity: .75; font-size: .74rem; letter-spacing: .08em; }
+.lp-btn-reset:hover { background:#E5E7EB; }
 
 /* ── TABS ── */
 .lp-tab-bar {
@@ -325,22 +284,6 @@
 .lp-sh-pagi  .lp-shift-label { background: rgba(245,159,0,.15); color: #92400E; }
 .lp-sh-malam .lp-shift-label { background: rgba(79,103,255,.12); color: #3730A3; }
 
-.lp-shift-now-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 10px; border-radius: 999px;
-  background: rgba(245,159,0,.18); color: #92400E;
-  font-size: .7rem; font-weight: 900; letter-spacing: .04em;
-  border: 1px solid rgba(245,159,0,.3);
-}
-.lp-shift-now-badge svg { animation: pulse-now 1.5s ease infinite; }
-@keyframes pulse-now {
-  0%,100% { opacity: 1; } 50% { opacity: .3; }
-}
-.lp-shift-now-malam {
-  background: rgba(79,103,255,.12); color: #3730A3;
-  border-color: rgba(79,103,255,.25);
-}
-
 .lp-shift-count {
   margin-left: auto;
   font-size: .75rem; font-weight: 700; color: #9CA3AF;
@@ -353,6 +296,35 @@
   background: var(--lp-surface);
   border: 1px solid var(--lp-border);
   border-radius: var(--lp-r);
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+}
+.lp-pagination-info { font-size:12px; color:#9CA3AF; }
+.lp-pagination-highlight { font-weight:600; color:#374151; }
+.lp-pagination-nav { display:flex; align-items:center; gap:4px; }
+.lp-page-btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:32px; height:32px; padding:0 6px;
+  font-size:12px; font-weight:500; color:#4B5563;
+  background:#fff; border:1.5px solid #E5E7EB; border-radius:7px;
+  text-decoration:none; transition:background .13s, color .13s, border-color .13s, box-shadow .13s;
+  cursor:pointer; user-select:none;
+}
+.lp-page-btn:hover { background:#EEF2FF; color:#4338CA; border-color:#C7D2FE; }
+.lp-page-btn--active {
+  background:var(--lp-accent); color:#fff; border-color:var(--lp-accent);
+  box-shadow:0 1px 6px rgba(232,93,47,.35); font-weight:600; cursor:default;
+}
+.lp-page-btn--active:hover { background:var(--lp-accent); color:#fff; border-color:var(--lp-accent); }
+.lp-page-btn--disabled {
+  background:#F9FAFB; color:#D1D5DB; border-color:#F3F4F6;
+  cursor:not-allowed; pointer-events:none;
+}
+.lp-page-ellipsis {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:32px; font-size:13px; color:#9CA3AF; letter-spacing:.1em;
+}
+@media (max-width:680px) {
+  .lp-pagination { flex-direction:column; align-items:center; text-align:center; }
 }
 </style>
 @endsection

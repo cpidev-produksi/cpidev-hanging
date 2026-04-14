@@ -9,20 +9,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg:           #080a0d;
-            --surface:      #0f1217;
-            --card:         #13161e;
-            --border:       #1c2030;
-            --border-hi:    #2c3550;
+            --bg:           #1a1d27;
+            --surface:      #21253a;
+            --card:         #ffffff;
+            --border:       #d0d5e8;
+            --border-hi:    #a0aac8;
             --accent:       #e8522a;
-            --accent-glow:  rgba(232, 82, 42, 0.18);
-            --accent-dim:   rgba(232, 82, 42, 0.08);
-            --gold:         #f0a500;
-            --gold-dim:     rgba(240, 165, 0, 0.1);
-            --text:         #eef0f5;
-            --muted:        #5a6380;
-            --success:      #22c97a;
-            --info:         #3b8aff;
+            --accent-glow:  rgba(232, 82, 42, 0.22);
+            --accent-dim:   rgba(232, 82, 42, 0.12);
+            --gold:         #c97d00;
+            --gold-dim:     rgba(201, 125, 0, 0.12);
+            --text:         #1a1d2e;
+            --text-on-dark: #eef0f5;
+            --muted:        #6b728e;
+            --success:      #16a34a;
+            --info:         #2563eb;
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -32,7 +33,7 @@
             font-family: 'DM Sans', system-ui, sans-serif;
             height: 100vh;
             overflow: hidden;
-            color: var(--text);
+            color: var(--text-on-dark);
         }
 
         /* Ambient glow layers */
@@ -76,17 +77,18 @@
             align-items: center;
             gap: 0.75rem;
             padding-bottom: 0.6rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         /* Logo */
         .logo-box {
             width: 40px; height: 40px;
             border-radius: 10px;
-            background: var(--card);
+            background: #ffffff;
             border: 1px solid var(--border);
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; flex-shrink: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
         .logo-box img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -101,7 +103,7 @@
         }
         .brand p {
             font-size: 0.58rem;
-            color: var(--muted);
+            color: rgba(255,255,255,0.45);
             letter-spacing: 0.4px;
         }
 
@@ -111,15 +113,16 @@
         /* Location badge */
         .loc-badge {
             display: flex; align-items: center; gap: 0.45rem;
-            background: var(--card);
+            background: #ffffff;
             border: 1px solid var(--border);
             border-radius: 100px;
             padding: 0.3rem 0.85rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
         .loc-badge svg { color: var(--accent); flex-shrink: 0; }
-        .loc-lbl { font-size: 0.58rem; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; }
+        .loc-lbl { font-size: 0.58rem; font-weight: 600; color: #6b728e; letter-spacing: 0.5px; }
         .loc-val {
-            font-size: 0.82rem; font-weight: 700; color: #fff;
+            font-size: 0.82rem; font-weight: 700; color: #1a1d2e;
             background: var(--accent-dim);
             padding: 0.1rem 0.45rem; border-radius: 5px;
         }
@@ -131,28 +134,29 @@
         .dt-time {
             font-family: 'Bebas Neue', monospace;
             font-size: 2rem; font-weight: 400;
-            color: var(--text);
+            color: var(--text-on-dark);
             letter-spacing: 3px;
             line-height: 1;
         }
         .dt-date {
             font-size: 0.68rem;
             font-weight: 600;
-            color: var(--muted);
+            color: rgba(255,255,255,0.45);
             letter-spacing: 0.3px;
             margin-top: 2px;
         }
 
         /* Report code */
         .report-pill {
-            background: var(--surface);
+            background: #ffffff;
             border: 1px solid var(--border);
             border-left: 2px solid var(--gold);
             border-radius: 8px;
             padding: 0.2rem 0.55rem;
             text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
-        .report-pill .lbl { font-size: 0.45rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .report-pill .lbl { font-size: 0.45rem; color: #6b728e; text-transform: uppercase; letter-spacing: 0.5px; }
         .report-pill .val {
             font-family: 'DM Mono', monospace;
             font-size: 0.62rem; font-weight: 500;
@@ -161,16 +165,17 @@
 
         /* Fullscreen button */
         .fs-btn {
-            background: var(--card);
+            background: #ffffff;
             border: 1px solid var(--border);
             border-radius: 9px;
             padding: 0.3rem 0.7rem;
             cursor: pointer;
             display: flex; align-items: center; gap: 0.4rem;
-            color: var(--muted);
+            color: #6b728e;
             font-size: 0.65rem; font-weight: 500;
             font-family: inherit;
             transition: all 0.18s ease;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
         .fs-btn:hover {
             border-color: var(--accent);
@@ -183,14 +188,15 @@
            MAIN HERO — Total Ayam (SANGAT BESAR)
         ═══════════════════════════════════════ */
         .hero {
-            background: linear-gradient(135deg, rgba(232,82,42,0.12) 0%, rgba(240,165,0,0.06) 100%);
-            border: 1px solid rgba(232,82,42,0.28);
+            background: #ffffff;
+            border: 1px solid var(--border);
             border-radius: 20px;
             padding: 0.55rem 1.2rem 0.65rem;
             display: flex;
             align-items: center;
             gap: 2rem;
             min-height: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
         }
 
         .hero-main { flex: 1; min-height: 0; }
@@ -206,7 +212,7 @@
             font-family: 'Bebas Neue', sans-serif;
             font-size: clamp(8rem, 28vh, 22rem);
             line-height: 0.88;
-            background: linear-gradient(135deg, #fff 0%, var(--gold) 60%, var(--accent) 100%);
+            background: linear-gradient(135deg, #e8522a 0%, #c97d00 60%, #e8522a 100%);
             -webkit-background-clip: text; background-clip: text; color: transparent;
             letter-spacing: 2px;
         }
@@ -215,6 +221,7 @@
             color: var(--success);
             display: flex; align-items: center; gap: 0.3rem;
             margin-top: 0.25rem;
+            font-weight: 600;
         }
         .pulse-dot {
             width: 6px; height: 6px;
@@ -230,24 +237,25 @@
             flex-shrink: 0;
         }
         .hstat {
-            background: rgba(0,0,0,0.3);
+            background: #ffffff;
             border: 1px solid var(--border);
             border-radius: 14px;
             padding: 0.4rem 1rem;
             text-align: center;
             min-width: 130px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
         }
         .hstat .lbl {
             font-size: 0.55rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: var(--muted);
+            color: #6b728e;
         }
         .hstat .val {
             font-family: 'Bebas Neue', sans-serif;
             font-size: 1.8rem;
             line-height: 1;
-            color: var(--text);
+            color: #1a1d2e;
         }
         .hstat.accent-hi .val { color: var(--accent); }
         .hstat.gold-hi .val   { color: var(--gold);   }
@@ -263,17 +271,18 @@
         }
 
         .sub-card {
-            background: var(--card);
+            background: #ffffff;
             border: 1px solid var(--border);
             border-radius: 14px;
             padding: 0.4rem 0.7rem;
             display: flex;
             align-items: center;
             gap: 0.6rem;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
             overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         }
-        .sub-card:hover { border-color: var(--border-hi); }
+        .sub-card:hover { border-color: var(--border-hi); box-shadow: 0 4px 14px rgba(0,0,0,0.16); }
 
         .sc-icon {
             width: 28px; height: 28px; flex-shrink: 0;
@@ -289,18 +298,18 @@
             font-size: 0.48rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: var(--muted);
+            color: #6b728e;
             margin-bottom: 0.15rem;
         }
         .sc-val {
             font-size: 0.75rem;
             font-weight: 700;
-            color: var(--text);
+            color: #1a1d2e;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .sc-sub {
             font-size: 0.6rem;
-            color: var(--muted);
+            color: #6b728e;
             margin-top: 0.05rem;
         }
 
@@ -324,8 +333,8 @@
             display: flex; align-items: center; justify-content: center;
             color: var(--accent);
         }
-        .empty-title { font-size: 0.85rem; font-weight: 600; }
-        .empty-desc  { font-size: 0.65rem; color: var(--muted); }
+        .empty-title { font-size: 0.85rem; font-weight: 600; color: #1a1d2e; }
+        .empty-desc  { font-size: 0.65rem; color: #6b728e; }
 
         /* ═══════════════════════════════════════
            FOOTER
@@ -335,39 +344,136 @@
             align-items: center;
             gap: 1rem;
             padding-top: 0.5rem;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid rgba(255,255,255,0.1);
             font-size: 0.58rem;
-            color: var(--muted);
+            color: rgba(255,255,255,0.5);
             flex-shrink: 0;
         }
 
         .refresh-badge {
             display: flex; align-items: center; gap: 0.35rem;
-            background: var(--card);
+            background: #000000;
             border: 1px solid var(--border);
             border-radius: 100px;
             padding: 0.22rem 0.65rem;
             flex-shrink: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
         .refresh-badge svg { color: var(--success); animation: spin 2s linear infinite; }
 
         .footer-counter {
-            display: flex; align-items: center; gap: 0.5rem;
-            background: var(--card);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #ffffff;
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 0.35rem 1rem;
+            padding: 0.5rem 1rem;
+            min-width: 180px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         }
-        .fc-lbl { color: var(--muted); font-size: 0.7rem; font-weight: 500; }
+
+        .footer-counter:hover {
+            border-color: var(--border-hi);
+            transform: translateY(-1px);
+        }
+
+        .footer-counter-ayam {
+            border-left: 3px solid var(--gold);
+        }
+
+        .footer-counter-truk {
+            border-left: 3px solid var(--accent);
+        }
+
+        .fc-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .fc-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .fc-lbl {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b728e;
+            margin-bottom: 0.2rem;
+        }
+
+        .fc-value-wrapper {
+            display: flex;
+            align-items: baseline;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.3rem;
+        }
+
+        .fc-val {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            line-height: 1;
+            color: #1a1d2e;
+            letter-spacing: 0.5px;
+        }
+
+        .fc-separator {
+            font-size: 0.8rem;
+            color: #6b728e;
+            margin: 0 0.1rem;
+        }
+
+        .fc-total {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            color: #6b728e;
+            font-weight: 400;
+        }
+
+        .fc-unit {
+            font-size: 0.6rem;
+            color: #6b728e;
+            margin-left: 0.2rem;
+        }
+
+        .progress-bar-wrapper {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            height: 4px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease-out;
+            background: linear-gradient(90deg, var(--gold), #f5b042);
+        }
+
+        .footer-counter-truk .progress-bar {
+            background: linear-gradient(90deg, var(--accent), #ff6b4a);
+        }
+
+        .footer-right {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.5);
+            margin-left: auto;
+            white-space: nowrap;
+        }
         .fc-val {
             font-family: 'Bebas Neue', sans-serif;
             font-size: 1.6rem;
             line-height: 1;
-            color: var(--text);
+            color: #1a1d2e;
             letter-spacing: 1px;
         }
 
-        .footer-right { margin-left: auto; }
+
 
         /* ═══════════════════════════════════════
            UTILITY
@@ -413,6 +519,30 @@
             .hstat { flex: 1; }
         }
         @media (max-width: 860px) {
+            .footer {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .footer-counter {
+                flex: 1;
+                min-width: 150px;
+            }
+            
+            .fc-val {
+                font-size: 1.1rem;
+            }
+            
+            .fc-total {
+                font-size: 0.85rem;
+            }
+            
+            .footer-right {
+                margin-left: 0;
+                width: 100%;
+                text-align: center;
+            }
+            
             .hero-num { font-size: 4.5rem; }
             .sub-grid { 
                 grid-template-columns: 1fr; 
@@ -452,6 +582,35 @@
         }
 
         @media (max-width: 600px) {
+            .footer-counter {
+                padding: 0.4rem 0.75rem;
+                gap: 0.5rem;
+            }
+            
+            .fc-icon {
+                font-size: 1.1rem;
+            }
+            
+            .fc-lbl {
+                font-size: 0.5rem;
+            }
+            
+            .fc-val {
+                font-size: 0.9rem;
+            }
+            
+            .fc-total {
+                font-size: 0.7rem;
+            }
+            
+            .fc-unit {
+                font-size: 0.5rem;
+            }
+            
+            .progress-bar-wrapper {
+                height: 3px;
+            }
+
             .wrap {
                 padding: 0.5rem 0.8rem;
                 gap: 0.5rem;
@@ -530,6 +689,22 @@
             .footer-right {
                 font-size: 0.5rem;
                 margin-left: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-counter {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.3rem;
+            }
+            
+            .fc-icon {
+                font-size: 1rem;
+            }
+            
+            .fc-value-wrapper {
+                flex-wrap: wrap;
             }
         }
 
@@ -690,11 +865,11 @@
         <!-- Right: Total Ekor + No Truk -->
         <div class="hero-stats">
             <div class="hstat gold-hi">
-                <div class="lbl">TOTAL EKOR</div>
+                <div class="lbl">EKOR PLANNING</div>
                 <div class="val" id="statTotalEkor">0</div>
             </div>
             <div class="hstat accent-hi">
-                <div class="lbl">NO. TRUK</div>
+                <div class="lbl">NO. TRUCK</div>
                 <div class="val" id="statTruckNo">—</div>
             </div>
         </div>
@@ -736,7 +911,7 @@
 
     <!-- Empty State (overlay, shown when not active) -->
     <div id="emptyOverlay" class="hidden" style="grid-row: 2 / 4; align-self: stretch;">
-        <div class="empty-state" style="height:100%; background: var(--card); border:1px solid var(--border); border-radius:20px;">
+        <div class="empty-state" style="height:100%; background: #ffffff; border:1px solid var(--border); border-radius:20px; box-shadow: 0 2px 12px rgba(0,0,0,0.12);">
             <div class="empty-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -761,16 +936,38 @@
             <span>Auto refresh 2 dtk</span>
         </div>
 
-        <!-- Counter ayam hari ini -->
-        <div class="footer-counter" style="border-color: rgba(240,165,0,0.3);">
-            <span class="fc-lbl">🐔 Ayam hari ini</span>
-            <span class="fc-val" id="footerAyam" style="color: var(--gold);">0</span>
+        <!-- Counter ayam hari ini dengan progress bar -->
+        <div class="footer-counter footer-counter-ayam">
+            <div class="fc-icon">🐔</div>
+            <div class="fc-content">
+                <div class="fc-lbl">Ayam hari ini</div>
+                <div class="fc-value-wrapper">
+                    <span class="fc-val" id="footerAyam">0</span>
+                    <span class="fc-separator">/</span>
+                    <span class="fc-total" id="footerAyamTotal">0</span>
+                    <span class="fc-unit">ekor</span>
+                </div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar" id="progressAyam" style="width: 0%"></div>
+                </div>
+            </div>
         </div>
 
-        <!-- Counter truk hari ini -->
-        <div class="footer-counter" style="border-color: rgba(232,82,42,0.3);">
-            <span class="fc-lbl">🚛 Truk hari ini</span>
-            <span class="fc-val" id="footerTruck" style="color: var(--accent);">0</span>
+        <!-- Counter truk hari ini dengan progress bar -->
+        <div class="footer-counter footer-counter-truk">
+            <div class="fc-icon">🚛</div>
+            <div class="fc-content">
+                <div class="fc-lbl">Number of Trucks</div>
+                <div class="fc-value-wrapper">
+                    <span class="fc-val" id="footerTruck">0</span>
+                    <span class="fc-separator">/</span>
+                    <span class="fc-total" id="footerTruckTotal">0</span>
+                    <span class="fc-unit">truck</span>
+                </div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar" id="progressTruk" style="width: 0%"></div>
+                </div>
+            </div>
         </div>
 
         <div class="footer-right">
@@ -839,20 +1036,52 @@
     }
 
     async function refresh() {
-        try {
+    try {
             const res = await fetch(`{{ route('monitor.data', $location) }}`, {
                 headers: { 'Accept': 'application/json' }
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const j = await res.json();
 
-            /* Footer counters — always updated */
-            document.getElementById('footerAyam').textContent  = fmt(j.today_total_ayam);
-            document.getElementById('footerTruck').textContent = fmt(j.today_truck_count);
-
             const now = new Date();
             document.getElementById('lastUpdate').textContent =
                 `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+            // Update footer dengan progress
+            const todayAyam = j.today_total_ayam || 0;
+            const totalPlanningAyam = j.total_planning_ayam || 0;
+            const todayTruck = j.today_truck_count || 0;
+            const totalPlanningTruk = j.total_planning_truk || 0;
+            
+            // Hitung persentase
+            const ayamPercent = totalPlanningAyam > 0 ? (todayAyam / totalPlanningAyam) * 100 : 0;
+            const truckPercent = totalPlanningTruk > 0 ? (todayTruck / totalPlanningTruk) * 100 : 0;
+            
+            // Update nilai numerik
+            document.getElementById('footerAyam').textContent = fmt(todayAyam);
+            document.getElementById('footerAyamTotal').textContent = fmt(totalPlanningAyam);
+            document.getElementById('footerTruck').textContent = fmt(todayTruck);
+            document.getElementById('footerTruckTotal').textContent = fmt(totalPlanningTruk);
+            
+            // Update progress bar
+            const progressAyam = document.getElementById('progressAyam');
+            const progressTruk = document.getElementById('progressTruk');
+            
+            progressAyam.style.width = Math.min(ayamPercent, 100) + '%';
+            progressTruk.style.width = Math.min(truckPercent, 100) + '%';
+            
+            // Tambahkan warna khusus jika sudah mencapai target
+            if (ayamPercent >= 100) {
+                progressAyam.style.background = 'linear-gradient(90deg, #22c97a, #16a34a)';
+            } else {
+                progressAyam.style.background = 'linear-gradient(90deg, var(--gold), #f5b042)';
+            }
+            
+            if (truckPercent >= 100) {
+                progressTruk.style.background = 'linear-gradient(90deg, #22c97a, #16a34a)';
+            } else {
+                progressTruk.style.background = 'linear-gradient(90deg, var(--accent), #ff6b4a)';
+            }
 
             if (!j.active) {
                 setActive(false);
@@ -880,10 +1109,10 @@
             const subDriver = document.getElementById('subDriver');
             
             subExpedisi.textContent = expedisiName;
-            subExpedisi.title = expedisiName; // Tooltip untuk text panjang
+            subExpedisi.title = expedisiName;
             
             subDriver.textContent = driverLine;
-            subDriver.title = driverLine; // Tooltip untuk text panjang
+            subDriver.title = driverLine;
 
             /* Sub main — Size & Farm */
             const farmName = j.farm_name || '—';

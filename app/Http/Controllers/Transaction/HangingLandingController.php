@@ -14,24 +14,43 @@ class HangingLandingController extends Controller
 {
     public function index(Request $request)
     {
-        $date = $request->query('date', now('Asia/Jakarta')->toDateString());
-
-        $q = MonitorControl::query()
-            ->with(['farm', 'expedition', 'plateNumber', 'hangingForm'])
-            ->orderBy('process_date', 'desc')
-            ->orderBy('location')
-            ->orderByRaw("CASE WHEN status = 'done' THEN 1 ELSE 0 END") // done di bawah
-            ->orderBy('truck_no'); // kecil ke besar
-
-        if ($date) {
-            $q->whereDate('process_date', $date);
+        $date = $request->query('date');
+        if ($date === null || $date === '') {
+            $date = now('Asia/Jakarta')->toDateString(); // default: tanggal operasional hari ini
         }
 
-        $items = $q->paginate(50);
+        $perPage = $request->query('per_page', 20);
+        $locations = ['SH01', 'SH02'];
+
+        $baseQuery = function () use ($date) {
+            return MonitorControl::query()
+                ->with(['farm', 'expedition', 'plateNumber', 'hangingForm'])
+                ->whereDate('process_date', $date);
+        };
+
+        $paginateShift = function (string $loc, string $sh, string $pageParam) use ($baseQuery, $perPage) {
+            return $baseQuery()
+                ->where('location', $loc)
+                ->where('shift', $sh)
+                ->orderByRaw("CASE WHEN status = 'done' THEN 1 ELSE 0 END")
+                ->orderBy('truck_no')
+                ->paginate($perPage, ['*'], $pageParam)
+                ->withQueryString();
+        };
+
+        $data = [];
+        foreach ($locations as $loc) {
+            foreach (['pagi', 'malam'] as $sh) {
+                $data[$loc][$sh] = $paginateShift($loc, $sh, "page_{$loc}_{$sh}");
+            }
+        }
 
         $runningLocations = HangingForm::query()
             ->where('status', 'running')
-            ->whereHas('monitorControl', fn ($mq) => $mq->whereIn('location', ['SH01','SH02']))
+            ->whereHas('monitorControl', function ($mq) use ($date) {
+                $mq->whereIn('location', ['SH01', 'SH02'])
+                   ->whereDate('process_date', $date);
+            })
             ->with('monitorControl:id,location')
             ->get()
             ->pluck('monitorControl.location')
@@ -40,9 +59,11 @@ class HangingLandingController extends Controller
             ->all();
 
         return view('transaction.hanging_landing.index', [
-            'items' => $items,
+            'data' => $data,
             'date' => $date,
+            'locations' => $locations,
             'runningLocations' => $runningLocations,
+            'perPage' => $perPage,
         ]);
     }
 

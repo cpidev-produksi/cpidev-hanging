@@ -11,7 +11,16 @@
 
   <div class="kl-info">
     <div class="kl-info-top">
-      <code class="kl-code">{{ $it->report_code }}</code>
+      <span class="kl-meta">{{ $it->process_date?->format('d/m/Y') ?? '–' }}</span>
+      <span class="kl-dot">·</span>
+      <code class="kl-plate">{{ $it->plateNumber?->plate_number ?? '–' }}</code>
+      <span class="kl-dot">·</span>
+      <span class="kl-meta">{{ $it->expedition?->name ?? '–' }}</span>
+      <span class="kl-dot">·</span>
+      <span class="kl-meta">{{ $it->farm?->name ?? '–' }}</span>
+      <span class="kl-dot">·</span>
+      <span class="kl-meta">Size {{ $it->size ?? '–' }}</span>
+      <span class="kl-dot">·</span>
       <span class="kl-pill {{ $filled ? 'kl-pill-ok' : 'kl-pill-warn' }}">
         {{ $filled ? 'Sudah Terisi' : 'Belum Diisi' }}
       </span>
@@ -20,13 +29,7 @@
       @endif
     </div>
     <div class="kl-info-bottom">
-      <span class="kl-meta">{{ $it->process_date?->format('d/m/Y') ?? '–' }}</span>
-      <span class="kl-dot">·</span>
-      <span class="kl-meta">{{ $it->expedition?->name ?? '–' }}</span>
-      <span class="kl-dot">·</span>
-      <code class="kl-plate">{{ $it->plateNumber?->plate_number ?? '–' }}</code>
-      <span class="kl-dot">·</span>
-      <span class="kl-meta">{{ $it->farm?->name ?? '–' }}</span>
+      <code class="kl-code">{{ $it->report_code }}</code>
     </div>
   </div>
 

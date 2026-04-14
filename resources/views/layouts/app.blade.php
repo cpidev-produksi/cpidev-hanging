@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 
     <style>
         :root {
@@ -463,6 +464,10 @@
                 </button>
 
                 <div class="dropdown-menu" id="ddProduksiMenu">
+                    <a class="dropdown-item {{ request()->routeIs('planning-lb.*') ? 'active' : '' }}"
+                    href="{{ route('planning-lb.index') }}">
+                        Planning LB
+                    </a>
                     <a class="dropdown-item {{ request()->routeIs('monitor-controls.*') ? 'active' : '' }}"
                     href="{{ route('monitor-controls.index') }}">
                         Kontrol Monitor
@@ -543,6 +548,7 @@
                 <span class="chev">▾</span>
             </button>
             <div id="accProduksi" class="mobile-acc-body">
+                <a class="mobile-sub {{ request()->routeIs('planning-lb.*') ? 'active' : '' }}" href="{{ route('planning-lb.index') }}">Planning LB</a>
                 <a class="mobile-sub {{ request()->routeIs('monitor-controls.*') ? 'active' : '' }}" href="{{ route('monitor-controls.index') }}">Kontrol Monitor</a>
                 <a class="mobile-sub {{ request()->routeIs('hanging.landing') || request()->routeIs('hanging.*') || request()->routeIs('hanging-forms.*') ? 'active' : '' }}" href="{{ route('hanging.landing') }}">Form Hanging Ayam</a>
                 <a class="mobile-sub {{ request()->routeIs('retur-mati.*') ? 'active' : '' }}" href="{{ route('retur-mati.landing') }}">Ayam Retur &amp; Mati</a>
@@ -668,5 +674,7 @@
             if (window.innerWidth > 820) closeMobileNav();
         });
     </script>
+
+    @stack('scripts')
 </body>
 </html>

@@ -9,6 +9,7 @@ class HangingReturItem extends Model
     protected $fillable = [
         'hanging_form_id',
         'weight_kg',
+        'photo_path',
     ];
 
     protected $casts = [

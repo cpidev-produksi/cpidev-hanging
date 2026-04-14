@@ -11,6 +11,7 @@ use App\Http\Controllers\Transaction\HangingFormController;
 use App\Http\Controllers\Transaction\HangingLandingController;
 use App\Http\Controllers\Transaction\MonitorControlController;
 use App\Http\Controllers\Transaction\MonitorSummaryController;
+use App\Http\Controllers\Transaction\PlanningLbController;
 use App\Http\Controllers\Transaction\ReturMatiController;
 use App\Http\Controllers\Transaction\ReturMatiLandingController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,9 @@ Route::get('monitor/{location}/data', [LiveMonitorController::class, 'data'])->n
 Route::middleware(['auth', 'nocache'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Planning LB
+    Route::resource('planning-lb', PlanningLbController::class);
 
     // Master Data (Operator TS)
     Route::middleware('role:operator_ts')->prefix('master')->name('master.')->group(function () {

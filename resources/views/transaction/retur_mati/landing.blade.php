@@ -32,140 +32,55 @@
   </div>
 
   @php
-    $col   = $items->getCollection();
-    $byLoc = $col->groupBy('location');
-
-    $mkSplit = function($locItems) {
-      $byShift = $locItems->groupBy('shift');
-      return [
-        'pagi'  => $byShift->get('pagi',  collect())->sortBy('truck_no')->values(),
-        'malam' => $byShift->get('malam', collect())->sortBy('truck_no')->values(),
-      ];
-    };
-
-    $sh01 = $mkSplit($byLoc->get('SH01', collect()));
-    $sh02 = $mkSplit($byLoc->get('SH02', collect()));
-
-    // helper: count belum diisi
     $cntBelum = function($list) {
       return $list->filter(fn($it) => is_null($it->hangingForm) || is_null($it->hangingForm->dead_count))->count();
     };
-
-    $sh01TotalBelum = $cntBelum($sh01['pagi']) + $cntBelum($sh01['malam']);
-    $sh02TotalBelum = $cntBelum($sh02['pagi']) + $cntBelum($sh02['malam']);
-    $sh01Total = $sh01['pagi']->count() + $sh01['malam']->count();
-    $sh02Total = $sh02['pagi']->count() + $sh02['malam']->count();
   @endphp
 
   {{-- ── TABS (SH01 / SH02) ── --}}
   <div class="rm-tab-bar">
-    <button type="button" class="rm-tab rm-tab-sh01 rm-tab-active" data-tab="rm-tab-sh01-pane">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/>
-        <path d="M16 7V5a2 2 0 0 0-4 0v2"/>
-      </svg>
-      SH01
-      <span class="rm-tab-cnt">{{ $sh01Total }}</span>
-      @if($sh01TotalBelum > 0)
-        <span class="rm-tab-warn">{{ $sh01TotalBelum }} belum</span>
-      @endif
-    </button>
-    <button type="button" class="rm-tab rm-tab-sh02" data-tab="rm-tab-sh02-pane">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/>
-        <path d="M16 7V5a2 2 0 0 0-4 0v2"/>
-      </svg>
-      SH02
-      <span class="rm-tab-cnt">{{ $sh02Total }}</span>
-      @if($sh02TotalBelum > 0)
-        <span class="rm-tab-warn">{{ $sh02TotalBelum }} belum</span>
-      @endif
-    </button>
+    @foreach($locations as $loc)
+      @php
+        $pagi  = $data[$loc]['pagi'];
+        $malam = $data[$loc]['malam'];
+        $total = $pagi->total() + $malam->total();
+        $totalBelum = $cntBelum($pagi->getCollection()) + $cntBelum($malam->getCollection());
+      @endphp
+      <button type="button" class="rm-tab rm-tab-{{ strtolower($loc) }} {{ $loop->first ? 'rm-tab-active' : '' }}"
+              data-tab="rm-tab-{{ strtolower($loc) }}-pane">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 7V5a2 2 0 0 0-4 0v2"/>
+        </svg>
+        {{ $loc }}
+        <span class="rm-tab-cnt">{{ $total }}</span>
+        @if($totalBelum > 0)
+          <span class="rm-tab-warn">{{ $totalBelum }} belum</span>
+        @endif
+      </button>
+    @endforeach
     <div class="rm-tab-filler"></div>
   </div>
 
-  {{-- ── SH01 PANE ── --}}
-  <div id="rm-tab-sh01-pane" class="rm-pane active">
-    @include('transaction.retur_mati.partials.list', [
-      'location' => 'SH01',
-      'listPagi'  => $sh01['pagi'],
-      'listMalam' => $sh01['malam'],
-      'theme'    => 'sh01',
-    ])
-  </div>
+  {{-- ── PANES ── --}}
+  @foreach($locations as $loc)
+    @php
+      $pagi  = $data[$loc]['pagi'];
+      $malam = $data[$loc]['malam'];
+    @endphp
 
-  {{-- ── SH02 PANE ── --}}
-  <div id="rm-tab-sh02-pane" class="rm-pane">
-    @include('transaction.retur_mati.partials.list', [
-      'location' => 'SH02',
-      'listPagi'  => $sh02['pagi'],
-      'listMalam' => $sh02['malam'],
-      'theme'    => 'sh02',
-    ])
-  </div>
+    <div id="rm-tab-{{ strtolower($loc) }}-pane" class="rm-pane {{ $loop->first ? 'active' : '' }}">
+      @include('transaction.retur_mati.partials.list', [
+        'location' => $loc,
+        'listPagi'  => $pagi->getCollection(),
+        'listMalam' => $malam->getCollection(),
+        'theme'    => strtolower($loc),
+      ])
 
-  {{-- ── PAGINATION YANG RAPI ── --}}
-  @if($items->hasPages())
-    <div class="rm-pagination">
-      {{-- Info --}}
-      <p class="pagination-info">
-        Menampilkan
-        <span class="pagination-info--highlight">{{ $items->firstItem() }}–{{ $items->lastItem() }}</span>
-        dari
-        <span class="pagination-info--highlight">{{ $items->total() }}</span>
-        data
-      </p>
-
-      {{-- Nav --}}
-      <div class="pagination-nav">
-        {{-- Prev --}}
-        @if($items->onFirstPage())
-          <span class="page-btn page-btn--disabled" aria-disabled="true">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          </span>
-        @else
-          <a href="{{ $items->previousPageUrl() }}&{{ http_build_query(request()->only(['date'])) }}"
-             class="page-btn" title="Halaman sebelumnya">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          </a>
-        @endif
-
-        {{-- Page Numbers --}}
-        @php
-          $cur   = $items->currentPage();
-          $last  = $items->lastPage();
-          $pages = collect(range(1, $last))
-              ->filter(fn($p) => $p === 1 || $p === $last || abs($p - $cur) <= 2)
-              ->values();
-        @endphp
-
-        @foreach($pages as $i => $page)
-          @if($i > 0 && $page - $pages[$i - 1] > 1)
-            <span class="page-ellipsis">…</span>
-          @endif
-
-          @if($page === $cur)
-            <span class="page-btn page-btn--active" aria-current="page">{{ $page }}</span>
-          @else
-            <a href="{{ $items->url($page) }}&{{ http_build_query(request()->only(['date'])) }}"
-               class="page-btn">{{ $page }}</a>
-          @endif
-        @endforeach
-
-        {{-- Next --}}
-        @if($items->hasMorePages())
-          <a href="{{ $items->nextPageUrl() }}&{{ http_build_query(request()->only(['date'])) }}"
-             class="page-btn" title="Halaman berikutnya">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-          </a>
-        @else
-          <span class="page-btn page-btn--disabled" aria-disabled="true">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-          </span>
-        @endif
-      </div>
+      @include('transaction.retur_mati.partials.pagination', ['list' => $pagi])
+      @include('transaction.retur_mati.partials.pagination', ['list' => $malam])
     </div>
-  @endif
+  @endforeach
 </div>
 
 <script>

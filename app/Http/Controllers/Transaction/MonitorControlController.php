@@ -15,29 +15,77 @@ use Illuminate\Support\Facades\DB;
 
 class MonitorControlController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $items = MonitorControl::query()
-            ->with(['expedition', 'plateNumber', 'farm', 'hangingForm'])
-            ->latest()
-            ->paginate(20);
+        $date = $request->query('date');
+        if ($date === null || $date === '') {
+            $date = now()->toDateString(); // default: tanggal operasional hari ini
+        }
+
+        $perPage = $request->query('per_page', 20);
+        $locations = ['SH01', 'SH02'];
+
+        $baseQuery = function () use ($date) {
+            return MonitorControl::query()
+                ->with(['expedition', 'plateNumber', 'farm', 'hangingForm'])
+                ->whereDate('process_date', $date);
+        };
+
+        $paginateShift = function (string $loc, string $sh, string $pageParam) use ($baseQuery, $perPage) {
+            return $baseQuery()
+                ->where('location', $loc)
+                ->where('shift', $sh)
+                ->orderBy('truck_no')
+                ->paginate($perPage, ['*'], $pageParam)
+                ->withQueryString();
+        };
+
+        $data = [];
+        $stats = [];
+        $summaryActive = 0;
+        $summaryDone = 0;
+
+        foreach ($locations as $loc) {
+            foreach (['pagi', 'malam'] as $sh) {
+                $data[$loc][$sh] = $paginateShift($loc, $sh, "page_{$loc}_{$sh}");
+
+                $countBase = MonitorControl::query()
+                    ->whereDate('process_date', $date)
+                    ->where('location', $loc)
+                    ->where('shift', $sh);
+
+                $active = (clone $countBase)->where('status', '!=', 'done')->count();
+                $done = (clone $countBase)->where('status', 'done')->count();
+
+                $stats[$loc][$sh] = [
+                    'active' => $active,
+                    'done' => $done,
+                    'total' => $active + $done,
+                ];
+
+                $summaryActive += $active;
+                $summaryDone += $done;
+            }
+        }
 
         $runningLocations = MonitorControl::query()
+            ->whereDate('process_date', $date)
             ->where('status', 'running')
             ->pluck('location')
             ->unique()
             ->values()
             ->all();
 
-        $items = MonitorControl::query()
-            ->with(['expedition', 'plateNumber', 'farm', 'hangingForm'])
-            ->orderByDesc('process_date')
-            ->orderBy('location')
-            ->orderByRaw("FIELD(shift,'pagi','malam')")
-            ->orderBy('truck_no')
-            ->paginate(100);
-
-        return view('transaction.monitor_controls.index', compact('items', 'runningLocations'));
+        return view('transaction.monitor_controls.index', [
+            'data' => $data,
+            'date' => $date,
+            'locations' => $locations,
+            'stats' => $stats,
+            'summaryActive' => $summaryActive,
+            'summaryDone' => $summaryDone,
+            'runningLocations' => $runningLocations,
+            'perPage' => $perPage,
+        ]);
     }
 
     public function create()
@@ -112,18 +160,6 @@ class MonitorControlController extends Controller
             $data['report_code'] = $this->generateReportCode($data['location'], $data['process_date'], $data['shift']);
 
             $monitor = MonitorControl::create($data);
-
-            // HangingForm::firstOrCreate(
-            //     ['monitor_control_id' => $monitor->id],
-            //     [
-            //         'status' => 'draft',
-            //         'unloading_time' => null,
-            //         'finish_time' => null,
-            //         'dead_count' => 0,
-            //         'retur_count' => 0,
-            //         'retur_total_kg' => 0,
-            //     ]
-            // );
 
             return redirect()
                 ->route('monitor-controls.index')
