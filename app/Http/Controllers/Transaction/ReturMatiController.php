@@ -28,7 +28,9 @@ class ReturMatiController extends Controller
 
     public function update(Request $request, HangingForm $hangingForm)
     {
-        if ($hangingForm->status === 'done') {
+        $slug = $request->user()?->role?->slug;
+
+        if ($hangingForm->status === 'done' && !in_array($slug, ['supervisor','superadmin'], true)) {
             return back()->withErrors(['retur' => 'Form sudah DONE dan tidak bisa diubah.']);
         }
 

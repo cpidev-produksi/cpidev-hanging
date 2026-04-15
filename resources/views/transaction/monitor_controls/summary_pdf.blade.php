@@ -338,8 +338,9 @@ foreach ($customSetCounts as $cap => $count) { $customEkor += ($count * $cap); }
 $dead   = (int)($form->dead_count ?? 0);
 $retur  = (int)($form->retur_count ?? 0);
 $totalEkorMC = (int)($mc->total_chicken ?? 0);
-$totalAyamTerimaCalc = max(0, $totalEkorMC - $dead - $retur);
-$selisih = $totalEkorMC - ($totalAyamTerimaCalc + $dead + $retur);
+$targetAyam = max(0, $totalEkorMC - $dead - $retur);
+$hasilShackle = $totalAyamCap;
+$selisih = $hasilShackle - $targetAyam;
 $isMatch = ($selisih === 0);
 @endphp
 
@@ -415,7 +416,7 @@ $isMatch = ($selisih === 0);
           <tr><th>Jam Bongkar</th><td>{{ $form->unloading_time?->format('H:i') ?? '—' }}</td></tr>
           <tr><th>Jam Selesai</th><td>{{ $form->finish_time?->format('H:i') ?? '—' }}</td></tr>
           <tr><th>Shackle Kosong</th><td class="td-num">{{ $totalKosong }}</td></tr>
-          <tr><th>Ayam Diterima</th><td class="td-num">{{ $totalAyamTerima }}</td></tr>
+          <tr><th>Ayam Diterima</th><td class="td-num">{{ $targetAyam }}</td></tr>
         </table>
       </div>
       <div class="col-r">
@@ -448,7 +449,7 @@ $isMatch = ($selisih === 0);
           </div>
           <div class="hl-row hl-row-total">
             <span class="hl-key"><b>Ayam Diterima</b></span>
-            <span class="hl-val hl-val-hero">{{ number_format($totalAyamTerimaCalc) }}</span>
+            <span class="hl-val hl-val-hero">{{ number_format($targetAyam) }}</span>
           </div>
           <div class="hl-row">
             <span class="hl-key">Status</span>

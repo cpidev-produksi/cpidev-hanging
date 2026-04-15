@@ -4,6 +4,10 @@
 <div class="ed-wrap">
 
   @php
+  $slug = auth()->user()?->role?->slug;
+  $canEditDone = in_array($slug, ['supervisor','superadmin'], true);
+  $isLocked = ($form->status === 'done') && !$canEditDone;
+
   $mc = $form->monitorControl;
   $oldWeights = old('retur_weights');
   $oldPhotos  = old('retur_photo_existing');
@@ -66,7 +70,7 @@
   </div>
 
   {{-- ── DONE BANNER ── --}}
-  @if($form->status === 'done')
+  @if($form->status === 'done' && $isLocked)
     <div class="ed-done-banner">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/>
@@ -99,16 +103,16 @@
           <label class="ed-label" for="dead_count">Jumlah Ayam Mati</label>
           <div class="ed-big-counter">
             <button type="button" class="ed-big-minus" id="deadMinus"
-                    onclick="stepDead(-1)" @disabled($form->status === 'done')>
+                    onclick="stepDead(-1)" @disabled($isLocked)>
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
             </button>
             <input id="dead_count" name="dead_count" type="number" min="0" step="1"
                    value="{{ old('dead_count', $form->dead_count ?? 0) }}"
-                   class="ed-big-input" @disabled($form->status === 'done')>
+                   class="ed-big-input" @disabled($isLocked)>
             <button type="button" class="ed-big-plus" id="deadPlus"
-                    onclick="stepDead(1)" @disabled($form->status === 'done')>
+                    onclick="stepDead(1)" @disabled($isLocked)>
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2.5">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -151,7 +155,7 @@
                          name="retur_weights[]"
                          value="{{ $w }}"
                          placeholder="0.00"
-                         @disabled($form->status === 'done')>
+                         @disabled($isLocked)>
                   <span class="ed-input-suffix">Kg</span>
                 </div>
 
@@ -165,9 +169,9 @@
                         accept="image/jpeg"
                         class="retur-photo-input"
                         style="display:none"
-                        @disabled($form->status === 'done')>
+                        @disabled($isLocked)>
 
-                  @if($form->status !== 'done')
+                  @if(!$isLocked)
                   <div class="ed-photo-trigger">
                     <button type="button" class="ed-photo-btn-main" title="Foto">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -204,7 +208,7 @@
                     @if(!empty($photos[$idx]))
                       <div class="ed-photo-thumb">
                         <img src="{{ asset('storage/'.$photos[$idx]) }}" alt="photo">
-                        @if($form->status !== 'done')
+                        @if(!$isLocked)
                         <button type="button" class="ed-photo-remove" onclick="removePhoto(this)">
                           <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
                                stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -218,7 +222,7 @@
 
                 <button type="button" class="ed-btn-remove"
                         onclick="removeRow(this, true)"
-                        @disabled($form->status === 'done')
+                        @disabled($isLocked)
                         title="Hapus baris ini">
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
                        stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/>
@@ -231,7 +235,7 @@
           </div>
 
           <div class="ed-retur-actions" style="margin-top:12px;text-align:right;">
-            <button type="button" class="ed-btn-add" onclick="addRow()" @disabled($form->status === 'done')>
+            <button type="button" class="ed-btn-add" onclick="addRow()" @disabled($isLocked)>
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
@@ -260,7 +264,7 @@
     {{-- ── FOOTER ── --}}
     <div class="ed-footer">
       <a class="ed-btn-cancel" href="{{ route('retur-mati.landing', $form) }}">Batal</a>
-      <button class="ed-btn-save" type="submit" @disabled($form->status === 'done')>
+      <button class="ed-btn-save" type="submit" @disabled($isLocked)>
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/>
         </svg>
@@ -339,7 +343,7 @@ function addRow() {
       <div class="ed-photo-preview"></div>
     </div>
 
-    <button type="button" class="ed-btn-remove" title="Hapus baris ini">
+    <button type="button" class="ed-btn-remove" title="Hapus baris ini" @disabled($isLocked)>
       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/>
         <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>

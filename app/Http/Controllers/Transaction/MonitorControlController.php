@@ -202,7 +202,7 @@ class MonitorControlController extends Controller
     {
         $slug = $request->user()?->role?->slug;
 
-        if ($monitorControl->status !== 'draft' && !in_array($slug, ['supervisor','superadmin'], true)) {
+        if ($monitorControl->status !== 'draft' && !in_array($slug, ['supervisor', 'spv', 'superadmin'], true)) {
             return back()->with('status', 'Tidak bisa edit jika sudah running/done.');
         }
 

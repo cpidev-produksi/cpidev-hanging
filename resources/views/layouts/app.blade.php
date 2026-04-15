@@ -466,7 +466,7 @@
                 <div class="dropdown-menu" id="ddProduksiMenu">
                     <a class="dropdown-item {{ request()->routeIs('planning-lb.*') ? 'active' : '' }}"
                     href="{{ route('planning-lb.index') }}">
-                        Planning LB
+                        Planning Live Birds
                     </a>
                     <a class="dropdown-item {{ request()->routeIs('monitor-controls.*') ? 'active' : '' }}"
                     href="{{ route('monitor-controls.index') }}">

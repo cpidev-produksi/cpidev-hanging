@@ -1,6 +1,8 @@
 @php
-  /** @var \Illuminate\Support\Collection $rows */
   $domId = 'done-' . $key;
+
+  $slug = auth()->user()?->role?->slug;
+  $canEditDone = in_array($slug, ['supervisor','superadmin'], true);
 @endphp
 
 @if($rows->isNotEmpty())
@@ -27,6 +29,13 @@
           <span class="dn-meta">{{ $it->plateNumber?->plate_number ?? '–' }}</span>
           <span class="dn-meta">{{ $it->expedition?->name ?? '–' }}</span>
           <span class="dn-meta">{{ $it->farm?->name ?? '–' }}</span>
+
+          @if($canEditDone)
+            <a href="{{ route('monitor-controls.edit', $it) }}"
+               class="dn-btn-edit"
+               title="Edit Monitor Control">Edit</a>
+          @endif
+
           @if(
               $it->status === 'done'
               && $it->hangingForm
@@ -98,6 +107,27 @@ function toggleDone(id) {
 </script>
 
 <style>
+  /* tombol edit untuk DONE */
+.dn-btn-edit {
+  display:inline-flex;
+  align-items:center;
+  margin-left:auto;
+  padding:5px 10px;
+  border-radius:8px;
+  font-size:.72rem;
+  font-weight:800;
+  color:#0D1117;
+  background:#F3F4F8;
+  border:1.5px solid #E2E5EE;
+  text-decoration:none;
+  transition:all .15s;
+}
+.dn-btn-edit:hover {
+  background:#E85D2F;
+  color:#fff;
+  border-color:#E85D2F;
+}
+
 /* ── DONE SECTION ── */
 .dn-wrap { margin-top: 10px; }
 

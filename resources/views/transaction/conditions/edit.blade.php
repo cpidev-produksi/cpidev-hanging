@@ -3,6 +3,10 @@
 @section('content')
 <div class="ke-wrap">
   @php
+  $slug = auth()->user()?->role?->slug;
+  $canEditDone = in_array($slug, ['supervisor','superadmin'], true);
+  $isLocked = ($form->status === 'done') && !$canEditDone;
+
     $mc = $form->monitorControl;
     $condColor = function(string $val): string {
         return match($val) {
@@ -98,9 +102,9 @@
       <div class="ke-radio-grid">
         @foreach(['sangat_basah' => 'Sangat Basah', 'basah' => 'Basah', 'kering' => 'Kering'] as $val => $label)
           @php $color = $condColor($val); @endphp
-          <label class="ke-radio cond-{{ $color }} {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $form->status === 'done' ? 'ke-radio-disabled' : '' }}">
+          <label class="ke-radio cond-{{ $color }} {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $isLocked ? 'ke-radio-disabled' : '' }}">
             <input type="radio" name="basket_condition" value="{{ $val }}"
-                   @checked($v === $val) @disabled($form->status === 'done')>
+                   @checked($v === $val) @disabled($isLocked)>
             <span class="ke-radio-dot"></span>
             <span class="ke-radio-color-dot cond-dot-{{ $color }}"></span>
             {{ $label }}
@@ -136,9 +140,9 @@
       <div class="ke-radio-grid">
         @foreach(['bak_berisi_air' => 'Bak berisi air', 'bak_kering' => 'Bak kering', 'benda_lain' => 'Benda lain-lain yang memberatkan timbangan'] as $val => $label)
           @php $color = $condColor($val); @endphp
-          <label class="ke-radio cond-{{ $color }} {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $form->status === 'done' ? 'ke-radio-disabled' : '' }}">
+          <label class="ke-radio cond-{{ $color }} {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $isLocked ? 'ke-radio-disabled' : '' }}">
             <input type="radio" name="truck_platform_condition" value="{{ $val }}"
-                   @checked($v === $val) @disabled($form->status === 'done')>
+                   @checked($v === $val) @disabled($isLocked)>
             <span class="ke-radio-dot"></span>
             <span class="ke-radio-color-dot cond-dot-{{ $color }}"></span>
             {{ $label }}
@@ -174,9 +178,9 @@
       <div class="ke-radio-grid">
         @foreach(['sangat_basah' => 'Sangat Basah', 'medium_basah' => 'Medium Basah', 'basah' => 'Basah', 'kering' => 'Kering'] as $val => $label)
           @php $color = $condColor($val); @endphp
-          <label class="ke-radio cond-{{ $color }} {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $form->status === 'done' ? 'ke-radio-disabled' : '' }}">
+          <label class="ke-radio cond-{{ $color }} {{ $v === $val ? 'ke-radio-checked' : '' }} {{ $isLocked ? 'ke-radio-disabled' : '' }}">
             <input type="radio" name="feather_condition" value="{{ $val }}"
-                   @checked($v === $val) @disabled($form->status === 'done')>
+                   @checked($v === $val) @disabled($isLocked)>
             <span class="ke-radio-dot"></span>
             <span class="ke-radio-color-dot cond-dot-{{ $color }}"></span>
             {{ $label }}
@@ -197,7 +201,7 @@
     {{-- ── FOOTER ── --}}
     <div class="ke-footer">
       <a class="ke-btn-cancel" href="{{ route('conditions.landing') }}">Batalkan</a>
-      <button class="ke-btn-save" type="submit" @disabled($form->status === 'done')>
+      <button class="ke-btn-save" type="submit" @disabled($isLocked)>
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
           <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>

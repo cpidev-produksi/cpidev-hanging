@@ -19,6 +19,10 @@
   </nav>
 
   @php
+  $slug = auth()->user()?->role?->slug;
+  $canEditDone = in_array($slug, ['supervisor','superadmin'], true);
+  $isLocked = ($form->status === 'done') && !$canEditDone;
+
     $mc       = $form->monitorControl;
     $isDone   = $form->status === 'done';
     $isDraft  = $form->status === 'draft';
@@ -92,7 +96,7 @@
         Penyelesaian Proses
       </div>
 
-      @if($isDone)
+      @if($isDone || $isLocked)
         <div class="sh-done-banner">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/>
@@ -116,7 +120,7 @@
               </span>
               <input type="time" id="unloading_time" name="unloading_time"
                      value="{{ old('unloading_time', $form->unloading_time?->format('H:i')) }}"
-                     class="sh-input" @disabled($isDone)>
+                     class="sh-input" @disabled($isLocked)>
             </div>
             @error('unloading_time')<p class="sh-error">{{ $message }}</p>@enderror
           </div>
@@ -132,14 +136,14 @@
               </span>
               <input type="time" id="finish_time" name="finish_time"
                      value="{{ old('finish_time', $form->finish_time?->format('H:i')) }}"
-                     class="sh-input" @disabled($isDone)>
+                     class="sh-input" @disabled($isLocked)>
             </div>
             @error('finish_time')<p class="sh-error">{{ $message }}</p>@enderror
           </div>
         </div>
 
         <div class="sh-finish-footer">
-          <button type="submit" class="sh-btn-finish" @disabled($isDone)
+          <button type="submit" class="sh-btn-finish" @disabled($isLocked)
                   onclick="return confirm('Selesaikan proses ini? Status akan menjadi DONE.')">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/>
@@ -309,7 +313,7 @@
                 <td class="sh-td sh-td-center sh-td-ctrl">
                   <div class="sh-counter">
                     <button type="button" class="sh-ctr-btn sh-ctr-minus"
-                            @disabled($isDone)
+                            @disabled($isLocked)
                             onclick="changeEmpty({{ $cell->id }}, -1)">−</button>
 
                     <input  id="empty-{{ $cell->id }}"
@@ -317,11 +321,11 @@
                             class="sh-ctr-input"
                             inputmode="numeric"
                             data-max="{{ $maxCap }}"
-                            @disabled($isDone)
+                            @disabled($isLocked)
                             onchange="updateCell({{ $cell->id }}, this.value)"/>
 
                     <button type="button" class="sh-ctr-btn sh-ctr-plus"
-                            @disabled($isDone)
+                            @disabled($isLocked)
                             onclick="changeEmpty({{ $cell->id }}, 1)">+</button>
                   </div>
                 </td>

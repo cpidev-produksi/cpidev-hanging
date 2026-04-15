@@ -51,8 +51,15 @@ foreach ($customSetCounts as $cap => $count) { $customEkor += ($count * $cap); }
 $dead   = (int)($form->dead_count ?? 0);
 $retur  = (int)($form->retur_count ?? 0);
 $totalEkorMC = (int)($mc->total_chicken ?? 0);
-$totalAyamTerimaCalc = max(0, $totalEkorMC - $dead - $retur);
-$selisih = $totalEkorMC - ($totalAyamTerimaCalc + $dead + $retur);
+
+// TARGET (DTA) = total ekor - mati - retur
+$targetAyam = max(0, $totalEkorMC - $dead - $retur);
+
+// HASIL SHACKLE = blok penuh + kondisional - kosong
+$hasilShackle = $totalAyamCap; // sudah hitung cap - empty
+
+// Selisih = hasil shackle - target
+$selisih = $hasilShackle - $targetAyam;
 $isMatch = ($selisih === 0);
 
 $condLevel = function(?string $val): int {
@@ -261,7 +268,7 @@ $fc = $form->feather_condition;
         {{-- Total hero row --}}
         <div class="sm-total-row">
           <span class="sm-total-label">Jumlah Ayam Diterima</span>
-          <span class="sm-kv-val sm-val-green">{{ $totalAyamTerimaCalc }}</span>
+          <span class="sm-kv-val sm-val-green">{{ number_format($targetAyam) }}</span>
         </div>
 
         <div class="sm-kv-group" style="margin-top:10px">

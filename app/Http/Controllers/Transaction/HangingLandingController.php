@@ -102,11 +102,12 @@ class HangingLandingController extends Controller
         });
     }
 
-    public function start(HangingForm $hangingForm)
+    public function start(HangingForm $hangingForm, Request $request)
     {
         $hangingForm->load('monitorControl');
+        $slug = $request->user()?->role?->slug;
 
-        if ($hangingForm->status === 'done') {
+        if ($hangingForm->status === 'done' && !in_array($slug, ['supervisor','superadmin'], true)) {
             return back()->withErrors(['start' => 'Form sudah DONE dan tidak bisa diubah.']);
         }
 

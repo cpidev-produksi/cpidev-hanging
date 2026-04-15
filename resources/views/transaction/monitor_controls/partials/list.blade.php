@@ -1,5 +1,6 @@
 @php
-  /** @var \Illuminate\Support\Collection $rows */
+  $slug = auth()->user()?->role?->slug;
+  $canEditDone = in_array($slug, ['supervisor','superadmin'], true);
 @endphp
 
 @if($rows->isEmpty())
@@ -68,20 +69,23 @@
 
         {{-- Actions --}}
         <div class="lst-actions">
-          @if($it->status === 'draft')
+          @if($it->status === 'draft' || $canEditDone)
             <a href="{{ route('monitor-controls.edit', $it) }}" class="lst-btn lst-btn-edit">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
               Edit
             </a>
+          @endif
+
+          @if($it->status === 'draft')
             <form method="POST" action="{{ route('monitor-controls.destroy', $it) }}" style="display:inline"
                   onsubmit="return confirm('Hapus data truk #{{ $it->truck_no }}?')">
               @csrf @method('DELETE')
               <button class="lst-btn lst-btn-del">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/>
+                    stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/>
                   <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
                   <path d="M9 6V4h6v2"/>
                 </svg>
@@ -91,7 +95,7 @@
           @else
             <a href="{{ route('hanging.landing') }}" class="lst-btn lst-btn-hanging">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2.5"><polygon points="6 3 20 12 6 21 6 3"/>
+                  stroke="currentColor" stroke-width="2.5"><polygon points="6 3 20 12 6 21 6 3"/>
               </svg>
               Hanging
             </a>

@@ -1,5 +1,6 @@
 @php
-  /** @var \App\Models\MonitorControl $it */
+  $slug = auth()->user()?->role?->slug;
+  $canEditDone = in_array($slug, ['supervisor','superadmin'], true);
 @endphp
 
 <div class="lst-row">
@@ -81,12 +82,18 @@
           Lanjutkan
         </a>
       @else
-        <span class="lst-done-pill">
-          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/>
-          </svg>
-          DONE
-        </span>
+        @if($canEditDone)
+          <a class="lst-btn-lanjut" href="{{ route('hanging-forms.show', $hf) }}">
+            Edit
+          </a>
+        @else
+          <span class="lst-done-pill">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/>
+            </svg>
+            DONE
+          </span>
+        @endif
       @endif
     @else
       <span class="lst-no-form">Belum ada form</span>
