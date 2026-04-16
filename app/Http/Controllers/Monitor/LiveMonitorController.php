@@ -85,6 +85,17 @@ class LiveMonitorController extends Controller
                 'today_truck_count' => $todayTruckCount,
                 'total_planning_ayam' => $totalPlanningAyam,
                 'total_planning_truk' => $totalPlanningTruk,
+                
+                // Data kosong untuk bagian lain
+                'report_code' => null,
+                'total_ayam_running' => 0,
+                'total_ekor' => 0,
+                'truck_no' => null,
+                'expedition_name' => null,
+                'driver_name' => null,
+                'driver_phone' => null,
+                'size' => null,
+                'farm_name' => null,
             ]);
         }
 
@@ -99,8 +110,6 @@ class LiveMonitorController extends Controller
         }
 
         $deadCount = (int) ($active->hangingForm->dead_count ?? 0);
-
-        // Hero = total shackle (tanpa dikurangi dead)
         $totalAyamBersih = $totalAyamShackle;
 
         return response()->json([

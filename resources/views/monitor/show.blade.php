@@ -660,12 +660,14 @@
             emptyOverlay.classList.add('hidden');
             heroGrid.style.display = '';
             carouselModule.style.display = '';
+            // PROGRESS STRIP TETAP DITAMPILKAN meskipun tidak active
             progressStrip.style.display = '';
         } else {
             emptyOverlay.classList.remove('hidden');
             heroGrid.style.display = 'none';
             carouselModule.style.display = 'none';
-            progressStrip.style.display = 'none';
+            // Progress strip tetap ditampilkan (jangan disembunyikan)
+            // progressStrip.style.display = 'none';  // HAPUS atau COMMENT baris ini
         }
     }
 
@@ -698,7 +700,36 @@
             if (!data.active) {
                 setActiveUI(false);
                 reportCodeSpan.innerText = '—';
-                return;
+                
+                // Kosongkan atau set default value untuk field yang tidak ada datanya
+                heroAyamSpan.innerText = '0';
+                statEkorSpan.innerText = '0';
+                statTruckNoSpan.innerText = '—';
+                carouselFarm.innerText = '—';
+                carouselSize.innerText = '—';
+                carouselExpedisi.innerText = '—';
+                carouselDriver.innerText = '—';
+                
+                // Progress tetap diupdate (sudah diambil dari data.today_total_ayam dll)
+                // JANGAN return, biarkan lanjut ke bawah untuk update progress
+                // return;  // HAPUS baris ini
+                
+                // Update progress saja, tanpa return
+                todayAyamSpan.innerText = fmt(data.today_total_ayam || 0);
+                planningAyamSpan.innerText = fmt(data.total_planning_ayam || 0);
+                todayTruckSpan.innerText = fmt(data.today_truck_count || 0);
+                planningTruckSpan.innerText = fmt(data.total_planning_truk || 0);
+                
+                let ayamPercent = (data.total_planning_ayam || 0) > 0 ? ((data.today_total_ayam || 0) / (data.total_planning_ayam || 1)) * 100 : 0;
+                let truckPercent = (data.total_planning_truk || 0) > 0 ? ((data.today_truck_count || 0) / (data.total_planning_truk || 1)) * 100 : 0;
+                ayamPercent = Math.min(ayamPercent, 100);
+                truckPercent = Math.min(truckPercent, 100);
+                progressAyamFill.style.width = ayamPercent + '%';
+                progressTruckFill.style.width = truckPercent + '%';
+                ayamPercentLabel.innerText = Math.floor(ayamPercent) + '%';
+                truckPercentLabel.innerText = Math.floor(truckPercent) + '%';
+                
+                return; // Return setelah update progress
             }
             setActiveUI(true);
             reportCodeSpan.innerText = data.report_code || '—';
