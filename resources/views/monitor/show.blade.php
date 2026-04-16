@@ -2,1140 +2,739 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Live Monitor • {{ $location }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Live Monitor • Slaughter House</title>
     @vite(['resources/css/app.css','resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg:           #1a1d27;
-            --surface:      #21253a;
-            --card:         #ffffff;
-            --border:       #d0d5e8;
-            --border-hi:    #a0aac8;
-            --accent:       #e8522a;
-            --accent-glow:  rgba(232, 82, 42, 0.22);
-            --accent-dim:   rgba(232, 82, 42, 0.12);
-            --gold:         #c97d00;
-            --gold-dim:     rgba(201, 125, 0, 0.12);
-            --text:         #1a1d2e;
-            --text-on-dark: #eef0f5;
-            --muted:        #6b728e;
-            --success:      #16a34a;
-            --info:         #2563eb;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --grad-bg: radial-gradient(ellipse at 20% 30%, #0B2B26, #05161a);
+            --accent-orange: #F97316;
+            --accent-gold: #F59E0B;
+            --accent-blue: #3B82F6;
+            --accent-green: #10B981;
+            --text-dark: #0F172A;
+            --text-muted: #475569;
+            --card-white: #FFFFFF;
+            --shadow-xl: 0 25px 40px -12px rgba(0, 0, 0, 0.25);
+            --shadow-card: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+        }
 
         body {
-            background: var(--bg);
-            font-family: 'DM Sans', system-ui, sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            color: var(--text-on-dark);
-        }
-
-        /* Ambient glow layers */
-        body::before {
-            content: '';
-            position: fixed; inset: 0;
-            background:
-                radial-gradient(ellipse 70% 55% at 10% 90%, rgba(232,82,42,0.07) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 45% at 90% 5%,  rgba(240,165,0,0.05) 0%, transparent 55%);
-            pointer-events: none; z-index: 0;
-        }
-
-        /* Subtle grid */
-        body::after {
-            content: '';
-            position: fixed; inset: 0;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
-            background-size: 44px 44px;
-            pointer-events: none; z-index: 0;
-        }
-
-        /* ═══════════════════════════════════════
-           LAYOUT WRAPPER
-        ═══════════════════════════════════════ */
-        .wrap {
-            position: relative; z-index: 1;
-            height: 100vh;
-            display: grid;
-            grid-template-rows: auto auto 1fr 64px auto;
-            gap: 0.65rem;
-            padding: 0.7rem 1.2rem;
-        }
-
-        /* ═══════════════════════════════════════
-           HEADER
-        ═══════════════════════════════════════ */
-        .header {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--grad-bg);
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding-bottom: 0.6rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
         }
 
-        /* Logo */
-        .logo-box {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            background: #ffffff;
-            border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden; flex-shrink: 0;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        /* subtle grid texture */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cGF0aCBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDMiIGQ9Ik0wIDBoNDB2NDBIMHoiLz48cGF0aCBkPSJNMjAgMjBhMTAgMTAgMCAwIDEgMC0yMCAxMCAxMCAwIDAgMSAwIDIweiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjAxIi8+PC9zdmc+');
+            background-repeat: repeat;
+            opacity: 0.3;
+            pointer-events: none;
         }
-        .logo-box img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Brand */
-        .brand h1 {
-            font-family: 'Bebas Neue', sans-serif;
+        /* dashboard container — NO outer border, full bleed */
+        .dashboard {
+            width: 100%;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(0px);
+        }
+
+        .dashboard-inner {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.2rem 1.5rem;
+            gap: 1rem;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .dashboard-inner::-webkit-scrollbar {
+            width: 4px;
+            background: #E2E8F0;
+        }
+
+        /* HEADER */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .brand-area {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .logo-icon {
+            width: 46px;
+            height: 46px;
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 12px -6px rgba(249,115,22,0.3);
+            color: white;
+        }
+        .brand-text h2 {
             font-size: 1.3rem;
-            letter-spacing: 1.5px;
-            background: linear-gradient(135deg, #fff 25%, var(--gold) 100%);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-            line-height: 1.1;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            background: linear-gradient(120deg, #1E293B, #F97316);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
         }
-        .brand p {
-            font-size: 0.58rem;
-            color: rgba(255,255,255,0.45);
-            letter-spacing: 0.4px;
-        }
-
-        /* Spacer */
-        .h-gap { flex: 1; }
-
-        /* Location badge */
-        .loc-badge {
-            display: flex; align-items: center; gap: 0.45rem;
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 0.3rem 0.85rem;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }
-        .loc-badge svg { color: var(--accent); flex-shrink: 0; }
-        .loc-lbl { font-size: 0.58rem; font-weight: 600; color: #6b728e; letter-spacing: 0.5px; }
-        .loc-val {
-            font-size: 0.82rem; font-weight: 700; color: #1a1d2e;
-            background: var(--accent-dim);
-            padding: 0.1rem 0.45rem; border-radius: 5px;
+        .brand-text p {
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #475569;
         }
 
-        /* DateTime */
-        .datetime-block {
+        .info-chips {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .chip {
+            background: white;
+            border-radius: 60px;
+            padding: 0.4rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid #E9EEF3;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+        .chip-loc {
+            background: #FFF7ED;
+            border-left: 3px solid var(--accent-orange);
+        }
+        .chip-code {
+            font-family: 'DM Mono', monospace;
+            background: #1E293B;
+            color: #FEF08A;
+            border: none;
+        }
+        .datetime {
             text-align: right;
         }
-        .dt-time {
-            font-family: 'Bebas Neue', monospace;
-            font-size: 2rem; font-weight: 400;
-            color: var(--text-on-dark);
-            letter-spacing: 3px;
-            line-height: 1;
-        }
-        .dt-date {
-            font-size: 0.68rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.45);
-            letter-spacing: 0.3px;
-            margin-top: 2px;
-        }
-
-        /* Report code */
-        .report-pill {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-left: 2px solid var(--gold);
-            border-radius: 8px;
-            padding: 0.2rem 0.55rem;
-            text-align: center;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }
-        .report-pill .lbl { font-size: 0.45rem; color: #6b728e; text-transform: uppercase; letter-spacing: 0.5px; }
-        .report-pill .val {
+        .time-digital {
+            font-size: 1.3rem;
+            font-weight: 700;
             font-family: 'DM Mono', monospace;
-            font-size: 0.62rem; font-weight: 500;
-            color: var(--gold);
+            letter-spacing: 1px;
+            color: #0F172A;
+        }
+        .date-text {
+            font-size: 0.65rem;
+            color: #64748B;
         }
 
-        /* Fullscreen button */
-        .fs-btn {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            padding: 0.3rem 0.7rem;
-            cursor: pointer;
-            display: flex; align-items: center; gap: 0.4rem;
-            color: #6b728e;
-            font-size: 0.65rem; font-weight: 500;
-            font-family: inherit;
-            transition: all 0.18s ease;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        /* HERO — total ayam */
+        .hero-grid {
+            background: linear-gradient(125deg, #fffede 0%, #dbffe1 100%);
+            border-radius: 1.8rem;
+            padding: 1rem 1.8rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            align-items: center;
+            box-shadow: var(--shadow-card);
+            border: 1px solid rgba(249,115,22,0.2);
         }
-        .fs-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: var(--accent-dim);
+        .hero-left {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        .fs-btn svg { width: 14px; height: 14px; }
+        .hero-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-orange);
+        }
+        /* angka sangat besar, maks 4 digit masih proporsional */
+        .hero-number {
+            font-size: clamp(4.5rem, 15vw, 9rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #F97316, #DC2626);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            line-height: 1;
+            letter-spacing: -2px;
+            margin: 0.2rem 0;
+        }
+        .hero-meta {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 0.2rem;
+        }
+        .hero-stats-right {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 1.2rem;
+            padding: 0.6rem 1.2rem;
+            min-width: 120px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+            border: 1px solid #F1F5F9;
+        }
+        .stat-card .stat-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .stat-card .stat-value {
+            font-size: 1.9rem;
+            font-weight: 800;
+            line-height: 1.2;
+            color: #1E293B;
+        }
 
-        /* ═══════════════════════════════════════
-           MAIN HERO — Total Ayam (SANGAT BESAR)
-        ═══════════════════════════════════════ */
-        .hero {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 0.55rem 1.2rem 0.65rem;
+        /* CAROUSEL — 2 slide saja (1: farm + size, 2: ekspedisi + sopir) */
+        .carousel-module {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 0.6rem 1rem;
+            box-shadow: var(--shadow-card);
+            border: 1px solid #EDF2F7;
+        }
+        .carousel-header {
             display: flex;
             align-items: center;
-            gap: 2rem;
-            min-height: 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-        }
-
-        .hero-main { flex: 1; min-height: 0; }
-        .hero-lbl {
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            letter-spacing: 2.5px;
-            font-weight: 700;
-            color: var(--gold);
-            margin-bottom: 0.1rem;
-        }
-        .hero-num {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(8rem, 28vh, 22rem);
-            line-height: 0.88;
-            background: linear-gradient(135deg, #e8522a 0%, #c97d00 60%, #e8522a 100%);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-            letter-spacing: 2px;
-        }
-        .hero-pulse {
-            font-size: 0.58rem;
-            color: var(--success);
-            display: flex; align-items: center; gap: 0.3rem;
-            margin-top: 0.25rem;
-            font-weight: 600;
-        }
-        .pulse-dot {
-            width: 6px; height: 6px;
-            background: var(--success); border-radius: 50%;
-            animation: blink 1.4s ease-in-out infinite;
-        }
-
-        /* Hero secondary stats — total ekor & truck no */
-        .hero-stats {
-            display: flex;
-            flex-direction: row;
             gap: 0.5rem;
-            flex-shrink: 0;
+            margin-bottom: 0.5rem;
+            padding-left: 0.2rem;
         }
-        .hstat {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 0.4rem 1rem;
-            text-align: center;
-            min-width: 130px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+        .carousel-header span {
+            font-size: 0.65rem;
+            font-weight: 700;
+            background: #F1F5F9;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            color: #334155;
         }
-        .hstat .lbl {
-            font-size: 0.55rem;
+        .slide-container {
+            position: relative;
+            min-height: 80px;
+        }
+        .slide {
+            position: absolute;
+            width: 100%;
+            transition: opacity 0.55s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            opacity: 0;
+            visibility: hidden;
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+        }
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            position: relative;
+        }
+        .slide-item {
+            background: #F8FAFE;
+            border-radius: 1.2rem;
+            padding: 0.7rem 1.2rem;
+            flex: 1;
+            border-left: 5px solid var(--accent-orange);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.2s;
+        }
+        .slide-icon {
+            width: 42px;
+            height: 42px;
+            background: #FFEDD5;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: #EA580C;
+        }
+        .slide-content p:first-child {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #6b728e;
         }
-        .hstat .val {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.8rem;
-            line-height: 1;
-            color: #1a1d2e;
+        .slide-content p:last-child {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #0F172A;
+            word-break: break-word;
+            line-height: 1.3;
         }
-        .hstat.accent-hi .val { color: var(--accent); }
-        .hstat.gold-hi .val   { color: var(--gold);   }
+        .carousel-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .indicator {
+            width: 7px;
+            height: 7px;
+            border-radius: 20px;
+            background: #CBD5E1;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .indicator.active {
+            width: 24px;
+            background: var(--accent-orange);
+        }
 
-        /* ═══════════════════════════════════════
-           SUB MAIN — Ekspedisi & Farm
-        ═══════════════════════════════════════ */
-        .sub-grid {
+        /* PROGRESS STRIP — angka diperbesar */
+        .progress-strip {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.65rem;
-            height: 64px;
-        }
-
-        .sub-card {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 0.4rem 0.7rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-        }
-        .sub-card:hover { border-color: var(--border-hi); box-shadow: 0 4px 14px rgba(0,0,0,0.16); }
-
-        .sc-icon {
-            width: 28px; height: 28px; flex-shrink: 0;
-            background: var(--accent-dim);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--accent);
-        }
-        .sc-icon svg { width: 13px; height: 13px; }
-
-        .sc-body { min-width: 0; }
-        .sc-lbl {
-            font-size: 0.48rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #6b728e;
-            margin-bottom: 0.15rem;
-        }
-        .sc-val {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #1a1d2e;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .sc-sub {
-            font-size: 0.6rem;
-            color: #6b728e;
-            margin-top: 0.05rem;
-        }
-
-        .sc-icon.gold { background: var(--gold-dim); color: var(--gold); }
-
-        /* ═══════════════════════════════════════
-           EMPTY STATE (inside hero area)
-        ═══════════════════════════════════════ */
-        .empty-state {
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: 0.4rem;
-            text-align: center;
-            height: 100%;
-            padding: 1rem;
-        }
-        .empty-icon {
-            width: 44px; height: 44px;
-            background: var(--accent-dim);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--accent);
-        }
-        .empty-title { font-size: 0.85rem; font-weight: 600; color: #1a1d2e; }
-        .empty-desc  { font-size: 0.65rem; color: #6b728e; }
-
-        /* ═══════════════════════════════════════
-           FOOTER
-        ═══════════════════════════════════════ */
-        .footer {
-            display: flex;
-            align-items: center;
             gap: 1rem;
-            padding-top: 0.5rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            font-size: 0.58rem;
-            color: rgba(255,255,255,0.5);
-            flex-shrink: 0;
+        }
+        .progress-card {
+            background: #FFFFFF;
+            border-radius: 1.5rem;
+            padding: 0.9rem 1.2rem;
+            box-shadow: var(--shadow-card);
+            border: 1px solid #EFF3F8;
+        }
+        .progress-title {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1E293B;
+        }
+        .progress-title span:first-child { font-size: 0.8rem; }
+        .progress-title span:last-child { font-size: 1rem; font-weight: 800; background: #F8FAFC; padding: 0.1rem 0.6rem; border-radius: 20px; }
+        .progress-bar-bg {
+            background: #E2E8F0;
+            border-radius: 40px;
+            height: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: 40px;
+            transition: width 0.5s ease;
+        }
+        .fill-ayam { background: linear-gradient(90deg, #F59E0B, #F97316); }
+        .fill-truk { background: linear-gradient(90deg, #3B82F6, #06B6D4); }
+        .stats-numbers {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #334155;
+        }
+        .stats-numbers strong {
+            font-size: 1rem;
+            color: #0F172A;
         }
 
-        .refresh-badge {
-            display: flex; align-items: center; gap: 0.35rem;
-            background: #000000;
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 0.22rem 0.65rem;
-            flex-shrink: 0;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        .footer-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.65rem;
+            color: #475569;
+            padding-top: 0.4rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
         }
-        .refresh-badge svg { color: var(--success); animation: spin 2s linear infinite; }
-
-        .footer-counter {
+        .live-badge {
+            background: #ECFDF5;
+            color: #059669;
+            border-radius: 40px;
+            padding: 0.2rem 0.9rem;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 0.5rem 1rem;
-            min-width: 180px;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            gap: 6px;
         }
-
-        .footer-counter:hover {
-            border-color: var(--border-hi);
-            transform: translateY(-1px);
-        }
-
-        .footer-counter-ayam {
-            border-left: 3px solid var(--gold);
-        }
-
-        .footer-counter-truk {
-            border-left: 3px solid var(--accent);
-        }
-
-        .fc-icon {
-            font-size: 1.4rem;
-            flex-shrink: 0;
-        }
-
-        .fc-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .fc-lbl {
-            font-size: 0.55rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #6b728e;
-            margin-bottom: 0.2rem;
-        }
-
-        .fc-value-wrapper {
+        .empty-state-modern {
+            background: white;
+            border-radius: 2rem;
             display: flex;
-            align-items: baseline;
-            gap: 0.2rem;
-            flex-wrap: wrap;
-            margin-bottom: 0.3rem;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            text-align: center;
+            padding: 2rem;
+            color: #475569;
+            border: 1px solid #F1F5F9;
         }
-
-        .fc-val {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.3rem;
-            line-height: 1;
-            color: #1a1d2e;
-            letter-spacing: 0.5px;
-        }
-
-        .fc-separator {
-            font-size: 0.8rem;
-            color: #6b728e;
-            margin: 0 0.1rem;
-        }
-
-        .fc-total {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1rem;
-            color: #6b728e;
-            font-weight: 400;
-        }
-
-        .fc-unit {
-            font-size: 0.6rem;
-            color: #6b728e;
-            margin-left: 0.2rem;
-        }
-
-        .progress-bar-wrapper {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            height: 4px;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        .progress-bar {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.5s ease-out;
-            background: linear-gradient(90deg, var(--gold), #f5b042);
-        }
-
-        .footer-counter-truk .progress-bar {
-            background: linear-gradient(90deg, var(--accent), #ff6b4a);
-        }
-
-        .footer-right {
-            font-size: 0.6rem;
-            color: rgba(255,255,255,0.5);
-            margin-left: auto;
-            white-space: nowrap;
-        }
-        .fc-val {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.6rem;
-            line-height: 1;
-            color: #1a1d2e;
-            letter-spacing: 1px;
-        }
-
-
-
-        /* ═══════════════════════════════════════
-           UTILITY
-        ═══════════════════════════════════════ */
         .hidden { display: none !important; }
 
-        @keyframes blink {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: 0.4; transform: scale(0.75); }
+        /* responsive: tidak ada border luar, semua menyesuaikan */
+        @media (max-width: 800px) {
+            .dashboard-inner { padding: 0.9rem 1rem; gap: 0.8rem; }
+            .hero-grid { grid-template-columns: 1fr; gap: 0.6rem; text-align: center; }
+            .hero-stats-right { justify-content: center; }
+            .hero-number { font-size: 5rem; }
+            .slide-item { flex-direction: column; align-items: flex-start; }
+            .slide-content p:last-child { font-size: 1rem; }
+            .progress-strip { grid-template-columns: 1fr; }
         }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(360deg); }
+        @media (max-width: 550px) {
+            .top-bar { flex-direction: column; align-items: stretch; }
+            .info-chips { justify-content: space-between; }
+            .stat-card .stat-value { font-size: 1.3rem; }
+            .hero-number { font-size: 3.8rem; }
         }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .hero, .sub-card { animation: fadeUp 0.35s ease-out both; }
-        .sub-card:nth-child(2) { animation-delay: 0.06s; }
-
-        /* Fullscreen overrides */
-        :fullscreen .hero-num,
-        :-webkit-full-screen .hero-num,
-        :-moz-full-screen .hero-num {
-            font-size: clamp(10rem, 34vh, 28rem);
-        }
-        :fullscreen .wrap,
-        :-webkit-full-screen .wrap,
-        :-moz-full-screen .wrap {
-            padding: 0.9rem 1.5rem;
-        }
-
-        @media (max-width: 860px) {
-            .hero-num { font-size: 4.5rem; }
-            .sub-grid { grid-template-columns: 1fr; }
-            .hero-stats { flex-direction: row; }
-        }
-        @media (max-width: 600px) {
-            .datetime-block { display: none; }
-            .hero { flex-direction: column; gap: 0.75rem; }
-            .hero-stats { flex-direction: row; width: 100%; }
-            .hstat { flex: 1; }
-        }
-        @media (max-width: 860px) {
-            .footer {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            
-            .footer-counter {
-                flex: 1;
-                min-width: 150px;
-            }
-            
-            .fc-val {
-                font-size: 1.1rem;
-            }
-            
-            .fc-total {
-                font-size: 0.85rem;
-            }
-            
-            .footer-right {
-                margin-left: 0;
-                width: 100%;
-                text-align: center;
-            }
-            
-            .hero-num { font-size: 4.5rem; }
-            .sub-grid { 
-                grid-template-columns: 1fr; 
-                gap: 0.5rem;
-            }
-            .hero-stats { flex-direction: row; }
-            
-            /* Perbaikan untuk sub-card */
-            .sub-card {
-                padding: 0.5rem 0.7rem;
-                gap: 0.5rem;
-            }
-            
-            .sc-body {
-                min-width: 0; /* Allow text truncation */
-                flex: 1;
-            }
-            
-            .sc-val {
-                font-size: 0.7rem;
-                white-space: normal; /* Allow text to wrap */
-                word-break: break-word;
-                line-height: 1.3;
-            }
-            
-            .sc-sub {
-                font-size: 0.55rem;
-                white-space: normal;
-                word-break: break-word;
-            }
-            
-            .sc-icon {
-                width: 32px;
-                height: 32px;
-                flex-shrink: 0;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .footer-counter {
-                padding: 0.4rem 0.75rem;
-                gap: 0.5rem;
-            }
-            
-            .fc-icon {
-                font-size: 1.1rem;
-            }
-            
-            .fc-lbl {
-                font-size: 0.5rem;
-            }
-            
-            .fc-val {
-                font-size: 0.9rem;
-            }
-            
-            .fc-total {
-                font-size: 0.7rem;
-            }
-            
-            .fc-unit {
-                font-size: 0.5rem;
-            }
-            
-            .progress-bar-wrapper {
-                height: 3px;
-            }
-
-            .wrap {
-                padding: 0.5rem 0.8rem;
-                gap: 0.5rem;
-            }
-            
-            .datetime-block { display: none; }
-            .hero { 
-                flex-direction: column; 
-                gap: 0.75rem;
-                padding: 0.75rem;
-            }
-            .hero-stats { 
-                flex-direction: row; 
-                width: 100%;
-                gap: 0.5rem;
-            }
-            .hstat { 
-                flex: 1; 
-                padding: 0.3rem 0.5rem;
-                min-width: 0;
-            }
-            .hstat .val {
-                font-size: 1.2rem;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .hstat .lbl {
-                font-size: 0.5rem;
-                white-space: nowrap;
-            }
-            
-            /* Perbaikan sub-card di mobile */
-            .sub-card {
-                padding: 0.5rem;
-                gap: 0.5rem;
-            }
-            
-            .sc-val {
-                font-size: 0.65rem;
-                line-height: 1.2;
-            }
-            
-            .sc-sub {
-                font-size: 0.5rem;
-                margin-top: 0.1rem;
-            }
-            
-            /* Footer responsive */
-            .footer {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-                padding-top: 0.5rem;
-            }
-            
-            .footer-counter {
-                padding: 0.2rem 0.6rem;
-            }
-            
-            .footer-counter .fc-lbl {
-                font-size: 0.6rem;
-            }
-            
-            .footer-counter .fc-val {
-                font-size: 1.1rem;
-            }
-            
-            .refresh-badge {
-                padding: 0.2rem 0.5rem;
-            }
-            
-            .refresh-badge span {
-                font-size: 0.5rem;
-            }
-            
-            .footer-right {
-                font-size: 0.5rem;
-                margin-left: 0;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .footer-counter {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.3rem;
-            }
-            
-            .fc-icon {
-                font-size: 1rem;
-            }
-            
-            .fc-value-wrapper {
-                flex-wrap: wrap;
-            }
-        }
-
-        /* Untuk layar sangat kecil (<= 400px) */
-        @media (max-width: 400px) {
-            .hero-stats {
-                flex-direction: column;
-                gap: 0.4rem;
-            }
-            
-            .hstat {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 0.5rem;
-                padding: 0.3rem 0.8rem;
-            }
-            
-            .hstat .lbl {
-                font-size: 0.55rem;
-                margin-bottom: 0;
-                white-space: normal;
-            }
-            
-            .hstat .val {
-                font-size: 1rem;
-            }
-            
-            .sub-card {
-                flex-wrap: wrap;
-            }
-            
-            .sc-body {
-                flex: 1;
-                min-width: 0;
-            }
-            
-            /* Header mobile */
-            .header {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            
-            .loc-badge {
-                order: 1;
-            }
-            
-            .report-pill {
-                order: 2;
-            }
-            
-            .fs-btn {
-                order: 3;
-            }
-            
-            .h-gap {
-                display: none;
-            }
-        }
-
-        /* Untuk tampilan landscape di mobile */
-        @media (max-width: 860px) and (orientation: landscape) {
-            .wrap {
-                padding: 0.4rem 0.8rem;
-                gap: 0.4rem;
-            }
-            
-            .hero {
-                padding: 0.4rem;
-            }
-            
-            .hero-num {
-                font-size: 3rem;
-            }
-            
-            .sub-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .footer {
-                flex-wrap: nowrap;
-            }
-        }
-
-        /* Tooltip untuk text yang terpotong */
-        .sc-val[title], .sc-sub[title] {
-            cursor: help;
-        }
-
-        /* Tambahkan text truncation dengan ellipsis untuk single line */
-        .sc-val.single-line {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        body { overflow: hidden; }
+        .dashboard, .dashboard-inner { overflow-y: auto; }
     </style>
 </head>
 <body>
-<div class="wrap">
-
-    <!-- ════════════════ HEADER ════════════════ -->
-    <div class="header">
-        <!-- Logo + Brand -->
-        <div class="logo-box">
-            <img src="{{ asset('images/logo small.png') }}" alt="Logo"
-                 onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e8522a%22 stroke-width=%221.5%22%3E%3Cpath d=%22M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5%22/%3E%3C/svg%3E';">
-        </div>
-        <div class="brand">
-            <h1>Slaughter House</h1>
-            <p>Live Production Monitor</p>
-        </div>
-
-        <div class="h-gap"></div>
-
-        <!-- Location -->
-        <div class="loc-badge">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                <circle cx="12" cy="10" r="3"/>
-            </svg>
-            <span class="loc-lbl">LOKASI</span>
-            <span class="loc-val">{{ $location }}</span>
-        </div>
-
-        <!-- Date & Time -->
-        <div class="datetime-block">
-            <div class="dt-time" id="dtTime">--:--:--</div>
-            <div class="dt-date" id="dtDate">--</div>
-        </div>
-
-        <!-- Report Code -->
-        <div class="report-pill">
-            <div class="lbl">Report Code</div>
-            <div class="val" id="reportCode">—</div>
-        </div>
-
-        <!-- Fullscreen -->
-        <button class="fs-btn" id="fsBtn" title="Fullscreen">
-            <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-            </svg>
-            <span id="fsText">Fullscreen</span>
-        </button>
-    </div>
-
-    <!-- ════════════════ HERO (MAIN) ════════════════ -->
-    <div class="hero" id="heroSection">
-        <!-- Left: giant number -->
-        <div class="hero-main">
-            <div class="hero-lbl">TOTAL AYAM DIPROSES</div>
-            <div class="hero-num" id="heroAyam">0</div>
-            <div class="hero-pulse" id="heroPulse">
-                <span class="pulse-dot"></span>
-                <span>Real-time</span>
-            </div>
-        </div>
-
-        <!-- Right: Total Ekor + No Truk -->
-        <div class="hero-stats">
-            <div class="hstat gold-hi">
-                <div class="lbl">EKOR PLANNING</div>
-                <div class="val" id="statTotalEkor">0</div>
-            </div>
-            <div class="hstat accent-hi">
-                <div class="lbl">NO. TRUCK</div>
-                <div class="val" id="statTruckNo">—</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ════════════════ SUB MAIN ════════════════ -->
-    <div class="sub-grid" id="subGrid">
-        <!-- Ekspedisi + Sopir -->
-        <div class="sub-card" id="cardExpedisi">
-            <div class="sc-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"/>
-                    <circle cx="5.5" cy="18.5" r="2.5"/>
-                    <circle cx="18.5" cy="18.5" r="2.5"/>
-                </svg>
-            </div>
-            <div class="sc-body">
-                <div class="sc-lbl">EKSPEDISI &amp; SOPIR</div>
-                <div class="sc-val" id="subExpedisi" title="">—</div>
-                <div class="sc-sub" id="subDriver" title="">—</div>
-            </div>
-        </div>
-
-        <!-- Size + Farm -->
-        <div class="sub-card" id="cardFarm">
-            <div class="sc-icon gold">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-            </div>
-            <div class="sc-body">
-                <div class="sc-lbl">SIZE AYAM &amp; FARM</div>
-                <div class="sc-val" id="subFarm" title="">—</div>
-                <div class="sc-sub" id="subSize" title="">—</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Empty State (overlay, shown when not active) -->
-    <div id="emptyOverlay" class="hidden" style="grid-row: 2 / 4; align-self: stretch;">
-        <div class="empty-state" style="height:100%; background: #ffffff; border:1px solid var(--border); border-radius:20px; box-shadow: 0 2px 12px rgba(0,0,0,0.12);">
-            <div class="empty-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8"  y1="2" x2="8"  y2="6"/>
-                    <line x1="3"  y1="10" x2="21" y2="10"/>
-                </svg>
-            </div>
-            <div class="empty-title">Tidak Ada Proses Running</div>
-            <div class="empty-desc">Belum ada aktivitas pemotongan saat ini</div>
-        </div>
-    </div>
-
-    <!-- ════════════════ FOOTER ════════════════ -->
-    <div class="footer">
-        <!-- Auto refresh indicator -->
-        <div class="refresh-badge">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="23 4 23 10 17 10"/>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-            </svg>
-            <span>Auto refresh 2 dtk</span>
-        </div>
-
-        <!-- Counter ayam hari ini dengan progress bar -->
-        <div class="footer-counter footer-counter-ayam">
-            <div class="fc-icon">🐔</div>
-            <div class="fc-content">
-                <div class="fc-lbl">Ayam hari ini</div>
-                <div class="fc-value-wrapper">
-                    <span class="fc-val" id="footerAyam">0</span>
-                    <span class="fc-separator">/</span>
-                    <span class="fc-total" id="footerAyamTotal">0</span>
-                    <span class="fc-unit">ekor</span>
+<div class="dashboard">
+    <div class="dashboard-inner">
+        <!-- header -->
+        <div class="top-bar">
+            <div class="brand-area">
+                <div class="logo-icon">
+                    <img src="{{ asset('images/logo small.png') }}" alt="Logo">
                 </div>
-                <div class="progress-bar-wrapper">
-                    <div class="progress-bar" id="progressAyam" style="width: 0%"></div>
+                <div class="brand-text">
+                    <h2>Slaughter House</h2>
+                    <p>Charoen Pokphand Indonesia • Live Monitor</p>
+                </div>
+            </div>
+            <div class="info-chips">
+                <div class="chip chip-loc">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span id="locationLabel">{{ $location }}</span>
+                </div>
+                <div class="chip chip-code">
+                    <span>📄 REPORT</span>
+                    <strong id="reportCodeDisplay">—</strong>
+                </div>
+                <div class="datetime">
+                    <div class="time-digital" id="liveClock">--:--:--</div>
+                    <div class="date-text" id="liveDate">--</div>
                 </div>
             </div>
         </div>
 
-        <!-- Counter truk hari ini dengan progress bar -->
-        <div class="footer-counter footer-counter-truk">
-            <div class="fc-icon">🚛</div>
-            <div class="fc-content">
-                <div class="fc-lbl">Number of Trucks</div>
-                <div class="fc-value-wrapper">
-                    <span class="fc-val" id="footerTruck">0</span>
-                    <span class="fc-separator">/</span>
-                    <span class="fc-total" id="footerTruckTotal">0</span>
-                    <span class="fc-unit">truck</span>
+        <!-- HERO : TOTAL AYAM DIPROSES -->
+        <div class="hero-grid" id="heroGrid">
+            <div class="hero-left">
+                <div class="hero-label">TOTAL AYAM DIPROSES</div>
+                <div class="hero-number" id="heroAyamTotal">0</div>
+                <div class="hero-meta">
+                    <span class="live-badge" style="background:#FFF0E6; color:#C2410C;">⚡ Real Count by Slaughtering Section</span>
                 </div>
-                <div class="progress-bar-wrapper">
-                    <div class="progress-bar" id="progressTruk" style="width: 0%"></div>
+            </div>
+            <div class="hero-stats-right">
+                <div class="stat-card">
+                    <div class="stat-label">📋 PLANNING EKOR</div>
+                    <div class="stat-value" id="statTotalEkor">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">🚛 NO. TRUCK</div>
+                    <div class="stat-value" id="statTruckNo">—</div>
                 </div>
             </div>
         </div>
 
-        <div class="footer-right">
-            Update: <span id="lastUpdate" style="font-family:'DM Mono',monospace;">—</span>
+        <!-- CAROUSEL hanya 2 slide (FARM+SIZE digabung, EKSPEDISI+SOPIR) -->
+        <div class="carousel-module">
+            <div class="carousel-header">
+                <span>📋 INFORMASI</span>
+            </div>
+            <div class="slide-container" id="carouselSlidesContainer">
+                <!-- SLIDE 0 : FARM + SIZE (digabung, tanpa detail lokasi farm) -->
+                <div class="slide active" data-slide="0">
+                    <div class="slide-item">
+                        <div class="slide-icon">🌾</div>
+                        <div class="slide-content">
+                            <p>FARM</p>
+                            <p id="carouselFarm">—</p>
+                        </div>
+                    </div>
+                    <div class="slide-item">
+                        <div class="slide-icon">⚖️</div>
+                        <div class="slide-content">
+                            <p>SIZE AYAM</p>
+                            <p id="carouselSize" style="font-size:1.3rem; font-weight:800;">—</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- SLIDE 1 : EKSPEDISI + SOPIR -->
+                <div class="slide" data-slide="1">
+                    <div class="slide-item">
+                        <div class="slide-icon">🚛</div>
+                        <div class="slide-content">
+                            <p>EKSPEDISI</p>
+                            <p id="carouselExpedisi">—</p>
+                        </div>
+                    </div>
+                    <div class="slide-item">
+                        <div class="slide-icon">👨‍✈️</div>
+                        <div class="slide-content">
+                            <p>SOPIR</p>
+                            <p id="carouselDriver">—</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-indicators" id="carouselIndicators"></div>
+        </div>
+
+        <!-- PROGRESS: ayam & truk -->
+        <div class="progress-strip">
+            <div class="progress-card">
+                <div class="progress-title">
+                    <span>🐔 AYAM HARI INI</span>
+                    <span><strong id="todayAyamCount">0</strong> / <strong id="planningAyamTotal">0</strong> ekor</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-fill fill-ayam" id="progressAyamFill" style="width:0%"></div>
+                </div>
+                <div class="stats-numbers">
+                    <span>Daily Planning</span>
+                    <span><strong id="ayamPercentLabel">0%</strong></span>
+                </div>
+            </div>
+            <div class="progress-card">
+                <div class="progress-title">
+                    <span>🚚 NUMBER OF TRUCKS</span>
+                    <span><strong id="todayTruckCount">0</strong> / <strong id="planningTruckTotal">0</strong> truck</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-fill fill-truk" id="progressTruckFill" style="width:0%"></div>
+                </div>
+                <div class="stats-numbers">
+                    <span>Load Progress</span>
+                    <span><strong id="truckPercentLabel">0%</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-status">
+            <div class="live-badge">
+                <span class="pulse-dot" style="width:8px;height:8px;background:#10B981;border-radius:50%;display:inline-block;animation: pulse 1s infinite alternate;"></span>
+                <span>Auto refresh 2 detik</span>
+            </div>
+            <div>Update: <span id="lastUpdateTime" style="font-family: monospace; font-weight:600;">--:--:--</span></div>
+            <button id="fsBtnNew" style="background:transparent;border:none;color:#475569;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:500;">⛶ Fullscreen</button>
+        </div>
+
+        <!-- empty state -->
+        <div id="emptyStateOverlay" class="empty-state-modern hidden">
+            <div style="font-size:2.8rem;">🐓</div>
+            <div style="font-weight:800;">Tidak Ada Proses Running</div>
+            <div style="font-size:0.75rem;">Belum ada aktivitas pemotongan saat ini</div>
         </div>
     </div>
 </div>
 
 <script>
-    /* ─── Helpers ─── */
-    function fmt(v) {
-        return new Intl.NumberFormat('id-ID').format(Number(v) || 0);
-    }
+    function fmt(v) { return new Intl.NumberFormat('id-ID').format(Number(v) || 0); }
     function pad(n) { return String(n).padStart(2, '0'); }
 
-    /* ─── Clock ─── */
-    const DAYS_ID  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-    const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-
-    function tickClock() {
+    // jam realtime
+    function updateClock() {
         const now = new Date();
-        document.getElementById('dtTime').textContent =
-            `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-        document.getElementById('dtDate').textContent =
-            `${DAYS_ID[now.getDay()]}, ${now.getDate()} ${MONTHS_ID[now.getMonth()]} ${now.getFullYear()}`;
+        document.getElementById('liveClock').innerText = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        document.getElementById('liveDate').innerHTML = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
     }
-    tickClock();
-    setInterval(tickClock, 1000);
+    updateClock(); setInterval(updateClock, 1000);
 
-    /* ─── Fullscreen ─── */
-    const fsBtn  = document.getElementById('fsBtn');
-    const fsIcon = document.getElementById('fsIcon');
-    const fsText = document.getElementById('fsText');
-
-    const ICON_ENTER = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
-    const ICON_EXIT  = '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>';
-
-    function syncFsBtn() {
-        const full = !!document.fullscreenElement;
-        fsIcon.innerHTML = full ? ICON_EXIT  : ICON_ENTER;
-        fsText.textContent = full ? 'Exit'      : 'Fullscreen';
-    }
-    fsIcon.innerHTML = ICON_ENTER;
-    fsBtn.addEventListener('click', () => {
-        document.fullscreenElement
-            ? document.exitFullscreen()
-            : document.documentElement.requestFullscreen().catch(console.error);
+    // fullscreen
+    const fsBtn = document.getElementById('fsBtnNew');
+    fsBtn?.addEventListener('click', () => {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
     });
-    document.addEventListener('fullscreenchange', syncFsBtn);
 
-    /* ─── Data fetch ─── */
-    function setActive(on) {
-        const heroSection = document.getElementById('heroSection');
-        const subGrid     = document.getElementById('subGrid');
-        const emptyOverlay= document.getElementById('emptyOverlay');
+    // carousel 2 slide (farm+size, expedisi+sopir)
+    let activeSlide = 0;
+    let carouselInterval;
+    const slides = document.querySelectorAll('.slide');
+    const indicatorsContainer = document.getElementById('carouselIndicators');
+    function buildIndicators(count) {
+        indicatorsContainer.innerHTML = '';
+        for(let i=0;i<count;i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('indicator');
+            if(i===activeSlide) dot.classList.add('active');
+            dot.addEventListener('click',()=>{
+                stopCarousel();
+                setActiveSlide(i);
+                startCarousel();
+            });
+            indicatorsContainer.appendChild(dot);
+        }
+    }
+    function setActiveSlide(index) {
+        slides.forEach((s,i)=>{
+            s.classList.remove('active');
+            if(i===index) s.classList.add('active');
+        });
+        document.querySelectorAll('.indicator').forEach((dot,i)=>{
+            if(i===index) dot.classList.add('active');
+            else dot.classList.remove('active');
+        });
+        activeSlide = index;
+    }
+    function nextSlide() { let next = (activeSlide + 1) % slides.length; setActiveSlide(next); }
+    function startCarousel() { if(carouselInterval) clearInterval(carouselInterval); carouselInterval = setInterval(nextSlide, 4200); }
+    function stopCarousel() { if(carouselInterval) clearInterval(carouselInterval); }
+    if(slides.length) { buildIndicators(slides.length); startCarousel(); }
 
-        if (on) {
-            heroSection.style.display  = '';
-            subGrid.style.display      = '';
-            emptyOverlay.style.display = 'none';
+    // DOM elements
+    const heroAyamSpan = document.getElementById('heroAyamTotal');
+    const statEkorSpan = document.getElementById('statTotalEkor');
+    const statTruckNoSpan = document.getElementById('statTruckNo');
+    const reportCodeSpan = document.getElementById('reportCodeDisplay');
+    const carouselFarm = document.getElementById('carouselFarm');
+    const carouselSize = document.getElementById('carouselSize');
+    const carouselExpedisi = document.getElementById('carouselExpedisi');
+    const carouselDriver = document.getElementById('carouselDriver');
+    const todayAyamSpan = document.getElementById('todayAyamCount');
+    const planningAyamSpan = document.getElementById('planningAyamTotal');
+    const todayTruckSpan = document.getElementById('todayTruckCount');
+    const planningTruckSpan = document.getElementById('planningTruckTotal');
+    const progressAyamFill = document.getElementById('progressAyamFill');
+    const progressTruckFill = document.getElementById('progressTruckFill');
+    const ayamPercentLabel = document.getElementById('ayamPercentLabel');
+    const truckPercentLabel = document.getElementById('truckPercentLabel');
+    const lastUpdateSpan = document.getElementById('lastUpdateTime');
+    const emptyOverlay = document.getElementById('emptyStateOverlay');
+    const heroGrid = document.getElementById('heroGrid');
+    const carouselModule = document.querySelector('.carousel-module');
+    const progressStrip = document.querySelector('.progress-strip');
+
+    function setActiveUI(active) {
+        if(active) {
+            emptyOverlay.classList.add('hidden');
+            heroGrid.style.display = '';
+            carouselModule.style.display = '';
+            progressStrip.style.display = '';
         } else {
-            heroSection.style.display  = 'none';
-            subGrid.style.display      = 'none';
-            emptyOverlay.style.display = '';
+            emptyOverlay.classList.remove('hidden');
+            heroGrid.style.display = 'none';
+            carouselModule.style.display = 'none';
+            progressStrip.style.display = 'none';
         }
     }
 
-    async function refresh() {
-    try {
-            const res = await fetch(`{{ route('monitor.data', $location) }}`, {
-                headers: { 'Accept': 'application/json' }
-            });
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const j = await res.json();
-
+    async function fetchData() {
+        try {
+            const res = await fetch(`{{ route('monitor.data', $location) }}`, { headers: { 'Accept': 'application/json' } });
+            if(!res.ok) throw new Error();
+            const data = await res.json();
             const now = new Date();
-            document.getElementById('lastUpdate').textContent =
-                `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            lastUpdateSpan.innerText = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-            // Update footer dengan progress
-            const todayAyam = j.today_total_ayam || 0;
-            const totalPlanningAyam = j.total_planning_ayam || 0;
-            const todayTruck = j.today_truck_count || 0;
-            const totalPlanningTruk = j.total_planning_truk || 0;
-            
-            // Hitung persentase
-            const ayamPercent = totalPlanningAyam > 0 ? (todayAyam / totalPlanningAyam) * 100 : 0;
-            const truckPercent = totalPlanningTruk > 0 ? (todayTruck / totalPlanningTruk) * 100 : 0;
-            
-            // Update nilai numerik
-            document.getElementById('footerAyam').textContent = fmt(todayAyam);
-            document.getElementById('footerAyamTotal').textContent = fmt(totalPlanningAyam);
-            document.getElementById('footerTruck').textContent = fmt(todayTruck);
-            document.getElementById('footerTruckTotal').textContent = fmt(totalPlanningTruk);
-            
-            // Update progress bar
-            const progressAyam = document.getElementById('progressAyam');
-            const progressTruk = document.getElementById('progressTruk');
-            
-            progressAyam.style.width = Math.min(ayamPercent, 100) + '%';
-            progressTruk.style.width = Math.min(truckPercent, 100) + '%';
-            
-            // Tambahkan warna khusus jika sudah mencapai target
-            if (ayamPercent >= 100) {
-                progressAyam.style.background = 'linear-gradient(90deg, #22c97a, #16a34a)';
-            } else {
-                progressAyam.style.background = 'linear-gradient(90deg, var(--gold), #f5b042)';
-            }
-            
-            if (truckPercent >= 100) {
-                progressTruk.style.background = 'linear-gradient(90deg, #22c97a, #16a34a)';
-            } else {
-                progressTruk.style.background = 'linear-gradient(90deg, var(--accent), #ff6b4a)';
-            }
+            const todayAyam = data.today_total_ayam || 0;
+            const totalPlanningAyam = data.total_planning_ayam || 0;
+            const todayTruck = data.today_truck_count || 0;
+            const totalPlanningTruk = data.total_planning_truk || 0;
 
-            if (!j.active) {
-                setActive(false);
-                document.getElementById('reportCode').textContent = '—';
+            todayAyamSpan.innerText = fmt(todayAyam);
+            planningAyamSpan.innerText = fmt(totalPlanningAyam);
+            todayTruckSpan.innerText = fmt(todayTruck);
+            planningTruckSpan.innerText = fmt(totalPlanningTruk);
+            let ayamPercent = totalPlanningAyam > 0 ? (todayAyam / totalPlanningAyam) * 100 : 0;
+            let truckPercent = totalPlanningTruk > 0 ? (todayTruck / totalPlanningTruk) * 100 : 0;
+            ayamPercent = Math.min(ayamPercent, 100);
+            truckPercent = Math.min(truckPercent, 100);
+            progressAyamFill.style.width = ayamPercent + '%';
+            progressTruckFill.style.width = truckPercent + '%';
+            ayamPercentLabel.innerText = Math.floor(ayamPercent) + '%';
+            truckPercentLabel.innerText = Math.floor(truckPercent) + '%';
+
+            if (!data.active) {
+                setActiveUI(false);
+                reportCodeSpan.innerText = '—';
                 return;
             }
+            setActiveUI(true);
+            reportCodeSpan.innerText = data.report_code || '—';
+            heroAyamSpan.innerText = fmt(data.total_ayam_running);
+            statEkorSpan.innerText = fmt(data.total_ekor);
+            statTruckNoSpan.innerText = data.truck_no || '—';
 
-            setActive(true);
-
-            /* Header */
-            document.getElementById('reportCode').textContent = j.report_code || '—';
-
-            /* Hero */
-            document.getElementById('heroAyam').textContent   = fmt(j.total_ayam_running);
-            document.getElementById('statTotalEkor').textContent = fmt(j.total_ekor);
-            document.getElementById('statTruckNo').textContent   = j.truck_no || '—';
-
-            /* Sub main — Ekspedisi & Sopir */
-            const expedisiName = j.expedition_name || '—';
-            const driverName = j.driver_name || '—';
-            const driverPhone = j.driver_phone ? '  ·  ' + j.driver_phone : '';
-            const driverLine = driverName + driverPhone;
+            // Update Carousel: Farm + Size (tanpa detail lokasi farm)
+            const farmName = data.farm_name || '—';
+            const sizeValue = data.size || 'Standar';
+            carouselFarm.innerText = farmName;
+            carouselSize.innerText = sizeValue;
+            // ukuran teks size diperbesar via css, class sudah besar
             
-            const subExpedisi = document.getElementById('subExpedisi');
-            const subDriver = document.getElementById('subDriver');
+            // Ekspedisi + Sopir
+            const expedition = data.expedition_name || '—';
+            let driverInfo = data.driver_name || '—';
+            if (data.driver_phone) driverInfo += `  ·  ${data.driver_phone}`;
+            carouselExpedisi.innerText = expedition;
+            carouselDriver.innerText = driverInfo;
             
-            subExpedisi.textContent = expedisiName;
-            subExpedisi.title = expedisiName;
-            
-            subDriver.textContent = driverLine;
-            subDriver.title = driverLine;
-
-            /* Sub main — Size & Farm */
-            const farmName = j.farm_name || '—';
-            const sizeText = j.size ? 'Ukuran: ' + j.size : '—';
-            
-            const subFarm = document.getElementById('subFarm');
-            const subSize = document.getElementById('subSize');
-            
-            subFarm.textContent = farmName;
-            subFarm.title = farmName;
-            
-            subSize.textContent = sizeText;
-            subSize.title = sizeText;
-
-        } catch (err) {
-            console.error('Refresh error:', err);
-        }
+            // tooltips untuk info tambahan
+            carouselFarm.setAttribute('title', farmName);
+            carouselSize.setAttribute('title', sizeValue);
+            carouselExpedisi.setAttribute('title', expedition);
+            carouselDriver.setAttribute('title', driverInfo);
+        } catch(e) { console.warn(e); }
     }
 
-    /* Boot */
-    refresh();
-    const _iv = setInterval(refresh, 2000);
-    window.addEventListener('beforeunload', () => clearInterval(_iv));
+    fetchData();
+    const intervalId = setInterval(fetchData, 2000);
+    window.addEventListener('beforeunload', ()=> clearInterval(intervalId));
+
+    const pulseStyle = document.createElement('style');
+    pulseStyle.innerText = `@keyframes pulse { 0% { opacity:0.4; transform:scale(0.9);} 100%{ opacity:1; transform:scale(1.2);}} .pulse-dot { animation: pulse 0.9s infinite alternate; }`;
+    document.head.appendChild(pulseStyle);
 </script>
 </body>
 </html>
