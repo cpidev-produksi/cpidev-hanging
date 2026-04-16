@@ -387,6 +387,55 @@
         .seed-hint svg { color: var(--accent2); flex-shrink: 0; }
         .seed-hint p { font-size: 11px; color: var(--muted); }
 
+        /* ── Back to Landing ── */
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            margin-top: 20px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            transition: color 0.2s ease, gap 0.2s ease;
+            padding: 8px 0;
+        }
+        .back-link svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .back-link:hover {
+            color: var(--text);
+            gap: 10px;
+        }
+        .back-link:hover svg {
+            transform: translateX(-3px);
+        }
+        .back-link-divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .back-link-divider::before,
+        .back-link-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        .back-link-divider span {
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
         /* ── Keyframes ── */
         @keyframes slideLeft {
             from { opacity: 0; transform: translateX(-30px); }
@@ -537,6 +586,16 @@
             </svg>
             <p>Silahkan hubungi supervisor Anda untuk registrasi akun.</p>
         </div>
+
+        <div class="back-link-divider"><span>atau</span></div>
+
+        <a href="{{ route('landing') }}" class="back-link">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Kembali ke Beranda
+        </a>
     </div>
 </div>
 
