@@ -93,7 +93,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // QC Kondisi (Operator TS OR QC TS)
-    Route::middleware('role:operator_ts,qc_ts')->group(function () {
+    Route::middleware('role:operator_ts,qc_ts,supervisor')->group(function () {
         Route::get('/conditions', [ConditionController::class, 'landing'])->name('conditions.landing');
         Route::post('/conditions/open/{monitorControl}', [ConditionController::class, 'open'])->name('conditions.open');
         Route::get('/conditions/{hangingForm}', [ConditionController::class, 'edit'])->name('conditions.edit');
