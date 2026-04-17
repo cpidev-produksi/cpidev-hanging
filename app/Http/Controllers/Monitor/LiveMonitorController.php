@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Monitor;
 use App\Http\Controllers\Controller;
 use App\Models\MonitorControl;
 use App\Models\PlanningLb;
-use Illuminate\Http\Request;
 
 class LiveMonitorController extends Controller
 {

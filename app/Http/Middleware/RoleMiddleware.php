@@ -14,11 +14,12 @@ class RoleMiddleware
 
         $slug = $user->role?->slug;
 
-        // Supervisor selalu boleh lewat (anggap supervisor / superadmin)
-        if (in_array($slug, ['supervisor', 'superadmin'], true)) {
+        // Jika route tidak memberi role, izin default
+        if (empty($allowedSlugs)) {
             return $next($request);
         }
 
+        // Hanya izinkan jika slug sesuai allowedSlugs
         if (!$slug || !in_array($slug, $allowedSlugs, true)) {
             abort(403, 'Tidak memiliki hak akses.');
         }

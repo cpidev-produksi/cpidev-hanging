@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'nocache' => \App\Http\Middleware\NoCache::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'supervisor' => \App\Http\Middleware\SupervisorOnly::class,
+            'superadmin' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\HangingForm;
 use App\Models\HangingLineSet;
+use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -109,9 +110,26 @@ class HangingFormController extends Controller
             'empty_count' => ['nullable','integer','min:0','max:' . $maxCap],
         ]);
 
+        $before = ['empty_count' => $hangingLineSet->empty_count];
+
         $hangingLineSet->update([
             'empty_count' => $data['empty_count'],
         ]);
+
+        $after = ['empty_count' => $hangingLineSet->empty_count];
+        $changes = AuditLogger::diff($before, $after);
+
+        $form = $hangingLineSet->line?->form;
+        $meta = [
+            'report_code' => $form?->monitorControl?->report_code,
+            'location' => $form?->monitorControl?->location,
+            'truck_no' => $form?->monitorControl?->truck_no,
+            'line_no' => $hangingLineSet->line?->line_no,
+            'set_no' => $hangingLineSet->set_no,
+            'was_done' => (($form?->status ?? '') === 'done'),
+        ];
+
+        AuditLogger::log('hanging_form', 'update_cell', $hangingLineSet, $changes, $meta);
 
         $ayam = ($hangingLineSet->empty_count === null)
             ? 0
@@ -141,7 +159,9 @@ class HangingFormController extends Controller
             'finish_time.date_format' => 'Format jam selesai harus HH:MM.',
         ]);
 
-        return DB::transaction(function () use ($hangingForm, $data) {
+        $before = $hangingForm->only(['unloading_time','finish_time','status']);
+
+        return DB::transaction(function () use ($hangingForm, $data, $before) {
             $hangingForm->update([
                 'unloading_time' => $data['unloading_time'] ?? $hangingForm->unloading_time,
                 'finish_time' => $data['finish_time'] ?? $hangingForm->finish_time,
@@ -151,6 +171,17 @@ class HangingFormController extends Controller
             $hangingForm->monitorControl()->update([
                 'status' => 'done',
             ]);
+
+            $after = $hangingForm->only(['unloading_time','finish_time','status']);
+            $changes = AuditLogger::diff($before, $after);
+
+            $meta = [
+                'report_code' => $hangingForm->monitorControl?->report_code,
+                'location' => $hangingForm->monitorControl?->location,
+                'truck_no' => $hangingForm->monitorControl?->truck_no,
+                'was_done' => true,
+            ];
+            AuditLogger::log('hanging_form', 'finish', $hangingForm, $changes, $meta);
 
             return redirect()->route('hanging.landing')->with('status', 'Proses selesai. Laporan tersimpan.');
         });

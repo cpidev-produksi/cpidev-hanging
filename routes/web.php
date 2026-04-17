@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Master\ExpeditionController;
 use App\Http\Controllers\Master\FarmController;
 use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\Monitor\LiveMonitorController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Transaction\ConditionController;
 use App\Http\Controllers\Transaction\HangingFormController;
 use App\Http\Controllers\Transaction\HangingLandingController;
@@ -26,15 +28,20 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('monitor/{location}', [LiveMonitorController::class, 'show'])->name('monitor.show');
 Route::get('monitor/{location}/data', [LiveMonitorController::class, 'data'])->name('monitor.data');
 
+
 Route::middleware(['auth', 'nocache'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
-    Route::middleware(['auth', 'nocache'])->group(function () {
+    // History
+    Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
+    Route::get('/history/{auditLog}', [HistoryController::class, 'show'])->name('history.show');
 
     // Planning LB
     Route::middleware('role:adminlb')->resource('planning-lb', PlanningLbController::class);
-    });
 
     // Master Data (Operator TS)
     Route::middleware('role:operator_ts')->prefix('master')->name('master.')->group(function () {
@@ -46,6 +53,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::middleware('supervisor')->prefix('master')->name('master.')->group(function () {
         Route::delete('expeditions/{expedition}', [ExpeditionController::class, 'destroy'])->name('expeditions.destroy');
         Route::delete('farms/{farm}', [FarmController::class, 'destroy'])->name('farms.destroy');
+    });
+
+    // Master Users (Superadmin only)
+    Route::middleware('role:superadmin')->prefix('master')->name('master.')->group(function () {
         Route::resource('users', UserController::class);
     });
 

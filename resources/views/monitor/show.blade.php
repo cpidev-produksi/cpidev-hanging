@@ -98,6 +98,8 @@
         .logo-icon {
             width: 46px;
             height: 46px;
+            min-width: 46px;
+            max-width: 46px;
             background: linear-gradient(135deg, #F97316, #EA580C);
             border-radius: 18px;
             display: flex;
@@ -105,6 +107,13 @@
             justify-content: center;
             box-shadow: 0 6px 12px -6px rgba(249,115,22,0.3);
             color: white;
+            overflow: hidden;
+        }
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;  /* atau 'contain' tergantung kebutuhan */
+            display: block;
         }
         .brand-text h2 {
             font-size: 1.3rem;
@@ -257,22 +266,24 @@
         }
         .slide-container {
             position: relative;
-            min-height: 80px;
+            min-height: 100px;
         }
         .slide {
-            position: absolute;
-            width: 100%;
             transition: opacity 0.55s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             opacity: 0;
             visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
             display: flex;
-            gap: 1.2rem;
-            flex-wrap: wrap;
+            width: 100%;
+            pointer-events: none;
         }
         .slide.active {
             opacity: 1;
             visibility: visible;
             position: relative;
+            pointer-events: auto;
         }
         .slide-item {
             background: #F8FAFE;
@@ -428,6 +439,7 @@
             .info-chips { justify-content: space-between; }
             .stat-card .stat-value { font-size: 1.3rem; }
             .hero-number { font-size: 3.8rem; }
+            .logo-icon { width: 46px; height: 46px; min-width: 46px; max-width: 46px; }
         }
         body { overflow: hidden; }
         .dashboard, .dashboard-inner { overflow-y: auto; }
@@ -516,13 +528,6 @@
                             <p id="carouselExpedisi">—</p>
                         </div>
                     </div>
-                    <div class="slide-item">
-                        <div class="slide-icon">👨‍✈️</div>
-                        <div class="slide-content">
-                            <p>SOPIR</p>
-                            <p id="carouselDriver">—</p>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div class="carousel-indicators" id="carouselIndicators"></div>
@@ -598,17 +603,20 @@
     });
 
     // carousel 2 slide (farm+size, expedisi+sopir)
+    // CAROUSEL - Versi SMOOTH tanpa merusak data
     let activeSlide = 0;
     let carouselInterval;
     const slides = document.querySelectorAll('.slide');
     const indicatorsContainer = document.getElementById('carouselIndicators');
+
     function buildIndicators(count) {
+        if(!indicatorsContainer) return;
         indicatorsContainer.innerHTML = '';
-        for(let i=0;i<count;i++) {
+        for(let i = 0; i < count; i++) {
             const dot = document.createElement('div');
             dot.classList.add('indicator');
-            if(i===activeSlide) dot.classList.add('active');
-            dot.addEventListener('click',()=>{
+            if(i === activeSlide) dot.classList.add('active');
+            dot.addEventListener('click', () => {
                 stopCarousel();
                 setActiveSlide(i);
                 startCarousel();
@@ -616,21 +624,47 @@
             indicatorsContainer.appendChild(dot);
         }
     }
+
     function setActiveSlide(index) {
-        slides.forEach((s,i)=>{
-            s.classList.remove('active');
-            if(i===index) s.classList.add('active');
+        if(index === activeSlide) return;
+        
+        // Hapus class active dari semua slide
+        slides.forEach(slide => {
+            slide.classList.remove('active');
         });
-        document.querySelectorAll('.indicator').forEach((dot,i)=>{
-            if(i===index) dot.classList.add('active');
+        
+        // Tambahkan class active ke slide yang dituju
+        slides[index].classList.add('active');
+        
+        // Update indicators
+        const indicators = document.querySelectorAll('.indicator');
+        indicators.forEach((dot, i) => {
+            if(i === index) dot.classList.add('active');
             else dot.classList.remove('active');
         });
+        
         activeSlide = index;
     }
-    function nextSlide() { let next = (activeSlide + 1) % slides.length; setActiveSlide(next); }
-    function startCarousel() { if(carouselInterval) clearInterval(carouselInterval); carouselInterval = setInterval(nextSlide, 4200); }
-    function stopCarousel() { if(carouselInterval) clearInterval(carouselInterval); }
-    if(slides.length) { buildIndicators(slides.length); startCarousel(); }
+
+    function nextSlide() {
+        let next = (activeSlide + 1) % slides.length;
+        setActiveSlide(next);
+    }
+
+    function startCarousel() {
+        if(carouselInterval) clearInterval(carouselInterval);
+        carouselInterval = setInterval(nextSlide, 4200);
+    }
+
+    function stopCarousel() {
+        if(carouselInterval) clearInterval(carouselInterval);
+    }
+
+    // Inisialisasi carousel
+    if(slides.length) {
+        buildIndicators(slides.length);
+        startCarousel();
+    }
 
     // DOM elements
     const heroAyamSpan = document.getElementById('heroAyamTotal');

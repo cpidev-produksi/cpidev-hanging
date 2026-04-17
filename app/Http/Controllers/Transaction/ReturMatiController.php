@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\HangingForm;
 use App\Models\HangingReturItem;
+use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -58,6 +59,16 @@ class ReturMatiController extends Controller
         $oldPhotos = $hangingForm->returItems->pluck('photo_path')->filter()->values()->all();
         $usedOld   = [];
 
+        $before = [
+            'dead_count' => $hangingForm->dead_count,
+            'retur_count' => $hangingForm->retur_count,
+            'retur_total_kg' => $hangingForm->retur_total_kg,
+            'retur_items' => $hangingForm->returItems->map(fn($i)=>[
+                'weight_kg'=>$i->weight_kg,
+                'photo_path'=>$i->photo_path
+            ])->values()->all(),
+        ];
+
         $savePhoto = function ($file) {
             $image = Image::make($file)->resize(1280, null, function ($c) {
                 $c->aspectRatio();
@@ -71,8 +82,7 @@ class ReturMatiController extends Controller
             return $path;
         };
 
-        return DB::transaction(function () use ($hangingForm, $data, $weightsInput, $existingPhotos, $removeFlags, $files, $oldPhotos, &$usedOld, $savePhoto) {
-            // hapus semua item lama
+        return DB::transaction(function () use ($hangingForm, $data, $weightsInput, $existingPhotos, $removeFlags, $files, $oldPhotos, &$usedOld, $savePhoto, $before) {
             HangingReturItem::query()
                 ->where('hanging_form_id', $hangingForm->id)
                 ->delete();
@@ -80,16 +90,15 @@ class ReturMatiController extends Controller
             $rows = [];
             foreach ($weightsInput as $i => $w) {
                 $w = (float) $w;
-                if ($w <= 0) continue; // skip kosong
+                if ($w <= 0) continue;
 
                 $photoPath = null;
                 $remove = ($removeFlags[$i] ?? '0') === '1';
                 $existing = $existingPhotos[$i] ?? null;
 
                 if (isset($files[$i]) && $files[$i]) {
-                    // new upload -> replace
                     $photoPath = $savePhoto($files[$i]);
-                    if ($existing) $usedOld[] = $existing; // mark to delete later
+                    if ($existing) $usedOld[] = $existing;
                 } else {
                     if (!$remove && $existing) {
                         $photoPath = $existing;
@@ -110,7 +119,6 @@ class ReturMatiController extends Controller
                 HangingReturItem::create($row);
             }
 
-            // delete old photos that are not reused
             $unused = array_diff($oldPhotos, $usedOld);
             foreach ($unused as $p) {
                 Storage::disk('public')->delete($p);
@@ -124,6 +132,23 @@ class ReturMatiController extends Controller
                 'retur_count' => $returCount,
                 'retur_total_kg' => $returTotalKg,
             ]);
+
+            $after = [
+                'dead_count' => $hangingForm->dead_count,
+                'retur_count' => $hangingForm->retur_count,
+                'retur_total_kg' => $hangingForm->retur_total_kg,
+                'retur_items' => $rows,
+            ];
+
+            $changes = AuditLogger::diff($before, $after);
+            $meta = [
+                'report_code' => $hangingForm->monitorControl?->report_code,
+                'location' => $hangingForm->monitorControl?->location,
+                'truck_no' => $hangingForm->monitorControl?->truck_no,
+                'was_done' => ($hangingForm->status === 'done'),
+            ];
+
+            AuditLogger::log('retur_mati', 'update', $hangingForm, $changes, $meta);
 
             return redirect()
                 ->route('retur-mati.landing')

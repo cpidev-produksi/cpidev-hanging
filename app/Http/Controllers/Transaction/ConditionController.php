@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\HangingForm;
 use App\Models\MonitorControl;
+use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,14 +15,13 @@ class ConditionController extends Controller
     {
         $date = $request->query('date');
         if ($date === null || $date === '') {
-            $date = now()->toDateString(); // default: tanggal operasional hari ini
+            $date = now()->toDateString();
         }
 
-        // Ambil parameter filter & sort
         $search = $request->query('search');
         $location = $request->query('location');
         $shift = $request->query('shift');
-        $statusFilter = $request->query('status'); // 'filled' or 'empty'
+        $statusFilter = $request->query('status');
         $sort = $request->query('sort', 'truck_no');
         $direction = $request->query('direction', 'asc');
 
@@ -29,25 +29,20 @@ class ConditionController extends Controller
             $q = MonitorControl::query()
                 ->with(['farm', 'expedition', 'plateNumber', 'hangingForm'])
                 ->whereHas('hangingForm', function ($q) {
-                    // Pastikan ada hanging form
                 }, '>=', 0);
 
-            // Filter date (process_date = tanggal operasional)
             if ($date !== null && $date !== '') {
                 $q->whereDate('process_date', $date);
             }
 
-            // Filter location
             if ($location && $location !== '') {
                 $q->where('location', $location);
             }
 
-            // Filter shift
             if ($shift && $shift !== '') {
                 $q->where('shift', $shift);
             }
 
-            // Search by report_code or plate_number
             if ($search && $search !== '') {
                 $q->where(function ($query) use ($search) {
                     $query->where('report_code', 'like', "%{$search}%")
@@ -60,7 +55,6 @@ class ConditionController extends Controller
                 });
             }
 
-            // Filter by status (filled / empty)
             if ($statusFilter === 'filled') {
                 $q->whereHas('hangingForm', function ($query) {
                     $query->whereNotNull('basket_condition')
@@ -75,13 +69,11 @@ class ConditionController extends Controller
                 })->orWhereDoesntHave('hangingForm');
             }
 
-            // Sorting
             $allowedSorts = ['truck_no', 'process_date', 'location', 'shift', 'report_code'];
             if (in_array($sort, $allowedSorts)) {
                 $q->orderBy($sort, $direction);
             }
 
-            // Default secondary sort
             $q->orderBy('process_date', 'desc')
               ->orderBy('location')
               ->orderByRaw("FIELD(shift,'pagi','malam')")
@@ -92,7 +84,7 @@ class ConditionController extends Controller
 
         $perPage = $request->query('per_page', 15);
 
-        $paginateShift = function (string $loc, string $sh, string $pageParam) use ($baseQuery, $perPage, $date, $search, $location, $shift, $statusFilter, $sort, $direction) {
+        $paginateShift = function (string $loc, string $sh, string $pageParam) use ($baseQuery, $perPage) {
             return $baseQuery()
                 ->where('location', $loc)
                 ->where('shift', $sh)
@@ -168,7 +160,20 @@ class ConditionController extends Controller
             'feather_condition' => ['required', 'in:sangat_basah,medium_basah,basah,kering'],
         ]);
 
+        $before = $hangingForm->only(['basket_condition','truck_platform_condition','feather_condition']);
         $hangingForm->update($data);
+
+        $after = $hangingForm->only(['basket_condition','truck_platform_condition','feather_condition']);
+        $changes = AuditLogger::diff($before, $after);
+
+        $meta = [
+            'report_code' => $hangingForm->monitorControl?->report_code,
+            'location' => $hangingForm->monitorControl?->location,
+            'truck_no' => $hangingForm->monitorControl?->truck_no,
+            'was_done' => ($hangingForm->status === 'done'),
+        ];
+
+        AuditLogger::log('qc_kondisi', 'update', $hangingForm, $changes, $meta);
 
         return redirect()
             ->route('conditions.landing')
