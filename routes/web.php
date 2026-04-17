@@ -44,13 +44,13 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::middleware('role:adminlb')->resource('planning-lb', PlanningLbController::class);
 
     // Master Data (Operator TS)
-    Route::middleware('role:operator_ts')->prefix('master')->name('master.')->group(function () {
+    Route::middleware('role:operator_ts,supervisor')->prefix('master')->name('master.')->group(function () {
         Route::resource('expeditions', ExpeditionController::class)->except(['destroy']);
         Route::resource('farms', FarmController::class)->except(['destroy']);
     });
 
     // Delete Master Data (Supervisor only)
-    Route::middleware('supervisor')->prefix('master')->name('master.')->group(function () {
+    Route::middleware('role:supervisor')->prefix('master')->name('master.')->group(function () {
         Route::delete('expeditions/{expedition}', [ExpeditionController::class, 'destroy'])->name('expeditions.destroy');
         Route::delete('farms/{farm}', [FarmController::class, 'destroy'])->name('farms.destroy');
     });
