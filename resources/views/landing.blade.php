@@ -680,6 +680,7 @@
         .org-slider-track {
             display: flex;
             transition: transform 0.45s cubic-bezier(.4,0,.2,1);
+            will-change: transform;
         }
         .org-slide {
             flex: 0 0 100%;
@@ -1184,7 +1185,7 @@
     <span class="org-label">Tim Kami</span>
     <h2 class="org-title">Struktur <span>Organisasi</span></h2>
     <p class="org-sub">
-        Kenali para profesional di balik sistem operasional PT. Charoen Pokphand Indonesia.
+        Kenali para profesional SlaughterHouse Department di PT. Charoen Pokphand Indonesia - Salatiga.
     </p>
 
     <div class="org-slider-wrap">
@@ -1195,7 +1196,7 @@
                 <div class="profile-card">
                     <div class="avatar-wrap">
                         {{-- <img src="{{ asset('images/org/direktur.jpg') }}" alt="Direktur Utama"> --}}
-                        <span class="avatar-initials">ATW</span>
+                        <span class="avatar-initials">AT</span>
                     </div>
                     <p class="card-name">Aditya Taufiq Wibowo</p>
                     <p class="card-role">General Manager</p>
@@ -1204,29 +1205,29 @@
                 <div class="profile-card">
                     <div class="avatar-wrap">
                         {{-- <img src="{{ asset('images/org/wakil-direktur.jpg') }}" alt="Wakil Direktur"> --}}
-                        <span class="avatar-initials">SR</span>
+                        <span class="avatar-initials">IA</span>
                     </div>
-                    <p class="card-name">Siti Rahayu</p>
+                    <p class="card-name">Iska Anggun</p>
                     <p class="card-role">Manager</p>
                     <span class="card-dept">SlaughterHouse</span>
                 </div>
                 <div class="profile-card">
                     <div class="avatar-wrap">
-                        {{-- <img src="{{ asset('images/org/sekretaris.jpg') }}" alt="Sekretaris"> --}}
-                        <span class="avatar-initials">DP</span>
+                        {{-- <img src="{{ asset('public/images/org/deanda.JPG') }}" alt="Deanda"> --}}
+                        <span class="avatar-initials">DE</span>
                     </div>
-                    <p class="card-name">Dewi Putri</p>
+                    <p class="card-name">Deanda Ekapaksi</p>
                     <p class="card-role">Manager</p>
-                    <span class="card-dept">Sausage</span>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
                 <div class="profile-card">
                     <div class="avatar-wrap">
-                        {{-- <img src="{{ asset('images/org/keuangan.jpg') }}" alt="Kepala Keuangan"> --}}
-                        <span class="avatar-initials">BH</span>
+                        {{-- <img src="{{ asset('images\org\deanda.JPG') }}" alt="Kepala Keuangan"> --}}
+                        <span class="avatar-initials">AW</span>
                     </div>
-                    <p class="card-name">Budi Hartono</p>
-                    <p class="card-role">Manager</p>
-                    <span class="card-dept">Further</span>
+                    <p class="card-name">Awang Wahid Widodo</p>
+                    <p class="card-role">Supervisor</p>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
             </div>
 
@@ -1237,36 +1238,36 @@
                         {{-- <img src="{{ asset('images/org/produksi.jpg') }}" alt="Kepala Produksi"> --}}
                         <span class="avatar-initials">RW</span>
                     </div>
-                    <p class="card-name">Rizky Wibowo</p>
+                    <p class="card-name">Diana Feryka Yusticya</p>
                     <p class="card-role">Supervisor</p>
-                    <span class="card-dept">BreadCrumb</span>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
                 <div class="profile-card">
                     <div class="avatar-wrap">
                         {{-- <img src="{{ asset('images/org/qc.jpg') }}" alt="Kepala QC"> --}}
-                        <span class="avatar-initials">NF</span>
+                        <span class="avatar-initials">NP</span>
                     </div>
-                    <p class="card-name">Nurul Fadilah</p>
-                    <p class="card-role">Manager</p>
-                    <span class="card-dept">Production Planning</span>
+                    <p class="card-name">Nadya Prabaningtyas</p>
+                    <p class="card-role">Supervisor</p>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
                 <div class="profile-card">
                     <div class="avatar-wrap">
                         {{-- <img src="{{ asset('images/org/logistik.jpg') }}" alt="Kepala Logistik"> --}}
                         <span class="avatar-initials">YP</span>
                     </div>
-                    <p class="card-name">Yusuf Prasetyo</p>
-                    <p class="card-role">Kepala Logistik</p>
-                    <span class="card-dept">Logistik</span>
+                    <p class="card-name">Alvito Bayu Aji</p>
+                    <p class="card-role">Foreman</p>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
                 <div class="profile-card">
                     <div class="avatar-wrap">
                         {{-- <img src="{{ asset('images/org/hrd.jpg') }}" alt="Manajer HRD"> --}}
-                        <span class="avatar-initials">IL</span>
+                        <span class="avatar-initials">FD</span>
                     </div>
-                    <p class="card-name">Indah Lestari</p>
-                    <p class="card-role">Manajer HRD</p>
-                    <span class="card-dept">SDM</span>
+                    <p class="card-name">Faridah</p>
+                    <p class="card-role">Forelady</p>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
             </div>
 
@@ -1275,38 +1276,127 @@
                 <div class="profile-card">
                     <div class="avatar-wrap">
                         {{-- <img src="{{ asset('images/org/it.jpg') }}" alt="Kepala IT"> --}}
-                        <span class="avatar-initials">FA</span>
+                        <span class="avatar-initials">RW</span>
                     </div>
-                    <p class="card-name">Fajar Adi</p>
-                    <p class="card-role">Kepala IT</p>
-                    <span class="card-dept">Teknologi</span>
+                    <p class="card-name">Rina Wahyuni</p>
+                    <p class="card-role">Forelady</p>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
                 <div class="profile-card">
                     <div class="avatar-wrap">
                         {{-- <img src="{{ asset('images/org/marketing.jpg') }}" alt="Kepala Marketing"> --}}
-                        <span class="avatar-initials">MS</span>
+                        <span class="avatar-initials">FM</span>
                     </div>
-                    <p class="card-name">Maya Sari</p>
-                    <p class="card-role">Kepala Marketing</p>
-                    <span class="card-dept">Pemasaran</span>
+                    <p class="card-name">Faizal Muttaqin</p>
+                    <p class="card-role">Foreman</p>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
                 <div class="profile-card">
                     <div class="avatar-wrap">
                         {{-- <img src="{{ asset('images/org/purchasing.jpg') }}" alt="Kepala Purchasing"> --}}
-                        <span class="avatar-initials">HN</span>
+                        <span class="avatar-initials">RA</span>
                     </div>
-                    <p class="card-name">Hendra Nugroho</p>
-                    <p class="card-role">Kepala Purchasing</p>
-                    <span class="card-dept">Pengadaan</span>
+                    <p class="card-name">Ridhwan Anshor A.</p>
+                    <p class="card-role">Foreman</p>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
                 <div class="profile-card">
                     <div class="avatar-wrap">
                         {{-- <img src="{{ asset('images/org/keswan.jpg') }}" alt="Dokter Hewan"> --}}
-                        <span class="avatar-initials">RD</span>
+                        <span class="avatar-initials">TH</span>
                     </div>
-                    <p class="card-name">drh. Rina Dewi</p>
-                    <p class="card-role">Dokter Hewan</p>
-                    <span class="card-dept">Kesehatan</span>
+                    <p class="card-name">Theodora Hernita P.</p>
+                    <p class="card-role">Forelady</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+            </div>
+            {{-- ── SLIDE 4: Divisi Teknis ── --}}
+            <div class="org-slide">
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/it.jpg') }}" alt="Kepala IT"> --}}
+                        <span class="avatar-initials">UN</span>
+                    </div>
+                    <p class="card-name">Ulya Nur F.</p>
+                    <p class="card-role">Forelady</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/marketing.jpg') }}" alt="Kepala Marketing"> --}}
+                        <span class="avatar-initials">SA</span>
+                    </div>
+                    <p class="card-name">Shifa Aprilia Wulandari</p>
+                    <p class="card-role">Forelady</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/purchasing.jpg') }}" alt="Kepala Purchasing"> --}}
+                        <span class="avatar-initials">ZA</span>
+                    </div>
+                    <p class="card-name">Zaenal Arifin</p>
+                    <p class="card-role">Foreman</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/keswan.jpg') }}" alt="Dokter Hewan"> --}}
+                        <span class="avatar-initials">TH</span>
+                    </div>
+                    <p class="card-name">Dhika Argaloka</p>
+                    <p class="card-role">Foreman</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+            </div>
+            {{-- ── SLIDE 5: Divisi Teknis ── --}}
+            <div class="org-slide">
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/it.jpg') }}" alt="Kepala IT"> --}}
+                        <span class="avatar-initials">AK</span>
+                    </div>
+                    <p class="card-name">Anggi Kristianda</p>
+                    <p class="card-role">Forelady</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/marketing.jpg') }}" alt="Kepala Marketing"> --}}
+                        <span class="avatar-initials">AA</span>
+                    </div>
+                    <p class="card-name">Ayu Aprilia</p>
+                    <p class="card-role">Administrasi</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/purchasing.jpg') }}" alt="Kepala Purchasing"> --}}
+                        <span class="avatar-initials">ID</span>
+                    </div>
+                    <p class="card-name">Irine Dwi Nuranti</p>
+                    <p class="card-role">Administrasi</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/keswan.jpg') }}" alt="Dokter Hewan"> --}}
+                        <span class="avatar-initials">LK</span>
+                    </div>
+                    <p class="card-name">Laeli Kurniawati</p>
+                    <p class="card-role">Administrasi</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+            </div>
+            <div class="org-slide">
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/keswan.jpg') }}" alt="Dokter Hewan"> --}}
+                        <span class="avatar-initials">DG</span>
+                    </div>
+                    <p class="card-name">Dina Kristiani Gigir</p>
+                    <p class="card-role">Administrasi</p>
+                    <span class="card-dept">SlaughterHouse</span>
                 </div>
             </div>
 
@@ -1341,7 +1431,7 @@
 </footer>
 
 <script>
-    // Scroll reveal
+    // Scroll reveal (existing code)
     const revealEls = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -1352,6 +1442,83 @@
         });
     }, { threshold: 0.12 });
     revealEls.forEach(el => observer.observe(el));
+
+    // ========== ORGANIZATION SLIDER ==========
+    const track = document.getElementById('orgTrack');
+    const slides = document.querySelectorAll('.org-slide');
+    const prevBtn = document.getElementById('orgPrev');
+    const nextBtn = document.getElementById('orgNext');
+    const dotsContainer = document.getElementById('orgDots');
+    
+    let currentIndex = 0;
+    let totalSlides = slides.length;
+    
+    // Fungsi untuk update posisi slide
+    function updateSlider() {
+        if (!track) return;
+        const slideWidth = slides[0]?.offsetWidth || 0;
+        track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        
+        // Update active dot
+        const dots = document.querySelectorAll('.org-dot');
+        dots.forEach((dot, i) => {
+            if (i === currentIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+    
+    // Buat dots navigasi
+    function buildDots() {
+        if (!dotsContainer) return;
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('org-dot');
+            if (i === currentIndex) dot.classList.add('active');
+            dot.addEventListener('click', () => {
+                currentIndex = i;
+                updateSlider();
+            });
+            dotsContainer.appendChild(dot);
+        }
+    }
+    
+    // Event listeners untuk tombol
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateSlider();
+            }
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < totalSlides - 1) {
+                currentIndex++;
+                updateSlider();
+            }
+        });
+    }
+    
+    // Inisialisasi slider
+    if (totalSlides > 0) {
+        buildDots();
+        updateSlider();
+    }
+    
+    // Resize handler untuk memastikan posisi tetap benar
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            updateSlider();
+        }, 100);
+    });
 </script>
 </body>
 </html>
