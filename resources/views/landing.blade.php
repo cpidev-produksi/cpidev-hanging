@@ -621,69 +621,206 @@
             box-shadow: 0 10px 32px rgba(245,166,35,0.4);
         }
 
-        /* ─────────────────────────────────────────────
-           FOOTER CTA
-        ───────────────────────────────────────────── */
-        .footer-cta {
+        /* ═══ ORG STRUCTURE ═══ */
+        .org-structure-section {
             position: relative;
-            overflow: hidden;
-            border-top: 1px solid var(--border);
-            padding: 100px 40px;
+            z-index: 1;
+            padding: 80px 40px;
             text-align: center;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .org-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+        .org-label::before {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .org-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(24px, 4vw, 40px);
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -1px;
+            line-height: 1.1;
+            margin: 0 0 10px;
+        }
+        .org-title span { color: var(--accent); }
+
+        .org-sub {
+            font-size: 14px;
+            color: var(--muted2);
+            max-width: 480px;
+            margin: 0 auto 48px;
+            line-height: 1.75;
+        }
+
+        /* Slider */
+        .org-slider-wrap {
+            overflow: hidden;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .org-slider-track {
+            display: flex;
+            transition: transform 0.45s cubic-bezier(.4,0,.2,1);
+        }
+        .org-slide {
+            flex: 0 0 100%;
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            padding: 0.5rem 0 1.5rem;
+            flex-wrap: nowrap;
+        }
+
+        /* Profile Card */
+        .profile-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 1.75rem 1.25rem 1.25rem;
+            width: 185px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 24px;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
         }
-        .footer-cta::before {
+        .profile-card::before {
             content: '';
             position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse 60% 70% at 50% 100%, rgba(232,93,47,0.08) 0%, transparent 60%);
-            pointer-events: none;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            opacity: 0;
+            transition: opacity 0.25s;
         }
-
-        .footer-cta-title {
-            font-family: 'Syne', sans-serif;
-            font-size: clamp(28px, 5vw, 52px);
-            font-weight: 800;
-            color: var(--text);
-            letter-spacing: -1.5px;
-            line-height: 1.05;
-            position: relative;
-            z-index: 1;
+        .profile-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-hi);
+            box-shadow: 0 16px 50px rgba(0,0,0,0.35);
         }
-        .footer-cta-title span { color: var(--accent); }
+        .profile-card:hover::before { opacity: 1; }
 
-        .footer-cta-sub {
-            font-size: 15px;
-            color: var(--muted2);
-            max-width: 400px;
-            line-height: 1.6;
-            position: relative;
-            z-index: 1;
-        }
-
-        .btn-cta-login {
-            display: inline-flex;
+        .avatar-wrap {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: rgba(232,93,47,0.08);
+            display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 16px 40px;
-            border-radius: 14px;
-            background: var(--accent);
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
-            text-decoration: none;
-            letter-spacing: 0.02em;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 6px 28px rgba(232,93,47,0.4);
-            position: relative;
-            z-index: 1;
+            justify-content: center;
+            border: 2px solid var(--border-hi);
         }
-        .btn-cta-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 40px rgba(232,93,47,0.55);
+        .avatar-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none; /* Hapus setelah foto tersedia */
+        }
+        .avatar-initials {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .card-name {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            text-align: center;
+            margin: 6px 0 0;
+            line-height: 1.4;
+        }
+        .card-role {
+            font-size: 11px;
+            color: var(--muted2);
+            text-align: center;
+            margin: 0;
+            line-height: 1.4;
+        }
+        .card-dept {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: var(--accent-soft);
+            border: 1px solid rgba(232,93,47,0.2);
+            padding: 3px 10px;
+            border-radius: 99px;
+            margin-top: 4px;
+        }
+
+        /* Nav */
+        .org-slider-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 2rem;
+        }
+        .org-nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border-hi);
+            background: var(--surface2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted2);
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
+        }
+        .org-nav-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-soft);
+        }
+        .org-dots { display: flex; gap: 6px; align-items: center; }
+        .org-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 99px;
+            background: var(--border-hi);
+            cursor: pointer;
+            transition: background 0.2s, width 0.25s;
+        }
+        .org-dot.active { background: var(--accent); width: 18px; }
+
+        @media (max-width: 768px) {
+            .org-structure-section { padding: 60px 20px; }
+            .org-slide { gap: 12px; }
+            .profile-card { width: 150px; padding: 1.25rem 1rem 1rem; }
+            .avatar-wrap { width: 58px; height: 58px; }
+        }
+        @media (max-width: 520px) {
+            .org-slide { flex-wrap: wrap; }
+            .profile-card { width: calc(50% - 6px); }
         }
 
         /* ─────────────────────────────────────────────
@@ -1042,19 +1179,153 @@
     </div>
 </div>
 
-<!-- ═══════════════════ FOOTER CTA ═══════════════════ -->
-<section class="footer-cta">
-    <h2 class="footer-cta-title reveal">Siap Masuk ke<br><span>Dashboard?</span></h2>
-    <p class="footer-cta-sub reveal reveal-delay-1">
-        Login untuk mengakses sistem operasional terpadu, laporan harian, dan kontrol penuh atas aktivitas SlaughterHouse.
+<!-- ═══════════════════ ORG STRUCTURE ═══════════════════ -->
+<section class="org-structure-section">
+    <span class="org-label">Tim Kami</span>
+    <h2 class="org-title">Struktur <span>Organisasi</span></h2>
+    <p class="org-sub">
+        Kenali para profesional di balik sistem operasional PT. Charoen Pokphand Indonesia.
     </p>
-    <a href="{{ route('login') }}" class="btn-cta-login reveal reveal-delay-2">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-        </svg>
-        Login ke Dashboard
-    </a>
+
+    <div class="org-slider-wrap">
+        <div class="org-slider-track" id="orgTrack">
+
+            {{-- ── SLIDE 1: Manajemen Puncak ── --}}
+            <div class="org-slide">
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/direktur.jpg') }}" alt="Direktur Utama"> --}}
+                        <span class="avatar-initials">ATW</span>
+                    </div>
+                    <p class="card-name">Aditya Taufiq Wibowo</p>
+                    <p class="card-role">General Manager</p>
+                    <span class="card-dept">Plant</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/wakil-direktur.jpg') }}" alt="Wakil Direktur"> --}}
+                        <span class="avatar-initials">SR</span>
+                    </div>
+                    <p class="card-name">Siti Rahayu</p>
+                    <p class="card-role">Manager</p>
+                    <span class="card-dept">SlaughterHouse</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/sekretaris.jpg') }}" alt="Sekretaris"> --}}
+                        <span class="avatar-initials">DP</span>
+                    </div>
+                    <p class="card-name">Dewi Putri</p>
+                    <p class="card-role">Manager</p>
+                    <span class="card-dept">Sausage</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/keuangan.jpg') }}" alt="Kepala Keuangan"> --}}
+                        <span class="avatar-initials">BH</span>
+                    </div>
+                    <p class="card-name">Budi Hartono</p>
+                    <p class="card-role">Manager</p>
+                    <span class="card-dept">Further</span>
+                </div>
+            </div>
+
+            {{-- ── SLIDE 2: Operasional ── --}}
+            <div class="org-slide">
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/produksi.jpg') }}" alt="Kepala Produksi"> --}}
+                        <span class="avatar-initials">RW</span>
+                    </div>
+                    <p class="card-name">Rizky Wibowo</p>
+                    <p class="card-role">Supervisor</p>
+                    <span class="card-dept">BreadCrumb</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/qc.jpg') }}" alt="Kepala QC"> --}}
+                        <span class="avatar-initials">NF</span>
+                    </div>
+                    <p class="card-name">Nurul Fadilah</p>
+                    <p class="card-role">Manager</p>
+                    <span class="card-dept">Production Planning</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/logistik.jpg') }}" alt="Kepala Logistik"> --}}
+                        <span class="avatar-initials">YP</span>
+                    </div>
+                    <p class="card-name">Yusuf Prasetyo</p>
+                    <p class="card-role">Kepala Logistik</p>
+                    <span class="card-dept">Logistik</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/hrd.jpg') }}" alt="Manajer HRD"> --}}
+                        <span class="avatar-initials">IL</span>
+                    </div>
+                    <p class="card-name">Indah Lestari</p>
+                    <p class="card-role">Manajer HRD</p>
+                    <span class="card-dept">SDM</span>
+                </div>
+            </div>
+
+            {{-- ── SLIDE 3: Divisi Teknis ── --}}
+            <div class="org-slide">
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/it.jpg') }}" alt="Kepala IT"> --}}
+                        <span class="avatar-initials">FA</span>
+                    </div>
+                    <p class="card-name">Fajar Adi</p>
+                    <p class="card-role">Kepala IT</p>
+                    <span class="card-dept">Teknologi</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/marketing.jpg') }}" alt="Kepala Marketing"> --}}
+                        <span class="avatar-initials">MS</span>
+                    </div>
+                    <p class="card-name">Maya Sari</p>
+                    <p class="card-role">Kepala Marketing</p>
+                    <span class="card-dept">Pemasaran</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/purchasing.jpg') }}" alt="Kepala Purchasing"> --}}
+                        <span class="avatar-initials">HN</span>
+                    </div>
+                    <p class="card-name">Hendra Nugroho</p>
+                    <p class="card-role">Kepala Purchasing</p>
+                    <span class="card-dept">Pengadaan</span>
+                </div>
+                <div class="profile-card">
+                    <div class="avatar-wrap">
+                        {{-- <img src="{{ asset('images/org/keswan.jpg') }}" alt="Dokter Hewan"> --}}
+                        <span class="avatar-initials">RD</span>
+                    </div>
+                    <p class="card-name">drh. Rina Dewi</p>
+                    <p class="card-role">Dokter Hewan</p>
+                    <span class="card-dept">Kesehatan</span>
+                </div>
+            </div>
+
+        </div>{{-- /.org-slider-track --}}
+    </div>{{-- /.org-slider-wrap --}}
+
+    <div class="org-slider-nav">
+        <button class="org-nav-btn" id="orgPrev" aria-label="Sebelumnya">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </button>
+        <div class="org-dots" id="orgDots"></div>
+        <button class="org-nav-btn" id="orgNext" aria-label="Berikutnya">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </button>
+    </div>
 </section>
 
 <!-- ═══════════════════ SITE FOOTER ═══════════════════ -->
