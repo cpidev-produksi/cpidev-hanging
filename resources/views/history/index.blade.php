@@ -126,14 +126,63 @@
     </div>
 
     @if($logs->hasPages())
-    <div class="panel-footer">
-        <div class="pagination-info">
-            Menampilkan {{ $logs->firstItem() }}–{{ $logs->lastItem() }} dari {{ $logs->total() }} entri
+        <div class="panel-footer">
+            <div class="pagination-info">
+                Menampilkan {{ $logs->firstItem() }}–{{ $logs->lastItem() }} dari {{ $logs->total() }} entri
+            </div>
+            <div class="pagination-nav">
+                {{-- Previous --}}
+                @if($logs->onFirstPage())
+                    <span class="page-btn page-btn--disabled">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </span>
+                @else
+                    <a href="{{ $logs->previousPageUrl() }}" class="page-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </a>
+                @endif
+
+                {{-- Page Numbers --}}
+                @php
+                    $cur   = $logs->currentPage();
+                    $last  = $logs->lastPage();
+                    $pages = collect(range(1, $last))
+                        ->filter(fn($p) => $p === 1 || $p === $last || abs($p - $cur) <= 2)
+                        ->values();
+                @endphp
+
+                @foreach($pages as $i => $page)
+                    @if($i > 0 && $page - $pages[$i - 1] > 1)
+                        <span class="page-ellipsis">…</span>
+                    @endif
+
+                    @if($page === $cur)
+                        <span class="page-btn page-btn--active">{{ $page }}</span>
+                    @else
+                        <a href="{{ $logs->url($page) }}" class="page-btn">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                {{-- Next --}}
+                @if($logs->hasMorePages())
+                    <a href="{{ $logs->nextPageUrl() }}" class="page-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </a>
+                @else
+                    <span class="page-btn page-btn--disabled">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </span>
+                @endif
+            </div>
         </div>
-        <div class="pagination-links">
-            {{ $logs->links() }}
-        </div>
-    </div>
     @endif
 </div>
 
@@ -440,6 +489,71 @@
 }
 .pagination-links nav { display: flex; align-items: center; }
 
+/* Pagination Styles untuk index.blade */
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #4b5563;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 7px;
+    text-decoration: none;
+    transition: background .13s, color .13s, border-color .13s, box-shadow .13s;
+    cursor: pointer;
+}
+
+.page-btn:hover {
+    background: #eef2ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+}
+
+.page-btn--active {
+    background: var(--accent, #E85D2F);
+    color: #fff;
+    border-color: var(--accent, #E85D2F);
+    box-shadow: 0 1px 6px rgba(232,93,47,.35);
+    font-weight: 600;
+    cursor: default;
+}
+
+.page-btn--active:hover {
+    background: var(--accent, #E85D2F);
+    color: #fff;
+    border-color: var(--accent, #E85D2F);
+}
+
+.page-btn--disabled {
+    background: #f9fafb;
+    color: #d1d5db;
+    border-color: #f3f4f6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 32px;
+    font-size: 13px;
+    color: #9ca3af;
+    letter-spacing: .1em;
+}
+
 @media (max-width: 640px) {
     .history-header { flex-direction: column; align-items: flex-start; }
     .history-stats { width: 100%; }
@@ -447,6 +561,10 @@
     /* Kolom role disembunyikan di layar kecil */
     .data-table th:nth-child(3),
     .data-table td:nth-child(3) { display: none; }
+    .pagination-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
 }
 </style>
 @endsection

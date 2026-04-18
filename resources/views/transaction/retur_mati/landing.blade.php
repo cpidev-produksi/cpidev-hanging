@@ -64,24 +64,23 @@
 
   {{-- ── PANES ── --}}
   @foreach($locations as $loc)
-    @php
-      $pagi  = $data[$loc]['pagi'];
-      $malam = $data[$loc]['malam'];
-    @endphp
+      @php
+        $pagi  = $data[$loc]['pagi'];
+        $malam = $data[$loc]['malam'];
+      @endphp
 
-    <div id="rm-tab-{{ strtolower($loc) }}-pane" class="rm-pane {{ $loop->first ? 'active' : '' }}">
-      @include('transaction.retur_mati.partials.list', [
-        'location' => $loc,
-        'listPagi'  => $pagi->getCollection(),
-        'listMalam' => $malam->getCollection(),
-        'theme'    => strtolower($loc),
-      ])
-
-      @include('transaction.retur_mati.partials.pagination', ['list' => $pagi])
-      @include('transaction.retur_mati.partials.pagination', ['list' => $malam])
-    </div>
+      <div id="rm-tab-{{ strtolower($loc) }}-pane" class="rm-pane {{ $loop->first ? 'active' : '' }}">
+        @include('transaction.retur_mati.partials.list', [
+          'location' => $loc,
+          'listPagi'  => $pagi->getCollection(),
+          'listMalam' => $malam->getCollection(),
+          'pagiPaginator' => $pagi,  // Kirim paginator untuk pagi
+          'malamPaginator' => $malam, // Kirim paginator untuk malam
+          'theme'    => strtolower($loc),
+        ])
+      </div>
   @endforeach
-</div>
+  </div>
 
 <script>
 (function () {

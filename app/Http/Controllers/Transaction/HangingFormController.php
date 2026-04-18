@@ -120,16 +120,21 @@ class HangingFormController extends Controller
         $changes = AuditLogger::diff($before, $after);
 
         $form = $hangingLineSet->line?->form;
-        $meta = [
-            'report_code' => $form?->monitorControl?->report_code,
-            'location' => $form?->monitorControl?->location,
-            'truck_no' => $form?->monitorControl?->truck_no,
-            'line_no' => $hangingLineSet->line?->line_no,
-            'set_no' => $hangingLineSet->set_no,
-            'was_done' => (($form?->status ?? '') === 'done'),
-        ];
+        $roleSlug = $request->user()?->role?->slug;
+        $wasDone = (($form?->status ?? '') === 'done');
 
-        AuditLogger::log('hanging_form', 'update_cell', $hangingLineSet, $changes, $meta);
+        if ($wasDone && $roleSlug === 'supervisor') {
+            $meta = [
+                'report_code' => $form?->monitorControl?->report_code,
+                'location' => $form?->monitorControl?->location,
+                'truck_no' => $form?->monitorControl?->truck_no,
+                'line_no' => $hangingLineSet->line?->line_no,
+                'set_no' => $hangingLineSet->set_no,
+                'was_done' => true,
+            ];
+
+            AuditLogger::log('hanging_form', 'update_cell', $hangingLineSet, $changes, $meta);
+        }
 
         $ayam = ($hangingLineSet->empty_count === null)
             ? 0
@@ -161,7 +166,10 @@ class HangingFormController extends Controller
 
         $before = $hangingForm->only(['unloading_time','finish_time','status']);
 
-        return DB::transaction(function () use ($hangingForm, $data, $before) {
+        $roleSlug = $request->user()?->role?->slug;
+        $wasDoneBefore = ($hangingForm->status === 'done');
+
+        return DB::transaction(function () use ($hangingForm, $data, $before, $roleSlug, $wasDoneBefore) {
             $hangingForm->update([
                 'unloading_time' => $data['unloading_time'] ?? $hangingForm->unloading_time,
                 'finish_time' => $data['finish_time'] ?? $hangingForm->finish_time,
@@ -175,13 +183,16 @@ class HangingFormController extends Controller
             $after = $hangingForm->only(['unloading_time','finish_time','status']);
             $changes = AuditLogger::diff($before, $after);
 
-            $meta = [
-                'report_code' => $hangingForm->monitorControl?->report_code,
-                'location' => $hangingForm->monitorControl?->location,
-                'truck_no' => $hangingForm->monitorControl?->truck_no,
-                'was_done' => true,
-            ];
-            AuditLogger::log('hanging_form', 'finish', $hangingForm, $changes, $meta);
+            if ($wasDoneBefore && $roleSlug === 'supervisor') {
+                $meta = [
+                    'report_code' => $hangingForm->monitorControl?->report_code,
+                    'location' => $hangingForm->monitorControl?->location,
+                    'truck_no' => $hangingForm->monitorControl?->truck_no,
+                    'was_done' => true,
+                ];
+
+                AuditLogger::log('hanging_form', 'finish', $hangingForm, $changes, $meta);
+            }
 
             return redirect()->route('hanging.landing')->with('status', 'Proses selesai. Laporan tersimpan.');
         });

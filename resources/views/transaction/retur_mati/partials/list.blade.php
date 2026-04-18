@@ -4,6 +4,8 @@
    * @var \Illuminate\Support\Collection $listMalam
    * @var string $location  (SH01 | SH02)
    * @var string $theme     (sh01 | sh02)
+   * @var \Illuminate\Pagination\LengthAwarePaginator|null $pagiPaginator
+   * @var \Illuminate\Pagination\LengthAwarePaginator|null $malamPaginator
    */
   $themeVar   = $theme === 'sh01' ? '#E85D2F' : '#7C3AED';
   $themeXl    = $theme === 'sh01' ? 'rgba(232,93,47,.08)'  : 'rgba(124,58,237,.08)';
@@ -18,9 +20,7 @@
       $isDoneA = $statusA === 'done';
       $isDoneB = $statusB === 'done';
       
-      // Jika A belum done dan B sudah done → A di atas (lebih prioritas)
       if (!$isDoneA && $isDoneB) return -1;
-      // Jika A sudah done dan B belum done → B di atas
       if ($isDoneA && !$isDoneB) return 1;
 
       $truckA = is_numeric($a->truck_no ?? null) ? (int)$a->truck_no : 999999;
@@ -49,8 +49,6 @@
       $cntRunning = $sList->filter(fn($it) => $it->hangingForm?->status === 'running')->count();
       $cntPartial = $cntTotal - $cntDone - $cntBelum - $cntRunning;
 
-      // Pisahkan item berdasarkan status untuk toggle
-      // Urutkan active items berdasarkan truck_no ASC
       $activeItems = $sList->filter(fn($it) => $it->hangingForm?->status !== 'done')
                           ->sortBy('truck_no')
                           ->values();
@@ -67,11 +65,16 @@
         <div class="rl-shift-label">
           @if($sPagi)
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/>
-              <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-              <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                 stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
             </svg>
           @else
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -86,7 +89,8 @@
           @if($cntRunning > 0)
             <span class="rl-stat rl-stat-running">
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
               </svg>
               {{ $cntRunning }} proses
             </span>
@@ -94,14 +98,17 @@
           @if($cntDone > 0)
             <span class="rl-stat rl-stat-done">
               <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                   stroke="currentColor" stroke-width="3.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
               {{ $cntDone }} selesai
             </span>
           @endif
           @if($cntBelum > 0)
             <span class="rl-stat rl-stat-warn">
               <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="3"><line x1="12" y1="8" x2="12" y2="12"/>
+                   stroke="currentColor" stroke-width="3">
+                <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               {{ $cntBelum }} belum isi
@@ -127,9 +134,11 @@
         @if($activeItems->isEmpty())
           <div class="rl-empty">
             <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="1.3"><rect x="1" y="3" width="15" height="13" rx="2"/>
+                 stroke="currentColor" stroke-width="1.3">
+              <rect x="1" y="3" width="15" height="13" rx="2"/>
               <path d="M16 8h4l3 5v3h-7V8z"/>
-              <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/>
+              <circle cx="18.5" cy="18.5" r="2.5"/>
             </svg>
             @if($hasDone)
               Semua item sudah selesai ✨
@@ -172,17 +181,20 @@
                   @endif">
                   @if($isRunning)
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                      <circle cx="12" cy="12" r="10"/>
+                      <polyline points="12 6 12 12 16 14"/>
                     </svg>
                     Proses
                   @elseif($isBelum)
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                     Belum
                   @else
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                      <circle cx="12" cy="12" r="10"/>
+                      <polyline points="12 6 12 12 16 14"/>
                     </svg>
                     Terisi
                   @endif
@@ -201,7 +213,8 @@
                 <div class="rl-mid">
                   <span class="rl-meta-item">
                     <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/>
+                         stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2"/>
                       <path d="M16 2v4M8 2v4M3 10h18"/>
                     </svg>
                     {{ $it->process_date?->format('d/m/Y') }}
@@ -219,23 +232,33 @@
                 @if($isBelum)
                   <div class="rl-unread">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/>
-                      <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                         stroke="currentColor" stroke-width="2.5">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                     Data retur &amp; mati belum diisi — klik <strong>Isi Sekarang</strong>
                   </div>
                 @elseif(!$isRunning)
                   <div class="rl-chips">
                     <span class="rl-chip rl-chip-mati">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
                       Mati <strong>{{ $dead }}</strong>
                     </span>
                     <span class="rl-chip rl-chip-retur">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="1 4 1 10 7 10"/>
+                        <path d="M3.51 15a9 9 0 1 0 .49-4"/>
+                      </svg>
                       Retur <strong>{{ $returCount }}</strong> ekor
                     </span>
                     <span class="rl-chip rl-chip-kg">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2v20M18 2v20M2 12h20"/></svg>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M6 2v20M18 2v20M2 12h20"/>
+                      </svg>
                       <strong>{{ number_format($returKg, 2) }}</strong> Kg
                     </span>
                   </div>
@@ -250,7 +273,10 @@
                     @if($isBelum) rl-btn-alert 
                     @elseif($isRunning) rl-btn-running 
                     @else rl-btn-accent @endif">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
                     @if($isBelum) Isi Sekarang @elseif($isRunning) Lanjutkan @else Detail @endif
                   </button>
                 </form>
@@ -289,7 +315,9 @@
                 <div class="rl-truck">
                   <div class="rl-truck-num">#{{ $it->truck_no ?? '–' }}</div>
                   <div class="rl-state-badge rsb-done">
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                     Done
                   </div>
                 </div>
@@ -303,7 +331,8 @@
                   <div class="rl-mid">
                     <span class="rl-meta-item">
                       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <path d="M16 2v4M8 2v4M3 10h18"/>
                       </svg>
                       {{ $it->process_date?->format('d/m/Y') }}
                     </span>
@@ -319,15 +348,23 @@
 
                   <div class="rl-chips">
                     <span class="rl-chip rl-chip-mati">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
                       Mati <strong>{{ $dead }}</strong>
                     </span>
                     <span class="rl-chip rl-chip-retur">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="1 4 1 10 7 10"/>
+                        <path d="M3.51 15a9 9 0 1 0 .49-4"/>
+                      </svg>
                       Retur <strong>{{ $returCount }}</strong> ekor
                     </span>
                     <span class="rl-chip rl-chip-kg">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2v20M18 2v20M2 12h20"/></svg>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M6 2v20M18 2v20M2 12h20"/>
+                      </svg>
                       <strong>{{ number_format($returKg, 2) }}</strong> Kg
                     </span>
                   </div>
@@ -337,12 +374,17 @@
                   <form method="POST" action="{{ route('retur-mati.open', $it) }}" style="display:inline">
                     @csrf
                     <button type="submit" class="rl-btn rl-btn-ghost">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
                       Lihat Detail
                     </button>
                   </form>
                   <span class="rl-done-pill">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                     DONE
                   </span>
                 </div>
@@ -351,9 +393,21 @@
           </div>
         </div>
       @endif
+
+      {{-- PAGINATION UNTUK SHIFT INI --}}
+      @php
+        $paginator = $shift['key'] === 'pagi' ? ($pagiPaginator ?? null) : ($malamPaginator ?? null);
+      @endphp
+      @if($paginator && $paginator->hasPages())
+        <div class="rl-pagination-wrap">
+          @include('transaction.retur_mati.partials.pagination', ['list' => $paginator])
+        </div>
+      @endif
     </div>
 
-    @if(!$loop->last)<div style="height:14px"></div>@endif
+    @if(!$loop->last)
+      <div style="height:14px"></div>
+    @endif
   @endforeach
 </div>
 
@@ -397,6 +451,23 @@
 
 <style>
 .rl-wrap { display:flex; flex-direction:column; }
+/* Pagination dalam shift card */
+.rl-pagination-wrap {
+  border-top: 1px solid #E2E5EE;
+  background: #FAFBFD;
+  padding: 12px 16px;
+}
+
+.rl-pagination-wrap .rm-pagination {
+  margin-top: 0;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+}
+
+.rl-pagination-wrap .pagination-nav {
+  justify-content: flex-end;
+}
 
 /* SHIFT CARD */
 .rl-shift-card { background:#fff; border:1px solid #E2E5EE; border-radius:14px; box-shadow:0 1px 4px rgba(0,0,0,.04),0 6px 18px rgba(0,0,0,.04); overflow:hidden; }
@@ -545,9 +616,18 @@
 .rl-empty { display:flex; align-items:center; gap:8px; padding:20px 12px; color:#9CA3AF; font-size:.82rem; font-weight:700; }
 .rl-empty svg { opacity:.3; flex-shrink:0; }
 
-@media (max-width:680px) {
+@media (max-width: 680px) {
   .rl-row { flex-wrap:wrap; }
   .rl-truck { flex-direction:row; min-width:unset; }
   .rl-actions { width:100%; justify-content:flex-start; }
+  .rl-pagination-wrap .rm-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .rl-pagination-wrap .pagination-nav {
+    justify-content: center;
+  }
 }
 </style>

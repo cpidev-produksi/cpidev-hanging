@@ -166,14 +166,19 @@ class ConditionController extends Controller
         $after = $hangingForm->only(['basket_condition','truck_platform_condition','feather_condition']);
         $changes = AuditLogger::diff($before, $after);
 
-        $meta = [
-            'report_code' => $hangingForm->monitorControl?->report_code,
-            'location' => $hangingForm->monitorControl?->location,
-            'truck_no' => $hangingForm->monitorControl?->truck_no,
-            'was_done' => ($hangingForm->status === 'done'),
-        ];
+        $roleSlug = $request->user()?->role?->slug;
+        $wasDone = ($hangingForm->status === 'done');
 
-        AuditLogger::log('qc_kondisi', 'update', $hangingForm, $changes, $meta);
+        if ($wasDone && $roleSlug === 'supervisor') {
+            $meta = [
+                'report_code' => $hangingForm->monitorControl?->report_code,
+                'location' => $hangingForm->monitorControl?->location,
+                'truck_no' => $hangingForm->monitorControl?->truck_no,
+                'was_done' => true,
+            ];
+
+            AuditLogger::log('qc_kondisi', 'update', $hangingForm, $changes, $meta);
+        }
 
         return redirect()
             ->route('conditions.landing')

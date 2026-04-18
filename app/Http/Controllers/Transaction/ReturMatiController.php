@@ -82,7 +82,10 @@ class ReturMatiController extends Controller
             return $path;
         };
 
-        return DB::transaction(function () use ($hangingForm, $data, $weightsInput, $existingPhotos, $removeFlags, $files, $oldPhotos, &$usedOld, $savePhoto, $before) {
+        $roleSlug = $request->user()?->role?->slug;
+        $wasDone  = ($hangingForm->status === 'done');
+
+        return DB::transaction(function () use ($hangingForm, $data, $weightsInput, $existingPhotos, $removeFlags, $files, $oldPhotos, &$usedOld, $savePhoto, $before, $roleSlug, $wasDone) {
             HangingReturItem::query()
                 ->where('hanging_form_id', $hangingForm->id)
                 ->delete();
@@ -141,14 +144,17 @@ class ReturMatiController extends Controller
             ];
 
             $changes = AuditLogger::diff($before, $after);
-            $meta = [
-                'report_code' => $hangingForm->monitorControl?->report_code,
-                'location' => $hangingForm->monitorControl?->location,
-                'truck_no' => $hangingForm->monitorControl?->truck_no,
-                'was_done' => ($hangingForm->status === 'done'),
-            ];
 
-            AuditLogger::log('retur_mati', 'update', $hangingForm, $changes, $meta);
+            if ($wasDone && $roleSlug === 'supervisor') {
+                $meta = [
+                    'report_code' => $hangingForm->monitorControl?->report_code,
+                    'location' => $hangingForm->monitorControl?->location,
+                    'truck_no' => $hangingForm->monitorControl?->truck_no,
+                    'was_done' => true,
+                ];
+
+                AuditLogger::log('retur_mati', 'update', $hangingForm, $changes, $meta);
+            }
 
             return redirect()
                 ->route('retur-mati.landing')
