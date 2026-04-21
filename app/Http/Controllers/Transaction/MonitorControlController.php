@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\Expedition;
 use App\Models\Farm;
-use App\Models\HangingForm;
-use App\Models\HangingLine;
-use App\Models\HangingLineSet;
 use App\Models\MonitorControl;
 use App\Models\PlateNumber;
 use Illuminate\Http\Request;
@@ -148,9 +145,10 @@ class MonitorControlController extends Controller
             $nextTruckNo = (int) MonitorControl::query()
                 ->where('location', $data['location'])
                 ->whereDate('process_date', $data['process_date'])
+                ->lockForUpdate()
                 ->max('truck_no');
 
-            $data['truck_no'] = $nextTruckNo + 1;
+            $data['truck_no'] = ((int) $nextTruckNo) + 1;
 
             $meta = $this->locationMeta($data['location']);
             $data['set_count'] = $meta['set_count'];
