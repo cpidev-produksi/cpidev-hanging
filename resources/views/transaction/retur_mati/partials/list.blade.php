@@ -150,14 +150,22 @@
           @foreach($activeItems as $it)
             @php
               $hf         = $it->hangingForm;
-              $hfStatus   = $hf?->status ?? null;
-              $dead       = $hf ? (int)($hf->dead_count ?? 0) : null;
-              $returCount = (int)($hf?->retur_count ?? 0);
-              $returKg    = (float)($hf?->retur_total_kg ?? 0);
-              $isRunning  = $hfStatus === 'running';
-              $isDone     = $hfStatus === 'done';
-              $isBelum    = is_null($hf) || is_null($dead);
+              $hfStatus = $it->hangingForm?->status;
+              $deadRaw    = $hf?->dead_count;
+              $returRaw   = $hf?->retur_count;
+              $returKgRaw = $hf?->retur_total_kg;
+
+              $returItemsCount = $hf?->returItems?->count() ?? 0;
+
+              $isRunning  = ($hf?->status === 'running');
+              $isDone     = ($hf?->status === 'done');
+
+              $isBelum = is_null($hf) || (is_null($deadRaw) && is_null($returRaw) && is_null($returKgRaw)) && $returItemsCount === 0;
+
               $isPartial  = !$isDone && !$isBelum && !$isRunning;
+              $dead       = (int)($deadRaw ?? 0);
+              $returCount = (int)($returRaw ?? 0);
+              $returKg    = (float)($returKgRaw ?? 0);
             @endphp
 
             <div class="rl-row 

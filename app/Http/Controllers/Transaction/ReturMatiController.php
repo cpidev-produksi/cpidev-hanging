@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HangingForm;
 use App\Models\HangingReturItem;
 use App\Support\AuditLogger;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +14,7 @@ use Intervention\Image\Facades\Image;
 
 class ReturMatiController extends Controller
 {
-    public function edit(HangingForm $hangingForm)
+    public function edit(HangingForm $hangingForm, Request $request)
     {
         $hangingForm->load([
             'monitorControl.expedition',
@@ -22,8 +23,32 @@ class ReturMatiController extends Controller
             'returItems',
         ]);
 
+        $slug = $request->user()?->role?->slug;
+
+        $allowLateEdit = false;
+        if ($hangingForm->status === 'done') {
+            $finishTime = $hangingForm->finish_time;
+            $processDate = $hangingForm->monitorControl?->process_date?->toDateString()
+                ?? now('Asia/Jakarta')->toDateString();
+
+            if ($finishTime) {
+                $finishTimeValue = $finishTime instanceof \Carbon\Carbon
+                    ? $finishTime->format('H:i:s')
+                    : trim((string) $finishTime);
+
+                $doneAt = Carbon::parse(
+                    $processDate . ' ' . $finishTimeValue,
+                    'Asia/Jakarta'
+                );
+                $allowLateEdit = now('Asia/Jakarta')->diffInMinutes($doneAt) <= 120;
+            } else {
+                $allowLateEdit = true;
+            }
+        }
+
         return view('transaction.retur_mati.edit', [
             'form' => $hangingForm,
+            'allowLateEdit' => $allowLateEdit,
         ]);
     }
 
@@ -31,8 +56,28 @@ class ReturMatiController extends Controller
     {
         $slug = $request->user()?->role?->slug;
 
-        if ($hangingForm->status === 'done' && !in_array($slug, ['supervisor','superadmin'], true)) {
-            return back()->withErrors(['retur' => 'Form sudah DONE dan tidak bisa diubah.']);
+        $allowLateEdit = false;
+        if ($hangingForm->status === 'done') {
+            $finishTime = $hangingForm->finish_time;
+            $processDate = $hangingForm->monitorControl?->process_date ?? now('Asia/Jakarta')->toDateString();
+
+            if ($finishTime) {
+                $doneAt = Carbon::createFromFormat(
+                    'Y-m-d H:i',
+                    $processDate . ' ' . $finishTime,
+                    'Asia/Jakarta'
+                );
+
+                $allowLateEdit = now('Asia/Jakarta')->diffInMinutes($doneAt) <= 120;
+            } else {
+                $allowLateEdit = true;
+            }
+        }
+
+        if ($hangingForm->status === 'done'
+            && !$allowLateEdit
+            && !in_array($slug, ['supervisor','superadmin'], true)) {
+            return back()->withErrors(['retur' => 'Form sudah DONE dan waktu edit sudah lewat.']);
         }
 
         $data = $request->validate([

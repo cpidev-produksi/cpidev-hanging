@@ -69,9 +69,9 @@ class ReturMatiLandingController extends Controller
                     'unloading_time' => null,
                     'finish_time' => null,
 
-                    'dead_count' => 0,
-                    'retur_count' => 0,
-                    'retur_total_kg' => 0,
+                    // 'dead_count' => 0,
+                    // 'retur_count' => 0,
+                    // 'retur_total_kg' => 0,
                 ]);
             }
 

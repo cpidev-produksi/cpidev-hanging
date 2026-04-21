@@ -30,10 +30,31 @@
           <span class="dn-meta">{{ $it->expedition?->name ?? '–' }}</span>
           <span class="dn-meta">{{ $it->farm?->name ?? '–' }}</span>
 
+          @php
+            $missing = [];
+
+            $qcMissing = 
+              !$it->hangingForm?->basket_condition ||
+              !$it->hangingForm?->truck_platform_condition ||
+              !$it->hangingForm?->feather_condition;
+
+            $returMissing =
+              !$it->hangingForm ||
+              $it->hangingForm->dead_count === null ||
+              $it->hangingForm->retur_count === null;
+
+            if ($qcMissing) $missing[] = 'QC belum';
+            if ($returMissing) $missing[] = 'Retur/Mati belum';
+          @endphp
+
+          @if(count($missing) > 0)
+            <span class="dn-missing">{{ implode(' · ', $missing) }}</span>
+          @endif
+
           @if($canEditDone)
             <a href="{{ route('monitor-controls.edit', $it) }}"
-               class="dn-btn-edit"
-               title="Edit Monitor Control">Edit</a>
+              class="dn-btn-edit"
+              title="Edit Monitor Control">Edit</a>
           @endif
 
           @if(
@@ -126,6 +147,18 @@ function toggleDone(id) {
   background:#E85D2F;
   color:#fff;
   border-color:#E85D2F;
+}
+
+.dn-missing {
+  display:inline-flex;
+  align-items:center;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:.7rem;
+  font-weight:800;
+  color:#B91C1C;
+  background:rgba(239,68,68,.12);
+  border:1px solid rgba(239,68,68,.35);
 }
 
 /* ── DONE SECTION ── */

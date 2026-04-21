@@ -6,7 +6,7 @@
   @php
   $slug = auth()->user()?->role?->slug;
   $canEditDone = in_array($slug, ['supervisor','superadmin'], true);
-  $isLocked = ($form->status === 'done') && !$canEditDone;
+  $isLocked = ($form->status === 'done') && !$canEditDone && !($allowLateEdit ?? false);
 
   $mc = $form->monitorControl;
   $oldWeights = old('retur_weights');

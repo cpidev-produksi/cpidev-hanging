@@ -41,16 +41,16 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/history/{auditLog}', [HistoryController::class, 'show'])->name('history.show');
 
     // Planning LB
-    Route::middleware('role:adminlb,supervisor')->resource('planning-lb', PlanningLbController::class);
+    Route::middleware('role:adminlb,supervisor,superadmin')->resource('planning-lb', PlanningLbController::class);
 
     // Master Data (Operator TS)
-    Route::middleware('role:operator_ts,supervisor')->prefix('master')->name('master.')->group(function () {
+    Route::middleware('role:operator_ts,supervisor,superadmin')->prefix('master')->name('master.')->group(function () {
         Route::resource('expeditions', ExpeditionController::class)->except(['destroy']);
         Route::resource('farms', FarmController::class)->except(['destroy']);
     });
 
     // Delete Master Data (Supervisor only)
-    Route::middleware('role:supervisor')->prefix('master')->name('master.')->group(function () {
+    Route::middleware('role:supervisor,superadmin')->prefix('master')->name('master.')->group(function () {
         Route::delete('expeditions/{expedition}', [ExpeditionController::class, 'destroy'])->name('expeditions.destroy');
         Route::delete('farms/{farm}', [FarmController::class, 'destroy'])->name('farms.destroy');
     });
@@ -61,7 +61,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // Monitor Controls (Operator TS)
-    Route::middleware('role:operator_ts,supervisor')->group(function () {
+    Route::middleware('role:operator_ts,supervisor,superadmin')->group(function () {
         Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])->name('monitor-controls.summary');
         Route::resource('monitor-controls', MonitorControlController::class)->except(['destroy','show']);
         Route::delete('monitor-controls/{monitorControl}', [MonitorControlController::class, 'destroy'])->name('monitor-controls.destroy');
@@ -75,7 +75,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     //     ->name('monitor-controls.destroy');
 
     // Hanging (Checker Hanging)
-    Route::middleware('role:checker_hanging,supervisor')->group(function () {
+    Route::middleware('role:checker_hanging,supervisor,superadmin')->group(function () {
         Route::get('/hanging', [HangingLandingController::class, 'index'])->name('hanging.landing');
         Route::post('/hanging/open/{monitorControl}', [HangingLandingController::class, 'open'])->name('hanging.open');
         Route::post('/hanging/start/{hangingForm}', [HangingLandingController::class, 'start'])->name('hanging.start');
@@ -85,7 +85,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // Retur & Mati (Checker Hanging OR Checker Retur)
-    Route::middleware('role:checker_hanging,checker_retur,supervisor')->group(function () {
+    Route::middleware('role:checker_hanging,checker_retur,supervisor,superadmin')->group(function () {
         Route::get('/retur-mati', [ReturMatiLandingController::class, 'index'])->name('retur-mati.landing');
         Route::post('/retur-mati/open/{monitorControl}', [ReturMatiLandingController::class, 'open'])->name('retur-mati.open');
         Route::get('/retur-mati/{hangingForm}', [ReturMatiController::class, 'edit'])->name('retur-mati.edit');
@@ -93,7 +93,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // QC Kondisi (Operator TS OR QC TS)
-    Route::middleware('role:operator_ts,qc_ts,supervisor')->group(function () {
+    Route::middleware('role:operator_ts,qc_ts,supervisor,superadmin')->group(function () {
         Route::get('/conditions', [ConditionController::class, 'landing'])->name('conditions.landing');
         Route::post('/conditions/open/{monitorControl}', [ConditionController::class, 'open'])->name('conditions.open');
         Route::get('/conditions/{hangingForm}', [ConditionController::class, 'edit'])->name('conditions.edit');
@@ -102,7 +102,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // Summary + Sign + PDF (Supervisor only)
-    Route::middleware('supervisor')->group(function () {
+    Route::middleware('supervisor,superadmin')->group(function () {
         Route::post('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'sign'])->name('monitor-controls.summary.sign');
         Route::delete('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'unsign'])->name('monitor-controls.summary.unsign');
         Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])->name('monitor-controls.summary.pdf');
