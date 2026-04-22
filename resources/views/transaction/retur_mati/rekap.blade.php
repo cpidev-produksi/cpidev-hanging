@@ -536,7 +536,7 @@ table.rk-table tbody tr:nth-child(n+9){ animation-delay: .28s; }
         <tbody>
           @forelse($byDate as $d => $r)
             <tr class="rk-date-row">
-              <td>{{ $d }}</td>
+              <td>{{ \Carbon\Carbon::parse($d)->translatedFormat('j F Y') }}</td>
               <td><span class="rk-num rk-num--truck">{{ $r['trucks'] }}</span></td>
               <td><span class="rk-num rk-num--dead">{{ $r['dead'] }}</span></td>
               <td><span class="rk-num rk-num--retur">{{ $r['retur'] }}</span></td>
