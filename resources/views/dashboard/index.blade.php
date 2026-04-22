@@ -709,7 +709,7 @@
     <div class="chart-panel">
         <div class="chart-panel-header">
             <div>
-                <div class="chart-panel-title">Ayam Diterima vs Planning</div>
+                <div class="chart-panel-title">Aktual Ayam Diterima & Truk Terhitung vs Planning</div>
                 <div style="font-size:12px;color:var(--c-muted);font-weight:500;margin-top:3px">SH01 + SH02 · {{ \Carbon\Carbon::parse($today)->subDays(6)->format('d/m') }} – {{ \Carbon\Carbon::parse($today)->format('d/m/Y') }}</div>
             </div>
             <div class="chart-legend">
