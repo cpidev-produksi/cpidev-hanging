@@ -393,6 +393,24 @@ table.rk-table tbody tr:nth-child(n+9){ animation-delay: .28s; }
       <input type="date" name="to" value="{{ $p['to'] }}" class="rk-input">
     </div>
 
+    <div class="rk-field">
+      <label class="rk-label">Lokasi</label>
+      <select name="location" class="rk-select" style="min-width:120px;">
+        <option value="ALL" @selected(($location ?? 'ALL')==='ALL')>Semua</option>
+        <option value="SH01" @selected(($location ?? 'ALL')==='SH01')>SH01</option>
+        <option value="SH02" @selected(($location ?? 'ALL')==='SH02')>SH02</option>
+      </select>
+    </div>
+
+    <div class="rk-field">
+      <label class="rk-label">Shift</label>
+      <select name="shift" class="rk-select" style="min-width:120px;">
+        <option value="ALL" @selected(($shift ?? 'ALL')==='ALL')>Semua</option>
+        <option value="pagi" @selected(($shift ?? 'ALL')==='pagi')>Pagi</option>
+        <option value="malam" @selected(($shift ?? 'ALL')==='malam')>Malam</option>
+      </select>
+    </div>
+
     <div class="rk-filter-actions">
       <button type="submit" class="rk-btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -435,6 +453,18 @@ table.rk-table tbody tr:nth-child(n+9){ animation-delay: .28s; }
           <div class="rk-stat-lbl">Ayam Retur</div>
         </div>
       </div>
+      <div class="rk-stat">
+        <div class="rk-stat-icon" style="background: rgba(5,150,105,.10); color:#059669;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="rk-stat-val">{{ $dailyTotals['trucks'] }}</div>
+          <div class="rk-stat-lbl">Total Truk</div>
+        </div>
+      </div>
     </div>
 
     <div class="rk-table-wrap">
@@ -462,8 +492,6 @@ table.rk-table tbody tr:nth-child(n+9){ animation-delay: .28s; }
                 <div class="rk-meta">
                   <span class="rk-chip">📍 {{ $r['location'] }}</span>
                   <span class="rk-chip">🔁 {{ $r['shift'] }}</span>
-                  <span class="rk-chip">#{{ $r['truck_no'] }}</span>
-                  <span class="rk-chip">{{ $r['report_code'] }}</span>
                 </div>
               </td>
               <td><span class="rk-num rk-num--dead">{{ $r['dead_count'] }}</span></td>

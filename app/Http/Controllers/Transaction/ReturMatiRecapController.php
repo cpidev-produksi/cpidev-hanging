@@ -48,18 +48,47 @@ class ReturMatiRecapController extends Controller
     {
         $p = $this->resolvePeriod($request);
 
-        // Untuk daily: butuh detail per plat
-        // Untuk monthly/range: butuh agregasi per tanggal
-        $rows = MonitorControl::query()
+        $location = $request->query('location', 'ALL'); // ALL|SH01|SH02
+        $shift    = $request->query('shift', 'ALL');    // ALL|pagi|malam
+        $sort     = $request->query('sort', 'truck');   // truck|location|shift
+
+        $q = MonitorControl::query()
             ->with(['plateNumber', 'hangingForm'])
-            ->whereBetween('process_date', [$p['start'], $p['end']])
-            ->orderBy('process_date')
-            ->orderByRaw('CAST(truck_no as UNSIGNED)')
-            ->get();
+            ->whereBetween('process_date', [$p['start'], $p['end']]);
+
+        if ($location !== 'ALL') {
+            $q->where('location', $location);
+        }
+        if ($shift !== 'ALL') {
+            $q->where('shift', $shift);
+        }
+
+        // sorting: daily bisa pilih, non-daily cukup per tanggal
+        $q->orderBy('process_date');
+
+        if ($p['mode'] === 'daily') {
+            if ($sort === 'location') {
+                $q->orderBy('location')
+                ->orderBy('shift')
+                ->orderByRaw('CAST(truck_no as UNSIGNED)');
+            } elseif ($sort === 'shift') {
+                $q->orderBy('shift')
+                ->orderBy('location')
+                ->orderByRaw('CAST(truck_no as UNSIGNED)');
+            } else { // truck
+                $q->orderBy('location')
+                ->orderBy('shift')
+                ->orderByRaw('CAST(truck_no as UNSIGNED)');
+            }
+        } else {
+            $q->orderBy('location')->orderBy('shift')->orderByRaw('CAST(truck_no as UNSIGNED)');
+        }
+
+        $rows = $q->get();
 
         // ====== DAILY DETAIL ======
-        $dailyDetails = [];
-        $dailyTotals  = ['dead' => 0, 'retur' => 0];
+        $dailyDetails = collect();
+        $dailyTotals  = ['dead' => 0, 'retur' => 0, 'trucks' => 0];
 
         if ($p['mode'] === 'daily') {
             $dailyDetails = $rows->map(function ($mc) {
@@ -67,16 +96,16 @@ class ReturMatiRecapController extends Controller
                     'plate_number' => $mc->plateNumber?->plate_number ?? '—',
                     'dead_count'   => (int)($mc->hangingForm?->dead_count ?? 0),
                     'retur_count'  => (int)($mc->hangingForm?->retur_count ?? 0),
-                    'report_code'  => $mc->report_code,
-                    'truck_no'     => $mc->truck_no,
                     'shift'        => strtoupper((string)$mc->shift),
                     'location'     => $mc->location,
+                    'truck_no'     => $mc->truck_no, // masih dipakai untuk urutan saja (tidak ditampilkan)
                 ];
             })->values();
 
             $dailyTotals = [
-                'dead'  => $dailyDetails->sum('dead_count'),
-                'retur' => $dailyDetails->sum('retur_count'),
+                'dead'   => $dailyDetails->sum('dead_count'),
+                'retur'  => $dailyDetails->sum('retur_count'),
+                'trucks' => $dailyDetails->count(),
             ];
         }
 
@@ -84,9 +113,9 @@ class ReturMatiRecapController extends Controller
         $byDate = $rows->groupBy(fn($mc) => $mc->process_date?->toDateString() ?? '—')
             ->map(function ($items) {
                 return [
-                    'dead'  => $items->sum(fn($mc) => (int)($mc->hangingForm?->dead_count ?? 0)),
-                    'retur' => $items->sum(fn($mc) => (int)($mc->hangingForm?->retur_count ?? 0)),
-                    'trucks'=> $items->count(),
+                    'dead'   => $items->sum(fn($mc) => (int)($mc->hangingForm?->dead_count ?? 0)),
+                    'retur'  => $items->sum(fn($mc) => (int)($mc->hangingForm?->retur_count ?? 0)),
+                    'trucks' => $items->count(),
                 ];
             })
             ->sortKeys()
@@ -94,6 +123,9 @@ class ReturMatiRecapController extends Controller
 
         return view('transaction.retur_mati.rekap', [
             'p' => $p,
+            'location' => $location,
+            'shift' => $shift,
+            'sort' => $sort,
             'dailyDetails' => $dailyDetails,
             'dailyTotals' => $dailyTotals,
             'byDate' => $byDate,

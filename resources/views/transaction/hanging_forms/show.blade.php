@@ -29,7 +29,7 @@
     $setCount = (int) $mc->set_count;
 
     $customCaps = [
-      'SH01' => [17 => 46],
+      // 'SH01' => [17 => 46],
       'SH02' => [30 => 19],
     ];
     $location = $mc->location ?? '';
