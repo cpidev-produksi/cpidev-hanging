@@ -290,10 +290,9 @@ table.rk-table tbody tr td:not(:first-child) { text-align: right; }
 .rk-num--truck { color: #059669; font-size: .8rem; }
 
 /* Daily detail row */
-.rk-plate { font-weight: 700; color: var(--rk-text); font-size: .88rem; }
+.rk-plate { font-weight: 700; align-items: center; justify-content: space-between; color: var(--rk-text); font-size: .88rem; flex-wrap: wrap; gap: 12px; }
 .rk-meta  {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  margin-top: 4px;
 }
 .rk-chip {
   display: inline-flex; align-items: center; gap: 4px;
@@ -436,6 +435,18 @@ table.rk-table tbody tr:nth-child(n+9){ animation-delay: .28s; }
 
     <div class="rk-stats">
       <div class="rk-stat">
+        <div class="rk-stat-icon" style="background: rgba(5,150,105,.10); color:#059669;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="rk-stat-val">{{ $dailyTotals['trucks'] }}</div>
+          <div class="rk-stat-lbl">Total Truk</div>
+        </div>
+      </div>
+      <div class="rk-stat">
         <div class="rk-stat-icon rk-stat-icon--dead">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.1 11.5 7.4 11.8a1 1 0 0 0 1.2 0C13 21.5 20 15.4 20 10a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
         </div>
@@ -451,18 +462,6 @@ table.rk-table tbody tr:nth-child(n+9){ animation-delay: .28s; }
         <div>
           <div class="rk-stat-val">{{ $dailyTotals['retur'] }}</div>
           <div class="rk-stat-lbl">Ayam Retur</div>
-        </div>
-      </div>
-      <div class="rk-stat">
-        <div class="rk-stat-icon" style="background: rgba(5,150,105,.10); color:#059669;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/>
-            <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-          </svg>
-        </div>
-        <div>
-          <div class="rk-stat-val">{{ $dailyTotals['trucks'] }}</div>
-          <div class="rk-stat-lbl">Total Truk</div>
         </div>
       </div>
     </div>
@@ -488,16 +487,18 @@ table.rk-table tbody tr:nth-child(n+9){ animation-delay: .28s; }
           @forelse($dailyDetails as $r)
             <tr>
               <td>
-                <div class="rk-plate">{{ $r['plate_number'] }}</div>
-                <div class="rk-meta">
-                  <span class="rk-chip">📍 {{ $r['location'] }}</span>
-                  <span class="rk-chip">🔁 {{ $r['shift'] }}</span>
+                <div class="rk-plate" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                  <span style="font-weight: 700;">{{ $r['plate_number'] }}</span>
+                  <div class="rk-meta" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="rk-chip">📍 {{ $r['location'] }}</span>
+                    <span class="rk-chip">🔁 {{ $r['shift'] }}</span>
+                  </div>
                 </div>
               </td>
               <td><span class="rk-num rk-num--dead">{{ $r['dead_count'] }}</span></td>
               <td><span class="rk-num rk-num--retur">{{ $r['retur_count'] }}</span></td>
             </tr>
-          @empty
+            @empty
             <tr><td colspan="3">
               <div class="rk-empty">
                 <div class="rk-empty-icon">🐔</div>
