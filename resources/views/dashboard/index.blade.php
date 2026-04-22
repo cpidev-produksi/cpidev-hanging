@@ -2,8 +2,8 @@
 
 @section('content')
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
-
     :root {
         --c-bg: #f5f7fb;
         --c-surface: #ffffff;
@@ -44,22 +44,43 @@
         display: flex;
         align-items: flex-end;
         justify-content: space-between;
-        margin-bottom: 28px;
+        margin-bottom: 32px;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: 16px;
+    }
+    .db-header-left {
+        position: relative;
     }
     .db-header-left h1 {
-        font-family: 'Syne', sans-serif;
-        font-size: 28px;
-        font-weight: 800;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: clamp(52px, 7vw, 40px);
+        font-weight: 600;
         color: var(--c-text);
-        margin: 0 0 4px;
-        letter-spacing: -0.5px;
+        margin: 0;
+        letter-spacing: -3px;
+        line-height: 0.92;
+        /* Subtle outline on second "shadow" layer for depth */
+        text-shadow:
+            3px 3px 0px rgba(37,99,235,0.07),
+            6px 6px 0px rgba(37,99,235,0.04);
+        position: relative;
+        display: inline-block;
+    }
+    /* Decorative accent underline */
+    .db-header-left h1::after {
+        content: '';
+        position: absolute;
+        left: 2px;
+        bottom: -6px;
+        width: 56px;
+        height: 4px;
+        border-radius: 100px;
+        background: linear-gradient(90deg, #2563eb, #7c3aed);
     }
     .db-header-left p {
         font-size: 13px;
         color: var(--c-muted);
-        margin: 0;
+        margin: 16px 0 0;
         font-weight: 500;
     }
     .db-header-left p strong { color: var(--c-text); font-weight: 700; }
@@ -150,12 +171,11 @@
         margin-bottom: 8px;
     }
     .kpi-value {
-        font-family: 'Syne', sans-serif;
-        font-size: 38px;
-        font-weight: 800;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 36px;
+        font-weight: 700;
         color: var(--c-text);
-        line-height: 1;
-        letter-spacing: -1.5px;
+        letter-spacing: -0.5px;
     }
     .kpi-value sup {
         font-size: 18px;
@@ -238,7 +258,7 @@
         background: linear-gradient(135deg, #fafbff 0%, #f5f7fb 100%);
     }
     .loc-name {
-        font-family: 'Syne', sans-serif;
+        font-family: 'Space Grotesk', sans-serif;
         font-size: 18px;
         font-weight: 800;
         color: var(--c-text);
@@ -280,12 +300,11 @@
         margin-bottom: 6px;
     }
     .loc-truk-counted {
-        font-family: 'Syne', sans-serif;
+        font-family: 'Space Grotesk', sans-serif;
         font-size: 30px;
-        font-weight: 800;
+        font-weight: 700;
         color: var(--c-text);
-        letter-spacing: -1px;
-        line-height: 1;
+        letter-spacing: -0.3px;
     }
     .loc-truk-plan {
         font-size: 13px;
@@ -367,16 +386,16 @@
         opacity: 0.7;
     }
     .loc-ayam-value {
-        font-family: 'Syne', sans-serif;
+        font-family: 'Space Grotesk', sans-serif;
         font-size: 24px;
         font-weight: 800;
         color: var(--c-violet);
-        letter-spacing: -0.8px;
+        letter-spacing: -0.2px;
         line-height: 1;
     }
     .loc-ayam-plan {
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--c-violet);
         opacity: 0.6;
     }
@@ -468,7 +487,7 @@
         color: #92400e;
     }
     .running-ayam-count b {
-        font-family: 'Syne', sans-serif;
+        font-family: 'Space Grotesk', sans-serif;
         font-size: 15px;
         font-weight: 800;
         color: #0f1623;
@@ -493,7 +512,7 @@
         gap: 10px;
     }
     .chart-panel-title {
-        font-family: 'Syne', sans-serif;
+        font-family: 'Space Grotesk', sans-serif;
         font-size: 15px;
         font-weight: 800;
         color: var(--c-text);
@@ -560,12 +579,11 @@
     .master-icon.amber  { background: var(--c-amber-bg);  color: var(--c-amber); }
     .master-info {}
     .master-count {
-        font-family: 'Syne', sans-serif;
+        font-family: 'Space Grotesk', sans-serif;
         font-size: 26px;
-        font-weight: 800;
+        font-weight: 700;
         color: var(--c-text);
-        letter-spacing: -0.8px;
-        line-height: 1;
+        letter-spacing: -0.3px;
     }
     .master-desc {
         font-size: 11px;
@@ -1058,7 +1076,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     grid: { display: false },
                     border: { display: false },
                     ticks: {
-                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '700' },
+                        font: { family: "'Space Grotesk', sans-serif", size: 11, weight: '600' },
                         color: (ctx) => isToday[ctx.index] ? '#7c3aed' : '#7a8aaa',
                     }
                 },
