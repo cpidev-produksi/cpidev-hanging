@@ -2,8 +2,8 @@
 
 @section('content')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap');
+    
     :root {
         --c-bg: #f5f7fb;
         --c-surface: #ffffff;
@@ -34,7 +34,7 @@
         max-width: 1280px;
         margin: 0 auto;
         padding: 28px 20px 40px;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
         background: var(--c-bg);
         min-height: 100vh;
     }
@@ -44,43 +44,22 @@
         display: flex;
         align-items: flex-end;
         justify-content: space-between;
-        margin-bottom: 32px;
+        margin-bottom: 28px;
         flex-wrap: wrap;
-        gap: 16px;
-    }
-    .db-header-left {
-        position: relative;
+        gap: 12px;
     }
     .db-header-left h1 {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-size: clamp(52px, 7vw, 40px);
-        font-weight: 600;
+        font-family: 'Inter', serif;
+        font-size: 50px;
+        font-weight: 800;
         color: var(--c-text);
-        margin: 0;
-        letter-spacing: -3px;
-        line-height: 0.92;
-        /* Subtle outline on second "shadow" layer for depth */
-        text-shadow:
-            3px 3px 0px rgba(37,99,235,0.07),
-            6px 6px 0px rgba(37,99,235,0.04);
-        position: relative;
-        display: inline-block;
-    }
-    /* Decorative accent underline */
-    .db-header-left h1::after {
-        content: '';
-        position: absolute;
-        left: 2px;
-        bottom: -6px;
-        width: 56px;
-        height: 4px;
-        border-radius: 100px;
-        background: linear-gradient(90deg, #2563eb, #7c3aed);
+        margin: 0 0 4px;
+        letter-spacing: -0.3px;
     }
     .db-header-left p {
         font-size: 13px;
         color: var(--c-muted);
-        margin: 16px 0 0;
+        margin: 0;
         font-weight: 500;
     }
     .db-header-left p strong { color: var(--c-text); font-weight: 700; }
@@ -111,6 +90,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        font-family: 'Inter', sans-serif;
     }
     .section-label::after {
         content: '';
@@ -171,9 +151,9 @@
         margin-bottom: 8px;
     }
     .kpi-value {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-size: 36px;
-        font-weight: 700;
+        font-weight: 800;
         color: var(--c-text);
         letter-spacing: -0.5px;
     }
@@ -258,11 +238,11 @@
         background: linear-gradient(135deg, #fafbff 0%, #f5f7fb 100%);
     }
     .loc-name {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 18px;
-        font-weight: 800;
+        font-family: 'Inter', serif;
+        font-size: 19px;
+        font-weight: 400;
         color: var(--c-text);
-        letter-spacing: -0.3px;
+        letter-spacing: -0.2px;
     }
     .loc-status-dot {
         width: 8px; height: 8px;
@@ -286,6 +266,7 @@
         background: #f0f3f9;
         border-radius: 100px;
         padding: 4px 12px;
+        font-family: 'Inter', sans-serif;
     }
     .loc-plan-badge strong { color: var(--c-text); }
 
@@ -300,7 +281,7 @@
         margin-bottom: 6px;
     }
     .loc-truk-counted {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-size: 30px;
         font-weight: 700;
         color: var(--c-text);
@@ -386,7 +367,7 @@
         opacity: 0.7;
     }
     .loc-ayam-value {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-size: 24px;
         font-weight: 800;
         color: var(--c-violet);
@@ -455,7 +436,7 @@
         color: #92400e;
         padding: 2px 8px;
         border-radius: 6px;
-        font-family: monospace;
+        font-family: 'DM Mono', monospace; /* Tambahkan DM Mono */
     }
     .running-truck-no {
         font-size: 12px;
@@ -487,7 +468,7 @@
         color: #92400e;
     }
     .running-ayam-count b {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-size: 15px;
         font-weight: 800;
         color: #0f1623;
@@ -512,11 +493,11 @@
         gap: 10px;
     }
     .chart-panel-title {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-size: 15px;
-        font-weight: 800;
+        font-weight: 700;
         color: var(--c-text);
-        letter-spacing: -0.3px;
+        letter-spacing: -0.2px;
     }
     .chart-legend {
         display: flex;
@@ -579,7 +560,7 @@
     .master-icon.amber  { background: var(--c-amber-bg);  color: var(--c-amber); }
     .master-info {}
     .master-count {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-size: 26px;
         font-weight: 700;
         color: var(--c-text);
@@ -612,10 +593,10 @@
     {{-- ── Grand KPI 4 Cards ── --}}
     <p class="section-label">Ringkasan Operasional · SH01 + SH02</p>
     @php
-        $pPlanTruck   = $grand['plan_truck']   > 0 ? min(round(($grand['truk_total']    / $grand['plan_truck'])   * 100), 100) : 0;
-        $pCounted     = $grand['plan_truck']   > 0 ? min(round(($grand['truk_counted']  / $grand['plan_truck'])   * 100), 100) : 0;
-        $pQueue       = $grand['plan_truck']   > 0 ? min(round(($grand['truk_queue']    / $grand['plan_truck'])   * 100), 100) : 0;
-        $pAyam        = $grand['plan_chicken'] > 0 ? min(round(($grand['ayam_received'] / $grand['plan_chicken']) * 100), 100) : 0;
+        $pPlanTruck   = $grand['plan_truck']   > 0 ? min(round(($grand['truk_total']     / $grand['plan_truck'])   * 100), 100) : 0;
+        $pCounted     = $grand['plan_truck']   > 0 ? min(round(($grand['truk_counted']   / $grand['plan_truck'])   * 100), 100) : 0;
+        $pQueue       = $grand['plan_truck']   > 0 ? min(round(($grand['truk_queue']     / $grand['plan_truck'])   * 100), 100) : 0;
+        $pAyam        = $grand['plan_chicken'] > 0 ? min(round(($grand['ayam_received']  / $grand['plan_chicken']) * 100), 100) : 0;
     @endphp
     <div class="grand-grid">
 
@@ -761,8 +742,8 @@
     <div class="loc-grid">
         @foreach($statsByLoc as $loc => $s)
         @php
-            $locPctTruk = $s['plan_truck']   > 0 ? min(round(($s['truk_counted']  / $s['plan_truck'])   * 100), 100) : 0;
-            $locPctAyam = $s['plan_chicken'] > 0 ? min(round(($s['ayam_received'] / $s['plan_chicken']) * 100), 100) : 0;
+            $locPctTruk = $s['plan_truck']   > 0 ? min(round(($s['truk_counted']   / $s['plan_truck'])   * 100), 100) : 0;
+            $locPctAyam = $s['plan_chicken'] > 0 ? min(round(($s['ayam_received']  / $s['plan_chicken']) * 100), 100) : 0;
             $isRunning  = $s['running'] !== null;
         @endphp
         <div class="loc-panel">
@@ -1076,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     grid: { display: false },
                     border: { display: false },
                     ticks: {
-                        font: { family: "'Space Grotesk', sans-serif", size: 11, weight: '600' },
+                        font: { family: "'Inter', sans-serif", size: 11, weight: '600' },
                         color: (ctx) => isToday[ctx.index] ? '#7c3aed' : '#7a8aaa',
                     }
                 },
@@ -1085,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     grid: { color: 'rgba(15,22,35,0.05)', drawBorder: false },
                     border: { display: false, dash: [4, 4] },
                     ticks: {
-                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 },
+                        font: { family: "'Inter', sans-serif", size: 11 },
                         color: '#7c3aed',
                         maxTicksLimit: 5,
                         callback: (val) => val >= 1000
@@ -1096,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         display: true,
                         text: 'Ekor Ayam',
                         color: '#7c3aed',
-                        font: { size: 10, weight: '700', family: "'Plus Jakarta Sans', sans-serif" },
+                        font: { size: 10, weight: '700', family: "'Inter', sans-serif" },
                     }
                 },
                 yTruk: {
@@ -1104,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     grid: { display: false },
                     border: { display: false },
                     ticks: {
-                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 },
+                        font: { family: "'Inter', sans-serif", size: 11 },
                         color: '#0ea472',
                         maxTicksLimit: 5,
                         stepSize: 1,
@@ -1114,7 +1095,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         display: true,
                         text: 'Jumlah Truk',
                         color: '#0ea472',
-                        font: { size: 10, weight: '700', family: "'Plus Jakarta Sans', sans-serif" },
+                        font: { size: 10, weight: '700', family: "'Inter', sans-serif" },
                     }
                 }
             }
