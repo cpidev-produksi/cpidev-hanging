@@ -28,6 +28,7 @@
       </div>
       <button class="rm-btn-filter" type="submit">Filter</button>
       <a href="{{ route('retur-mati.landing') }}" class="rm-btn-reset">Reset</a>
+      <a href="{{ route('retur-mati.rekap') }}" class="rm-btn-reset">Rekap</a>
     </form>
   </div>
 

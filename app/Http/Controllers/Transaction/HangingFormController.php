@@ -14,7 +14,7 @@ class HangingFormController extends Controller
     protected function getMaxCapacity(string $location, int $lineNo): int
     {
         $custom = [
-            'SH01' => [17 => 46],
+            //'SH01' => [17 => 46],
             'SH02' => [30 => 19],
         ];
 

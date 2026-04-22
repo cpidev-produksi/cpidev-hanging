@@ -28,20 +28,18 @@ class ReturMatiController extends Controller
         $allowLateEdit = false;
         if ($hangingForm->status === 'done') {
             $finishTime = $hangingForm->finish_time;
-            $processDate = $hangingForm->monitorControl?->process_date?->toDateString()
-                ?? now('Asia/Jakarta')->toDateString();
+            $processDate = $hangingForm->monitorControl?->process_date->toDateString() ?? now('Asia/Jakarta')->toDateString();
 
             if ($finishTime) {
-                $finishTimeValue = $finishTime instanceof \Carbon\Carbon
-                    ? $finishTime->format('H:i:s')
-                    : trim((string) $finishTime);
+            $finishTimeValue = $finishTime instanceof \Carbon\Carbon
+                ? $finishTime->format('H:i:s')
+                : trim((string) $finishTime);
 
-                $doneAt = Carbon::parse(
-                    $processDate . ' ' . $finishTimeValue,
-                    'Asia/Jakarta'
-                );
-                $allowLateEdit = now('Asia/Jakarta')->diffInMinutes($doneAt) <= 120;
-            } else {
+            $doneAt = Carbon::parse($processDate . ' ' . $finishTimeValue, 'Asia/Jakarta');
+            $deadline = $doneAt->copy()->addMinutes(120);
+
+            $allowLateEdit = now('Asia/Jakarta')->lessThanOrEqualTo($deadline);
+        } else {
                 $allowLateEdit = true;
             }
         }
@@ -59,17 +57,18 @@ class ReturMatiController extends Controller
         $allowLateEdit = false;
         if ($hangingForm->status === 'done') {
             $finishTime = $hangingForm->finish_time;
-            $processDate = $hangingForm->monitorControl?->process_date ?? now('Asia/Jakarta')->toDateString();
+            $processDate = $hangingForm->monitorControl?->process_date->toDateString() ?? now('Asia/Jakarta')->toDateString();
 
             if ($finishTime) {
-                $doneAt = Carbon::createFromFormat(
-                    'Y-m-d H:i',
-                    $processDate . ' ' . $finishTime,
-                    'Asia/Jakarta'
-                );
+            $finishTimeValue = $finishTime instanceof \Carbon\Carbon
+                ? $finishTime->format('H:i:s')
+                : trim((string) $finishTime);
 
-                $allowLateEdit = now('Asia/Jakarta')->diffInMinutes($doneAt) <= 120;
-            } else {
+            $doneAt = Carbon::parse($processDate . ' ' . $finishTimeValue, 'Asia/Jakarta');
+            $deadline = $doneAt->copy()->addMinutes(120);
+
+            $allowLateEdit = now('Asia/Jakarta')->lessThanOrEqualTo($deadline);
+        } else {
                 $allowLateEdit = true;
             }
         }

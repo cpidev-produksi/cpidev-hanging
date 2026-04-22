@@ -17,6 +17,7 @@ use App\Http\Controllers\Transaction\MonitorSummaryController;
 use App\Http\Controllers\Transaction\PlanningLbController;
 use App\Http\Controllers\Transaction\ReturMatiController;
 use App\Http\Controllers\Transaction\ReturMatiLandingController;
+use App\Http\Controllers\Transaction\ReturMatiRecapController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -90,6 +91,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/retur-mati/open/{monitorControl}', [ReturMatiLandingController::class, 'open'])->name('retur-mati.open');
         Route::get('/retur-mati/{hangingForm}', [ReturMatiController::class, 'edit'])->name('retur-mati.edit');
         Route::post('/retur-mati/{hangingForm}', [ReturMatiController::class, 'update'])->name('retur-mati.update');
+    });
+
+    Route::middleware(['role:supervisor,checker_retur,superadmin'])->group(function () {
+        Route::get('/retur-mati/rekap', [ReturMatiRecapController::class, 'index'])->name('retur-mati.rekap');
+        Route::get('/retur-mati/rekap/export', [ReturMatiRecapController::class, 'export'])->name('retur-mati.rekap.export');
     });
 
     // QC Kondisi (Operator TS OR QC TS)
