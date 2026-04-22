@@ -87,15 +87,16 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // Retur & Mati (Checker Hanging OR Checker Retur)
     Route::middleware('role:checker_hanging,checker_retur,supervisor,superadmin')->group(function () {
+
+        // ✅ taruh REKAP dulu (statis)
+        Route::get('/retur-mati/rekap', [ReturMatiRecapController::class, 'index'])->name('retur-mati.rekap');
+        Route::get('/retur-mati/rekap/export', [ReturMatiRecapController::class, 'export'])->name('retur-mati.rekap.export');
+
+        // baru route yang dinamis
         Route::get('/retur-mati', [ReturMatiLandingController::class, 'index'])->name('retur-mati.landing');
         Route::post('/retur-mati/open/{monitorControl}', [ReturMatiLandingController::class, 'open'])->name('retur-mati.open');
         Route::get('/retur-mati/{hangingForm}', [ReturMatiController::class, 'edit'])->name('retur-mati.edit');
         Route::post('/retur-mati/{hangingForm}', [ReturMatiController::class, 'update'])->name('retur-mati.update');
-    });
-
-    Route::middleware(['role:supervisor,checker_retur,superadmin'])->group(function () {
-        Route::get('/retur-mati/rekap', [ReturMatiRecapController::class, 'index'])->name('retur-mati.rekap');
-        Route::get('/retur-mati/rekap/export', [ReturMatiRecapController::class, 'export'])->name('retur-mati.rekap.export');
     });
 
     // QC Kondisi (Operator TS OR QC TS)

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Transaction;
 
+use App\Exports\ReturMatiDailyExport;
+use App\Exports\ReturMatiSummaryExport;
 use App\Http\Controllers\Controller;
 use App\Models\MonitorControl;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ReturMatiDailyExport;
 
 class ReturMatiRecapController extends Controller
 {
@@ -53,7 +54,7 @@ class ReturMatiRecapController extends Controller
             ->with(['plateNumber', 'hangingForm'])
             ->whereBetween('process_date', [$p['start'], $p['end']])
             ->orderBy('process_date')
-            ->orderBy('truck_no')
+            ->orderByRaw('CAST(truck_no as UNSIGNED)')
             ->get();
 
         // ====== DAILY DETAIL ======
@@ -103,15 +104,17 @@ class ReturMatiRecapController extends Controller
     {
         $p = $this->resolvePeriod($request);
 
-        if ($p['mode'] !== 'daily') {
-            return back()->withErrors(['export' => 'Export Excel hanya untuk mode Harian.']);
+        if ($p['mode'] === 'daily') {
+            $date = $p['start'];
+            return Excel::download(
+                new ReturMatiDailyExport($date),
+                "rekap-retur-mati-{$date}.xlsx"
+            );
         }
 
-        $date = $p['start']; // sama dengan end pada daily
-
         return Excel::download(
-            new ReturMatiDailyExport($date),
-            "rekap-retur-mati-{$date}.xlsx"
+            new ReturMatiSummaryExport($p['start'], $p['end']),
+            "rekap-retur-mati-{$p['start']}-sampai-{$p['end']}.xlsx"
         );
     }
 }

@@ -18,18 +18,38 @@
       </div>
     </div>
 
-    <form method="GET" class="rm-filter">
-      <div class="rm-input-wrap">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" class="rm-input-icon">
-          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
-        </svg>
-        <input type="date" name="date" value="{{ $date ?? '' }}" class="rm-date-input">
-      </div>
-      <button class="rm-btn-filter" type="submit">Filter</button>
-      <a href="{{ route('retur-mati.landing') }}" class="rm-btn-reset">Reset</a>
-      <a href="{{ route('retur-mati.rekap') }}" class="rm-btn-reset">Rekap</a>
-    </form>
+    <div class="rm-toolbar">
+      <form method="GET" class="rm-filter">
+        <div class="rm-input-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" class="rm-input-icon">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+          <input type="date" name="date" value="{{ $date ?? '' }}" class="rm-date-input">
+        </div>
+        <button class="rm-btn-filter" type="submit">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filter
+        </button>
+        <a href="{{ route('retur-mati.landing') }}" class="rm-btn-reset">Reset</a>
+      </form>
+
+      {{-- ── REKAP BUTTON ── --}}
+      <a href="{{ route('retur-mati.rekap') }}" class="rm-btn-rekap">
+        <span class="rm-btn-rekap-inner">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          Lihat Rekap
+        </span>
+        <span class="rm-btn-rekap-arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </span>
+      </a>
+    </div>
   </div>
 
   @php
@@ -75,8 +95,8 @@
           'location' => $loc,
           'listPagi'  => $pagi->getCollection(),
           'listMalam' => $malam->getCollection(),
-          'pagiPaginator' => $pagi,  // Kirim paginator untuk pagi
-          'malamPaginator' => $malam, // Kirim paginator untuk malam
+          'pagiPaginator' => $pagi,
+          'malamPaginator' => $malam,
           'theme'    => strtolower($loc),
         ])
       </div>
@@ -117,7 +137,6 @@
   --rm-r:       14px;
   --rm-sh:      0 1px 4px rgba(0,0,0,.05), 0 6px 20px rgba(0,0,0,.05);
 
-  /* per-lokasi accent */
   --sh01: #E85D2F;
   --sh01-xl: rgba(232,93,47,.08);
   --sh01-bd: rgba(232,93,47,.25);
@@ -135,6 +154,14 @@
 .rm-title { font-size:1.45rem; font-weight:800; color:var(--rm-text); margin:0 0 3px; letter-spacing:-.01em; }
 .rm-sub   { font-size:.8rem; color:var(--rm-muted); margin:0; }
 
+/* TOOLBAR wraps filter + rekap button */
+.rm-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 /* FILTER */
 .rm-filter { display:flex; align-items:center; gap:10px; }
 .rm-input-wrap { display:flex; align-items:center; border:1.5px solid var(--rm-border); border-radius:10px; background:var(--rm-surface); overflow:hidden; transition:border-color .18s, box-shadow .18s; }
@@ -143,6 +170,59 @@
 .rm-date-input { border:none; outline:none; background:transparent; padding:10px 12px 10px 0; font-size:.875rem; color:var(--rm-text); }
 .rm-btn-filter { display:inline-flex; align-items:center; gap:7px; padding:10px 18px; background:var(--rm-accent); color:#fff; border:none; border-radius:10px; font-size:.84rem; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(232,93,47,.28); transition:all .18s; }
 .rm-btn-filter:hover { background:var(--rm-acc-hv); transform:translateY(-1px); }
+
+/* ── REKAP BUTTON ── */
+.rm-btn-rekap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  text-decoration: none;
+  background: #0D1117;
+  color: #fff;
+  border-radius: 10px;
+  font-size: .84rem;
+  font-weight: 700;
+  overflow: hidden;
+  border: 1.5px solid rgba(255,255,255,.1);
+  box-shadow: 0 2px 10px rgba(0,0,0,.15), 0 0 0 0 rgba(232,93,47,0);
+  transition: all .22s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+.rm-btn-rekap::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(232,93,47,.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity .22s;
+}
+.rm-btn-rekap:hover {
+  border-color: rgba(232,93,47,.5);
+  box-shadow: 0 4px 18px rgba(0,0,0,.2), 0 0 0 3px rgba(232,93,47,.1);
+  transform: translateY(-1px);
+}
+.rm-btn-rekap:hover::before { opacity: 1; }
+
+.rm-btn-rekap-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+}
+.rm-btn-rekap-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  background: var(--rm-accent);
+  color: #fff;
+  align-self: stretch;
+  transition: background .18s, padding .18s;
+}
+.rm-btn-rekap:hover .rm-btn-rekap-arrow {
+  background: var(--rm-acc-hv);
+  padding-right: 16px;
+}
 
 /* TABS */
 .rm-tab-bar { display:flex; align-items:flex-end; gap:0; border-bottom:1.5px solid var(--rm-border); margin-bottom:0; }
@@ -159,9 +239,7 @@
 }
 .rm-tab:hover { color:var(--rm-text); background:#F5F7FA; border-color:var(--rm-border); }
 
-/* SH01 active */
 .rm-tab-sh01.rm-tab-active { background:var(--rm-surface); color:var(--sh01); border-color:var(--rm-border); border-bottom-color:var(--rm-surface); }
-/* SH02 active */
 .rm-tab-sh02.rm-tab-active { background:var(--rm-surface); color:var(--sh02); border-color:var(--rm-border); border-bottom-color:var(--rm-surface); }
 
 .rm-tab-filler { flex:1; border-bottom:1.5px solid var(--rm-border); position:relative; bottom:-1.5px; }
@@ -173,7 +251,7 @@
 .rm-pane { display:none; padding-top:16px; }
 .rm-pane.active { display:block; }
 
-/* ===== PAGINATION YANG RAPI ===== */
+/* PAGINATION */
 .rm-pagination {
   margin-top: 24px;
   padding: 14px 20px;
@@ -187,107 +265,40 @@
   gap: 12px;
 }
 
-.pagination-info {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.pagination-info--highlight {
-  font-weight: 600;
-  color: #374151;
-}
-
-.pagination-nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
+.pagination-info { font-size: 12px; color: #9ca3af; }
+.pagination-info--highlight { font-weight: 600; color: #374151; }
+.pagination-nav { display: flex; align-items: center; gap: 4px; }
 
 .page-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  padding: 0 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #4b5563;
-  background: #fff;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 32px; height: 32px; padding: 0 6px;
+  font-size: 12px; font-weight: 500; color: #4b5563;
+  background: #fff; border: 1.5px solid #e5e7eb; border-radius: 7px;
   text-decoration: none;
   transition: background .13s, color .13s, border-color .13s, box-shadow .13s;
-  cursor: pointer;
-  user-select: none;
+  cursor: pointer; user-select: none;
 }
 
 .rm-btn-reset {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  display: inline-flex; align-items: center; gap: 7px;
   padding: 10px 18px;
-  background: #f3f4f6;
-  color: #374151;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: .84rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all .18s;
+  background: #f3f4f6; color: #374151;
+  border: 1.5px solid #e5e7eb; border-radius: 10px;
+  font-size: .84rem; font-weight: 700; cursor: pointer;
+  text-decoration: none; transition: all .18s;
 }
-.rm-btn-reset:hover {
-  background: #e5e7eb;
-}
+.rm-btn-reset:hover { background: #e5e7eb; }
 
-.page-btn:hover {
-  background: #eef2ff;
-  color: #4338ca;
-  border-color: #c7d2fe;
-}
+.page-btn:hover { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+.page-btn--active { background: var(--rm-accent); color: #fff; border-color: var(--rm-accent); box-shadow: 0 1px 6px rgba(232,93,47,.35); font-weight: 600; cursor: default; }
+.page-btn--active:hover { background: var(--rm-accent); color: #fff; border-color: var(--rm-accent); }
+.page-btn--disabled { background: #f9fafb; color: #d1d5db; border-color: #f3f4f6; cursor: not-allowed; pointer-events: none; }
+.page-ellipsis { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 32px; font-size: 13px; color: #9ca3af; letter-spacing: .1em; }
 
-.page-btn--active {
-  background: var(--rm-accent);
-  color: #fff;
-  border-color: var(--rm-accent);
-  box-shadow: 0 1px 6px rgba(232,93,47,.35);
-  font-weight: 600;
-  cursor: default;
-}
-
-.page-btn--active:hover {
-  background: var(--rm-accent);
-  color: #fff;
-  border-color: var(--rm-accent);
-}
-
-.page-btn--disabled {
-  background: #f9fafb;
-  color: #d1d5db;
-  border-color: #f3f4f6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.page-ellipsis {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 32px;
-  font-size: 13px;
-  color: #9ca3af;
-  letter-spacing: .1em;
-}
-
-/* Responsive */
 @media (max-width: 680px) {
-  .rm-pagination {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
+  .rm-pagination { flex-direction: column; align-items: center; text-align: center; }
+  .rm-toolbar { gap: 8px; }
+  .rm-btn-rekap-inner { padding: 9px 12px; font-size: .78rem; }
 }
 </style>
 @endsection

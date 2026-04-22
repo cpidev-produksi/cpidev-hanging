@@ -35,7 +35,7 @@ class ReturMatiDailyExport implements FromCollection, WithHeadings, WithStyles
             ->whereDate('process_date', $this->date)
             ->orderBy('location')
             ->orderBy('shift')
-            ->orderBy('truck_no')
+            ->orderByRaw('CAST(truck_no as UNSIGNED)')
             ->get();
 
         $data = $rows->map(function ($mc) {
