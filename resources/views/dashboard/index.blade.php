@@ -114,7 +114,7 @@
         background: var(--c-surface);
         border-radius: var(--radius);
         border: 1px solid var(--c-border);
-        padding: 20px 20px 16px;
+        padding: 20px 20px 20px;
         position: relative;
         overflow: hidden;
         transition: transform 0.2s, box-shadow 0.2s;
@@ -140,7 +140,8 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 16px;
+        margin-bottom: 24px;
+        gap: 12px;
     }
     .kpi-label {
         font-size: 10px;
@@ -148,25 +149,28 @@
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--c-muted);
-        margin-bottom: 8px;
+        margin-bottom: 12px;
     }
     .kpi-value {
         font-family: 'Inter', sans-serif;
         font-size: 36px;
-        font-weight: 800;
+        font-weight: 900;
         color: var(--c-text);
         letter-spacing: -0.5px;
+        line-height: 1.2;
+        margin-bottom: 8px;
     }
     .kpi-value sup {
         font-size: 18px;
         letter-spacing: -0.5px;
         opacity: 0.4;
+        margin-left: 8px;
     }
     .kpi-plan-ratio {
         font-size: 12px;
         font-weight: 700;
         color: var(--c-muted);
-        margin-top: 4px;
+        margin-top: 6px;
     }
     .kpi-plan-ratio strong { color: var(--c-text); }
     .kpi-icon {
