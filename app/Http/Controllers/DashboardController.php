@@ -8,7 +8,6 @@ use App\Models\MonitorControl;
 use App\Models\PlateNumber;
 use App\Models\PlanningLb;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {

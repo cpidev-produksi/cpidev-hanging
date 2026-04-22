@@ -592,7 +592,7 @@
     </div>
 
     {{-- ── Grand KPI 4 Cards ── --}}
-    <p class="section-label">Ringkasan Grand Total · SH01 + SH02</p>
+    <p class="section-label">Ringkasan Operasional · SH01 + SH02</p>
     @php
         $pPlanTruck   = $grand['plan_truck']   > 0 ? min(round(($grand['truk_total']    / $grand['plan_truck'])   * 100), 100) : 0;
         $pCounted     = $grand['plan_truck']   > 0 ? min(round(($grand['truk_counted']  / $grand['plan_truck'])   * 100), 100) : 0;
@@ -901,12 +901,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Count-up animation ──
     document.querySelectorAll('.kpi-value, .loc-truk-counted, .loc-ayam-value').forEach(el => {
-        const raw = el.innerText.replace(/[^0-9]/g, '');
-        if (!raw || raw.length > 8) return;
+        // Ambil hanya text node pertama (angka utama), abaikan <sup>
+        const textNode = Array.from(el.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+        if (!textNode) return;
+        const raw = textNode.textContent.replace(/[^0-9]/g, '');
+        if (!raw) return;
         const target = parseInt(raw);
         if (isNaN(target) || target === 0) return;
-        const isFormatted = el.innerText.includes(',');
-        const suffix = el.innerHTML.includes('<sup>') ? el.querySelector('sup')?.outerHTML || '' : '';
+        const isFormatted = raw !== textNode.textContent.trim();
         let start = 0;
         const duration = 900;
         const step = (timestamp) => {
@@ -914,12 +916,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const progress = Math.min((timestamp - start) / duration, 1);
             const ease = 1 - Math.pow(1 - progress, 3);
             const current = Math.floor(ease * target);
-            const display = isFormatted ? current.toLocaleString('id-ID') : current;
-            if (suffix) {
-                el.innerHTML = display + suffix;
-            } else {
-                el.innerText = display;
-            }
+            textNode.textContent = isFormatted
+                ? current.toLocaleString('id-ID')
+                : String(current);
             if (progress < 1) requestAnimationFrame(step);
         };
         requestAnimationFrame(step);
