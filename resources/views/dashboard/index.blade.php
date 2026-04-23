@@ -502,8 +502,8 @@
         padding: 10px 14px;
         margin-top: 10px;
         animation: shiftDashIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both,
-                   shiftDashGlow 2.2s ease-in-out 0.45s infinite,
-                   dashShimmer 3.5s linear 0.45s infinite;
+                shiftDashGlow 2.2s ease-in-out 0.45s infinite,
+                dashShimmer 3.5s linear 0.45s infinite;
     }
     .shift-done-block.visible { display: flex; }
     .shift-done-icon {
@@ -898,7 +898,12 @@
                         <div class="shift-done-badge">Selesai</div>
                     </div>
                 </div>
-
+                {{-- Shift Complete Banner --}}
+                <div class="shift-done-block" id="shiftDone_{{ $loc }}">
+                    <div class="shift-done-icon">✓</div>
+                    <div class="shift-done-text" id="shiftDoneText_{{ $loc }}">Shift selesai</div>
+                    <div class="shift-done-badge">Selesai</div>
+                </div>
             </div>
         </div>
         @endforeach
