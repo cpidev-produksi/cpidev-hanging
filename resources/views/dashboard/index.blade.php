@@ -769,7 +769,7 @@
                         <div class="loc-truk-counted">{{ $s['truk_counted'] }}
                             <span style="font-size:16px;color:var(--c-muted);font-weight:600;letter-spacing:0"> / {{ $s['plan_truck'] ?: '–' }}</span>
                         </div>
-                        <div class="loc-truk-plan">Total daftar: <strong>{{ $s['truk_total'] }}</strong></div>
+                        <div class="loc-truk-plan">Truk terdaftar: <strong>{{ $s['truk_total'] }}</strong></div>
                     </div>
                     <div class="loc-truk-track">
                         <div class="loc-truk-bar" data-w="{{ $locPctTruk }}"></div>
@@ -784,11 +784,11 @@
                     </div>
                     <div class="loc-pill">
                         <span class="loc-pill-dot run"></span>
-                        Run <strong>{{ $s['truk_running'] }}</strong>
+                        Diproses <strong>{{ $s['truk_running'] }}</strong>
                     </div>
                     <div class="loc-pill">
                         <span class="loc-pill-dot done"></span>
-                        Done <strong>{{ $s['truk_done'] }}</strong>
+                        Selesai <strong>{{ $s['truk_done'] }}</strong>
                     </div>
                 </div>
 
@@ -808,7 +808,7 @@
                 <div class="running-block">
                     <div class="running-block-header">
                         <span class="loc-status-dot running" style="width:7px;height:7px"></span>
-                        <span class="running-label">Live Running</span>
+                        <span class="running-label">Live Hanging</span>
                         @if($s['running'])
                         <div class="running-run-done" style="margin-left:auto">
                             <span class="r">▶ {{ $s['truk_running'] }}</span>
@@ -819,10 +819,10 @@
                     </div>
 
                     @if(!$s['running'])
-                        <div class="running-empty">Tidak ada proses running saat ini.</div>
+                        <div class="running-empty">Tidak ada proses hanging saat ini.</div>
                     @else
                         <div class="running-info-row">
-                            <span class="running-code">{{ $s['running']['report_code'] }}</span>
+                            <span class="running-code">{{ $s['running']['shift_label'] }}</span>
                             <span class="running-truck-no">Truk #{{ $s['running']['truck_no'] }}</span>
                         </div>
                         <div class="running-details">
@@ -831,7 +831,7 @@
                             <span>🔢 {{ $s['running']['plate'] ?? '—' }}</span>
                         </div>
                         <div class="running-ayam-count">
-                            Ayam running: <b>{{ number_format($s['running']['total_ayam']) }}</b> ekor
+                            Ayam diterima: <b>{{ number_format($s['running']['total_ayam']) }}</b> ekor
                         </div>
                     @endif
                 </div>

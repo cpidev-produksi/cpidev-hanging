@@ -81,11 +81,24 @@ class DashboardController extends Controller
 
             $runningTotalAyam = 0;
             if ($running && $running->hangingForm) {
-                $sets = $running->hangingForm->lines->flatMap->sets;
-                $runningTotalAyam = (int) $sets->sum(function ($s) {
-                    if ($s->empty_count === null) return 0;
-                    return 50 - (int) $s->empty_count;
-                });
+                $loc = $running->location ?? '';
+
+                foreach ($running->hangingForm->lines as $line) {
+                    $cap = $this->getMaxCapacity($loc, (int) $line->line_no);
+
+                    foreach ($line->sets as $set) {
+                        if ($set->empty_count === null) continue;
+                        $runningTotalAyam += ($cap - (int) $set->empty_count);
+                    }
+                }
+            }
+
+            $shiftLabel = null;
+            if ($running) {
+                $shiftRaw = strtolower((string) ($running->shift ?? ''));
+
+                $shiftLabel = ($shiftRaw === 'pagi') ? 'Shift 1'
+                    : (($shiftRaw === 'malam') ? 'Shift 3' : strtoupper((string) ($running->shift ?? '')));
             }
 
             $statsByLoc[$loc] = [
@@ -98,7 +111,7 @@ class DashboardController extends Controller
                 'plan_truck'    => $planTruck,
                 'plan_chicken'  => $planChicken,
                 'running'       => $running ? [
-                    'report_code' => $running->report_code,
+                    'shift_label' => $shiftLabel,
                     'truck_no'    => $running->truck_no,
                     'expedition'  => $running->expedition?->name,
                     'farm'        => $running->farm?->name,
@@ -163,5 +176,14 @@ class DashboardController extends Controller
             'grand'      => $grand,
             'chartData'  => $chartData,
         ]);
+    }
+
+    protected function getMaxCapacity(string $location, int $lineNo): int
+    {
+        $custom = [
+            'SH02' => [30 => 19],
+        ];
+
+        return $custom[$location][$lineNo] ?? 50;
     }
 }

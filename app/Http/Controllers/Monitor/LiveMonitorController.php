@@ -11,7 +11,7 @@ class LiveMonitorController extends Controller
     protected function getMaxCapacity(string $location, int $lineNo): int
     {
         $custom = [
-            'SH01' => [17 => 46],
+            // 'SH01' => [17 => 46],
             'SH02' => [30 => 19],
         ];
 
@@ -34,6 +34,25 @@ class LiveMonitorController extends Controller
             ->with(['expedition','plateNumber','farm','hangingForm.lines.sets'])
             ->first();
 
+        $shiftsToday = MonitorControl::query()
+            ->where('location', $location)
+            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
+            ->pluck('shift')
+            ->filter()
+            ->map(fn($s) => strtolower((string)$s))
+            ->unique()
+            ->values()
+            ->all();
+
+        // mapping: pagi->1, malam->3
+        $hasShift1 = in_array('pagi', $shiftsToday, true);
+        $hasShift3 = in_array('malam', $shiftsToday, true);
+
+        $shiftDoneMessage = null;
+        if ($hasShift1 && $hasShift3) $shiftDoneMessage = 'Shift 1 dan 3 selesai.';
+        elseif ($hasShift1) $shiftDoneMessage = 'Shift 1 selesai.';
+        elseif ($hasShift3) $shiftDoneMessage = 'Shift 3 selesai.';
+
         // Ambil total planning untuk hari ini
         $todayPlanning = PlanningLb::query()
             ->where('location', $location)
@@ -42,6 +61,13 @@ class LiveMonitorController extends Controller
 
         $totalPlanningAyam = $todayPlanning ? (int) $todayPlanning->total_plan_chicken : 0;
         $totalPlanningTruk = $todayPlanning ? (int) $todayPlanning->total_plan_truck : 0;
+
+        $todayRegisteredTruckCount = MonitorControl::query()
+            ->where('location', $location)
+            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
+            ->count();
+
+        $targetReached = ($totalPlanningTruk > 0) && ($todayRegisteredTruckCount >= $totalPlanningTruk);
 
         // Ambil semua MonitorControl hari ini
         $allTodayControls = MonitorControl::query()
@@ -84,6 +110,10 @@ class LiveMonitorController extends Controller
                 'today_truck_count' => $todayTruckCount,
                 'total_planning_ayam' => $totalPlanningAyam,
                 'total_planning_truk' => $totalPlanningTruk,
+                'no_process_reason' => ($totalPlanningTruk <= 0 && $totalPlanningAyam <= 0)
+                    ? 'no_planning'
+                    : (($targetReached && $shiftDoneMessage) ? 'target_reached' : 'no_running'),
+                'shift_done_message' => ($targetReached ? $shiftDoneMessage : null),
                 
                 // Data kosong untuk bagian lain
                 'report_code' => null,

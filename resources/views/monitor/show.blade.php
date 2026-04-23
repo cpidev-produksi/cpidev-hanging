@@ -575,9 +575,11 @@
         <!-- empty state -->
         <div id="emptyStateOverlay" class="empty-state-modern hidden">
             <div style="font-size:2.8rem;">🐓</div>
-            <div style="font-weight:800;">Tidak Ada Proses Running</div>
+            <div style="font-weight:800;">Tidak Ada Proses Hanging</div>
             <div style="font-size:0.75rem;">Belum ada aktivitas pemotongan saat ini</div>
         </div>
+
+        <div id="emptyReasonText" style="font-size:0.8rem;font-weight:700;color:#64748B;"></div>
     </div>
 </div>
 
@@ -734,6 +736,15 @@
             if (!data.active) {
                 setActiveUI(false);
                 reportCodeSpan.innerText = '—';
+
+                const reasonEl = document.getElementById('emptyReasonText');
+                if (reasonEl) {
+                    if (data.no_process_reason === 'target_reached' && data.shift_done_message) {
+                        reasonEl.textContent = data.shift_done_message;
+                    } else {
+                        reasonEl.textContent = ''; // default (biarkan kosong)
+                    }
+                }
                 
                 // Kosongkan atau set default value untuk field yang tidak ada datanya
                 heroAyamSpan.innerText = '0';
@@ -743,10 +754,6 @@
                 carouselSize.innerText = '—';
                 carouselExpedisi.innerText = '—';
                 carouselDriver.innerText = '—';
-                
-                // Progress tetap diupdate (sudah diambil dari data.today_total_ayam dll)
-                // JANGAN return, biarkan lanjut ke bawah untuk update progress
-                // return;  // HAPUS baris ini
                 
                 // Update progress saja, tanpa return
                 todayAyamSpan.innerText = fmt(data.today_total_ayam || 0);
@@ -763,7 +770,7 @@
                 ayamPercentLabel.innerText = Math.floor(ayamPercent) + '%';
                 truckPercentLabel.innerText = Math.floor(truckPercent) + '%';
                 
-                return; // Return setelah update progress
+                return;
             }
             setActiveUI(true);
             reportCodeSpan.innerText = data.report_code || '—';
