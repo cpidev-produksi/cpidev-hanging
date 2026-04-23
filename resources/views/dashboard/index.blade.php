@@ -478,6 +478,62 @@
         color: #0f1623;
     }
 
+    /* ── Shift Complete Highlight (dashboard) ── */
+    @keyframes shiftDashIn {
+        from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes shiftDashGlow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.3); }
+        50%       { box-shadow: 0 0 0 6px rgba(16,185,129,0);  }
+    }
+    @keyframes dashShimmer {
+        0%   { background-position: -200% center; }
+        100% { background-position:  200% center; }
+    }
+    .shift-done-block {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(120deg, #D1FAE5 0%, #A7F3D0 55%, #D1FAE5 100%);
+        background-size: 200% auto;
+        border: 1.5px solid #34D399;
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        margin-top: 10px;
+        animation: shiftDashIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both,
+                   shiftDashGlow 2.2s ease-in-out 0.45s infinite,
+                   dashShimmer 3.5s linear 0.45s infinite;
+    }
+    .shift-done-block.visible { display: flex; }
+    .shift-done-icon {
+        width: 32px; height: 32px; min-width: 32px;
+        background: linear-gradient(135deg, #10B981, #059669);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 1rem;
+        box-shadow: 0 3px 8px rgba(16,185,129,0.4);
+        flex-shrink: 0;
+    }
+    .shift-done-text {
+        flex: 1;
+        font-size: 12px;
+        font-weight: 700;
+        color: #065F46;
+        line-height: 1.3;
+    }
+    .shift-done-badge {
+        background: #059669;
+        color: white;
+        border-radius: 40px;
+        padding: 2px 10px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
     /* ─── Chart Panel ─── */
     .chart-panel {
         background: var(--c-surface);
@@ -750,7 +806,7 @@
             $locPctAyam = $s['plan_chicken'] > 0 ? min(round(($s['ayam_received']  / $s['plan_chicken']) * 100), 100) : 0;
             $isRunning  = $s['running'] !== null;
         @endphp
-        <div class="loc-panel">
+        <div class="loc-panel" data-loc="{{ $loc }}">
 
             <div class="loc-panel-header">
                 <div style="display:flex;align-items:center;gap:8px">
@@ -830,10 +886,17 @@
                             <span>🏠 {{ $s['running']['farm'] ?? '—' }}</span>
                             <span>🔢 {{ $s['running']['plate'] ?? '—' }}</span>
                         </div>
-                        <div class="running-ayam-count">
+                        <div class="running-ayam-count" data-loc-ayam="{{ $loc }}">
                             Ayam diterima: <b>{{ number_format($s['running']['total_ayam']) }}</b> ekor
                         </div>
                     @endif
+
+                    {{-- Shift Complete Banner --}}
+                    <div class="shift-done-block" id="shiftDone_{{ $loc }}">
+                        <div class="shift-done-icon">✓</div>
+                        <div class="shift-done-text" id="shiftDoneText_{{ $loc }}">Shift selesai</div>
+                        <div class="shift-done-badge">Selesai</div>
+                    </div>
                 </div>
 
             </div>
@@ -1105,6 +1168,58 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+    // ── Auto-refresh: running ayam count & shift-done banner per lokasi ──
+    // Ambil semua lokasi yang ada di panel
+    const locPanels = document.querySelectorAll('.loc-panel[data-loc]');
+    const locList   = Array.from(locPanels).map(p => p.dataset.loc);
+
+    function fmtId(v) { return new Intl.NumberFormat('id-ID').format(Number(v) || 0); }
+
+    async function refreshLocData(loc) {
+        try {
+            // Gunakan route yang sama dengan live monitor: monitor.data
+            const res = await fetch(`/monitor/${encodeURIComponent(loc)}/data`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            // ── Update running-ayam-count ──
+            const ayamEl = document.querySelector(`.running-ayam-count[data-loc-ayam="${loc}"]`);
+            if (ayamEl && data.active && data.total_ayam_running !== undefined) {
+                const b = ayamEl.querySelector('b');
+                if (b) b.textContent = fmtId(data.total_ayam_running);
+            }
+
+            // ── Shift-done banner ──
+            const banner   = document.getElementById(`shiftDone_${loc}`);
+            const textEl   = document.getElementById(`shiftDoneText_${loc}`);
+            const isShiftDone = !data.active
+                             && data.no_process_reason === 'target_reached'
+                             && data.shift_done_message;
+            if (banner) {
+                if (isShiftDone) {
+                    if (textEl) textEl.textContent = data.shift_done_message;
+                    if (!banner.classList.contains('visible')) {
+                        banner.classList.remove('visible');
+                        void banner.offsetWidth; // reflow — re-trigger animation
+                        banner.classList.add('visible');
+                    }
+                } else {
+                    banner.classList.remove('visible');
+                }
+            }
+        } catch (e) { /* silent */ }
+    }
+
+    function refreshAllLoc() {
+        locList.forEach(loc => refreshLocData(loc));
+    }
+
+    // Langsung jalan pertama kali, lalu tiap 2 detik (sama seperti live monitor)
+    refreshAllLoc();
+    const dashRefreshId = setInterval(refreshAllLoc, 2000);
+    window.addEventListener('beforeunload', () => clearInterval(dashRefreshId));
 });
 </script>
 

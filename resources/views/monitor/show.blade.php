@@ -424,6 +424,62 @@
         }
         .hidden { display: none !important; }
 
+        /* ── Shift Complete Banner ── */
+        @keyframes shiftBannerIn {
+            from { opacity: 0; transform: translateY(-14px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)     scale(1);    }
+        }
+        @keyframes shiftGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.35), 0 6px 24px rgba(16,185,129,0.12); }
+            50%       { box-shadow: 0 0 0 8px rgba(16,185,129,0),  0 8px 28px rgba(16,185,129,0.22); }
+        }
+        @keyframes checkPop {
+            0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+            60%  { transform: scale(1.25) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg);   opacity: 1; }
+        }
+        @keyframes shimmer {
+            0%   { background-position: -200% center; }
+            100% { background-position:  200% center; }
+        }
+        .shift-complete-banner {
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 50%, #D1FAE5 100%);
+            background-size: 200% auto;
+            border: 2px solid #34D399;
+            border-radius: 1.5rem;
+            padding: 0.9rem 1.4rem;
+            animation: shiftBannerIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both,
+                       shiftGlow 2.4s ease-in-out 0.5s infinite,
+                       shimmer 3.5s linear 0.5s infinite;
+        }
+        .shift-complete-banner.visible { display: flex; }
+        .shift-complete-icon {
+            width: 46px; height: 46px; min-width: 46px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.4rem;
+            animation: checkPop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+        }
+        .shift-complete-text { flex: 1; }
+        .shift-complete-text .sct-title {
+            font-size: 1rem; font-weight: 800; color: #065F46; letter-spacing: -0.2px;
+        }
+        .shift-complete-text .sct-sub {
+            font-size: 0.72rem; font-weight: 600; color: #047857; margin-top: 2px;
+        }
+        .shift-complete-badge {
+            background: #059669; color: white;
+            border-radius: 40px; padding: 0.3rem 0.9rem;
+            font-size: 0.72rem; font-weight: 800; letter-spacing: 0.05em;
+            text-transform: uppercase; white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(5,150,105,0.4);
+        }
+
         /* responsive: tidak ada border luar, semua menyesuaikan */
         @media (max-width: 800px) {
             .dashboard-inner { padding: 0.9rem 1rem; gap: 0.8rem; }
@@ -580,6 +636,16 @@
         </div>
 
         <div id="emptyReasonText" style="font-size:0.8rem;font-weight:700;color:#64748B;"></div>
+
+        <!-- ── Shift Complete Banner ── -->
+        <div class="shift-complete-banner" id="shiftCompleteBanner">
+            <div class="shift-complete-icon">✓</div>
+            <div class="shift-complete-text">
+                <div class="sct-title" id="shiftCompleteTitle">Shift Selesai</div>
+                <div class="sct-sub" id="shiftCompleteSub">Semua proses hanging pada shift ini telah selesai.</div>
+            </div>
+            <div class="shift-complete-badge">SELESAI</div>
+        </div>
     </div>
 </div>
 
@@ -733,17 +799,31 @@
             ayamPercentLabel.innerText = Math.floor(ayamPercent) + '%';
             truckPercentLabel.innerText = Math.floor(truckPercent) + '%';
 
+            // ── Shift Complete Banner ──
+            const shiftBanner     = document.getElementById('shiftCompleteBanner');
+            const shiftTitleEl    = document.getElementById('shiftCompleteTitle');
+            const shiftSubEl      = document.getElementById('shiftCompleteSub');
+            const isShiftDone     = !data.active && data.no_process_reason === 'target_reached' && data.shift_done_message;
+            if (shiftBanner) {
+                if (isShiftDone) {
+                    shiftTitleEl.textContent = data.shift_done_message;
+                    shiftSubEl.textContent   = 'Semua proses hanging pada shift ini telah selesai.';
+                    // Re-trigger animation by removing + re-adding class
+                    shiftBanner.classList.remove('visible');
+                    void shiftBanner.offsetWidth;
+                    shiftBanner.classList.add('visible');
+                } else {
+                    shiftBanner.classList.remove('visible');
+                }
+            }
+
             if (!data.active) {
                 setActiveUI(false);
                 reportCodeSpan.innerText = '—';
 
                 const reasonEl = document.getElementById('emptyReasonText');
                 if (reasonEl) {
-                    if (data.no_process_reason === 'target_reached' && data.shift_done_message) {
-                        reasonEl.textContent = data.shift_done_message;
-                    } else {
-                        reasonEl.textContent = ''; // default (biarkan kosong)
-                    }
+                    reasonEl.textContent = ''; // Banner sudah menampilkan pesan shift selesai
                 }
                 
                 // Kosongkan atau set default value untuk field yang tidak ada datanya
