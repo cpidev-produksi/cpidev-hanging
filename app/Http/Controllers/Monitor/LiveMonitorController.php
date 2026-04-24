@@ -111,13 +111,13 @@ class LiveMonitorController extends Controller
 
         if (!$active || !$active->hangingForm) {
             // Banner hanya muncul jika:
-            // - Tidak ada proses aktif DAN tidak ada antrian
-            // - ATAU sudah mencapai target planning
+            // - Sudah mencapai target planning truk
+            // - ATAU tidak ada antrian di kontrol monitor (status waiting/queued) untuk lokasi ini
             $showShiftDone = false;
             $noPlanning = ($totalPlanningTruk <= 0 && $totalPlanningAyam <= 0);
             if ($targetReached && $shiftDoneMessage) {
                 $showShiftDone = true;
-            } elseif (!$active && $queueCount === 0) {
+            } elseif ($queueCount === 0) {
                 $showShiftDone = true;
             }
             return response()->json([
