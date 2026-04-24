@@ -34,6 +34,13 @@ class LiveMonitorController extends Controller
             ->with(['expedition','plateNumber','farm','hangingForm.lines.sets'])
             ->first();
 
+        // Cek apakah masih ada antrian (status waiting/queued)
+        $queueCount = MonitorControl::query()
+            ->where('location', $location)
+            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
+            ->whereIn('status', ['waiting', 'queued'])
+            ->count();
+
         $shiftsToday = MonitorControl::query()
             ->where('location', $location)
             ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
@@ -103,6 +110,16 @@ class LiveMonitorController extends Controller
             ->count();
 
         if (!$active || !$active->hangingForm) {
+            // Banner hanya muncul jika:
+            // - Tidak ada proses aktif DAN tidak ada antrian
+            // - ATAU sudah mencapai target planning
+            $showShiftDone = false;
+            $noPlanning = ($totalPlanningTruk <= 0 && $totalPlanningAyam <= 0);
+            if ($targetReached && $shiftDoneMessage) {
+                $showShiftDone = true;
+            } elseif (!$active && $queueCount === 0) {
+                $showShiftDone = true;
+            }
             return response()->json([
                 'active' => false,
                 'location' => $location,
@@ -110,11 +127,10 @@ class LiveMonitorController extends Controller
                 'today_truck_count' => $todayTruckCount,
                 'total_planning_ayam' => $totalPlanningAyam,
                 'total_planning_truk' => $totalPlanningTruk,
-                'no_process_reason' => ($totalPlanningTruk <= 0 && $totalPlanningAyam <= 0)
+                'no_process_reason' => $noPlanning
                     ? 'no_planning'
-                    : (($targetReached && $shiftDoneMessage) ? 'target_reached' : 'no_running'),
-                'shift_done_message' => ($targetReached ? $shiftDoneMessage : null),
-                
+                    : ($showShiftDone ? 'target_reached' : 'no_running'),
+                'shift_done_message' => $showShiftDone ? $shiftDoneMessage : null,
                 // Data kosong untuk bagian lain
                 'report_code' => null,
                 'total_ayam_running' => 0,
