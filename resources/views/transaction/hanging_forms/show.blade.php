@@ -30,7 +30,7 @@
 
     $customCaps = [
       // 'SH01' => [17 => 46],
-      'SH02' => [30 => 19],
+      'SH02' => [30 => 18],
     ];
     $location = $mc->location ?? '';
   @endphp
