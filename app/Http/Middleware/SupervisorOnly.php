@@ -14,7 +14,7 @@ class SupervisorOnly
 
         $slug = $user->role?->slug;
 
-        abort_unless(in_array($slug, ['supervisor','superadmin'], true), 403, 'Hanya supervisor yang boleh melakukan aksi ini.');
+        abort_unless(in_array($slug, ['supervisor'], true), 403, 'Hanya supervisor yang boleh melakukan aksi ini.');
         return $next($request);
     }
 }

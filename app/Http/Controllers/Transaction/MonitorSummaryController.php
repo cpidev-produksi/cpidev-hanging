@@ -90,7 +90,6 @@ class MonitorSummaryController extends Controller
             'totalKosong' => $totalKosong,
             'totalAyamTerima' => $totalAyamTerima,
             'createdBy' => $request->user()->name,
-            //'createdBy' => $request->user()->name ?? $request->user()->email ?? $request->user()->username ?? '—',
         ]);
     }
 

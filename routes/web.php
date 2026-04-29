@@ -83,6 +83,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('hanging-forms/{hangingForm}', [HangingFormController::class, 'show'])->name('hanging-forms.show');
         Route::post('hanging-forms/{hangingForm}/finish', [HangingFormController::class, 'finish'])->name('hanging-forms.finish');
         Route::patch('hanging-cells/{hangingLineSet}', [HangingFormController::class, 'updateCell'])->name('hanging-cells.update');
+        Route::post('/hanging/finish-shift/{location}/{shift}/{date}', [HangingLandingController::class, 'finishShift'])
+            ->name('hanging.finish-shift');
     });
 
     // Retur & Mati (Checker Hanging OR Checker Retur)
@@ -109,7 +111,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // Summary + Sign + PDF (Supervisor only)
-    Route::middleware('supervisor,superadmin')->group(function () {
+    Route::middleware('role:supervisor,superadmin')->group(function () {
         Route::post('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'sign'])->name('monitor-controls.summary.sign');
         Route::delete('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'unsign'])->name('monitor-controls.summary.unsign');
         Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])->name('monitor-controls.summary.pdf');

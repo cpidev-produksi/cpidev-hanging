@@ -1,4 +1,8 @@
 @php
+  $location = $location ?? '';
+  $shift = $shift ?? '';
+  $date = $date ?? now()->toDateString();
+
   $runningRows = $list->filter(function($x) {
       $hfStatus = $x->hangingForm?->status;
       return $hfStatus ? $hfStatus === 'running' : $x->status === 'running';
@@ -15,6 +19,10 @@
   })->sortBy('truck_no')->values();
 
   $key = $location;
+
+  $totalItems = $paginator->total() ?? $list->count();
+  $totalDone = $doneRows->count();
+  $isAllProcessed = ($totalDone > 0) && ($draftRows->isEmpty() && $runningRows->isEmpty());
 @endphp
 
 <div class="lst-card">
@@ -43,36 +51,66 @@
       </div>
     @else
       {{-- RUNNING --}}
-      <div class="lst-grid">
-        @foreach($runningRows as $it)
-          @php
-            $hf       = $it->hangingForm;
-            $hfStatus = $hf?->status;
-          @endphp
-          @include('transaction.hanging_landing.partials.list_row', [
-            'it' => $it, 'hf' => $hf, 'hfStatus' => $hfStatus
-          ])
-        @endforeach
-      </div>
+      @if($runningRows->isNotEmpty())
+        <div class="lst-grid">
+          @foreach($runningRows as $it)
+            @php
+              $hf       = $it->hangingForm;
+              $hfStatus = $hf?->status;
+            @endphp
+            @include('transaction.hanging_landing.partials.list_row', [
+              'it' => $it, 'hf' => $hf ?? null, 'hfStatus' => $hfStatus ?? null
+            ])
+          @endforeach
+        </div>
+      @endif
 
       {{-- DRAFT --}}
-      <div class="lst-grid" style="margin-top:8px">
-        @foreach($draftRows as $it)
-          @php
-            $hf       = $it->hangingForm;
-            $hfStatus = $hf?->status;
-          @endphp
-          @include('transaction.hanging_landing.partials.list_row', [
-            'it' => $it, 'hf' => $hf, 'hfStatus' => $hfStatus
-          ])
-        @endforeach
-      </div>
+      @if($draftRows->isNotEmpty())
+        <div class="lst-grid" style="margin-top:8px">
+          @foreach($draftRows as $it)
+            @php
+              $hf       = $it->hangingForm;
+              $hfStatus = $hf?->status;
+            @endphp
+            @include('transaction.hanging_landing.partials.list_row', [
+              'it' => $it, 'hf' => $hf ?? null, 'hfStatus' => $hfStatus ?? null
+            ])
+          @endforeach
+        </div>
+      @endif
 
       {{-- DONE (DROPDOWN TOGGLE) --}}
-      @include('transaction.hanging_landing.partials.done', [
-        'rows' => $doneRows,
-        'key'  => $key
-      ])
+      @if($doneRows->isNotEmpty())
+        @include('transaction.hanging_landing.partials.done', [
+          'rows' => $doneRows,
+          'key'  => $key
+        ])
+      @endif
+
+      {{-- TOMBOL FINISH SHIFT --}}
+      @if($isAllProcessed && $shift)
+        @php
+          $isShiftFinished = \App\Models\ShiftCompletion::where([
+              'location' => $location,
+              'shift' => $shift,
+              'process_date' => $date,
+          ])->exists();
+        @endphp
+        
+        @if(!$isShiftFinished)
+          <div class="lst-finish-shift-wrap" id="finish-shift-{{ $location }}-{{ $shift }}">
+            <button type="button" class="lst-btn-finish-shift" 
+                    onclick="confirmFinishShift('{{ $location }}', '{{ $shift }}', '{{ $date }}')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Selesai Shift {{ ucfirst($shift) }}
+            </button>
+          </div>
+        @endif
+      @endif
     @endif
   </div>
 </div>
@@ -94,6 +132,165 @@
   border-radius: 14px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 6px 18px rgba(0,0,0,.04);
   overflow: hidden;
+}
+
+/* Finish Shift Button */
+.lst-finish-shift-wrap {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 2px dashed #E85D2F;
+  text-align: center;
+}
+
+.lst-btn-finish-shift {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #E85D2F 0%, #C0392B 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(232,93,47,0.3);
+}
+
+.lst-btn-finish-shift:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 6px 16px rgba(232,93,47,0.4);
+}
+
+/* Modal Styles */
+.lst-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.lst-modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+}
+
+.lst-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #E2E5EE;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lst-modal-header h3 {
+  margin: 0;
+  color: #E85D2F;
+  font-size: 1.25rem;
+}
+
+.lst-modal-body {
+  padding: 20px 24px;
+}
+
+.lst-modal-body p {
+  margin: 0 0 12px 0;
+}
+
+.lst-modal-body ul, .lst-modal-body ol {
+  margin: 12px 0;
+  padding-left: 20px;
+}
+
+.lst-modal-body li {
+  margin: 6px 0;
+  color: #4B5563;
+}
+
+.lst-modal-warning {
+  background: #FEF3C7;
+  border-left: 4px solid #F59F00;
+  padding: 12px 16px;
+  margin: 16px 0;
+  border-radius: 8px;
+}
+
+.lst-modal-input {
+  margin: 16px 0;
+}
+
+.lst-modal-input textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1.5px solid #E2E5EE;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  resize: vertical;
+}
+
+.lst-modal-confirm {
+  margin: 16px 0;
+}
+
+.lst-modal-confirm input {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #E2E5EE;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.lst-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #E2E5EE;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.lst-modal-cancel, .lst-modal-submit {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.lst-modal-cancel {
+  background: #F3F4F6;
+  color: #4B5563;
+}
+
+.lst-modal-submit {
+  background: #E85D2F;
+  color: white;
+}
+
+.lst-modal-submit:disabled {
+  background: #D1D5DB;
+  cursor: not-allowed;
+}
+
+.lst-modal-submit:not(:disabled):hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
 }
 
 /* ── CARD HEAD ── */

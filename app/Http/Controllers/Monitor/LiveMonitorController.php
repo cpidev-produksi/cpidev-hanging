@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Monitor;
 use App\Http\Controllers\Controller;
 use App\Models\MonitorControl;
 use App\Models\PlanningLb;
+use App\Models\ShiftCompletion;
 
 class LiveMonitorController extends Controller
 {
@@ -34,29 +35,35 @@ class LiveMonitorController extends Controller
             ->with(['expedition','plateNumber','farm','hangingForm.lines.sets'])
             ->first();
 
-        $shiftsToday = MonitorControl::query()
-            ->where('location', $location)
-            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
-            ->pluck('shift')
-            ->filter()
-            ->map(fn($s) => strtolower((string)$s))
-            ->unique()
-            ->values()
-            ->all();
+        $today = now('Asia/Jakarta')->toDateString();
 
-        // mapping: pagi->1, malam->3
-        $hasShift1 = in_array('pagi', $shiftsToday, true);
-        $hasShift3 = in_array('malam', $shiftsToday, true);
+        $shiftCompletions = ShiftCompletion::where('location', $location)
+        ->whereDate('process_date', $today)
+        ->get();
 
+        $completedShifts = [];
+        foreach ($shiftCompletions as $sc) {
+            $completedShifts[] = $sc->shift;
+        }
+
+        $hasShift1Completed = in_array('pagi', $completedShifts);
+        $hasShift3Completed = in_array('malam', $completedShifts);
+
+        // Shift message berdasarkan completion
         $shiftDoneMessage = null;
-        if ($hasShift1 && $hasShift3) $shiftDoneMessage = 'Shift 1 dan 3 selesai.';
-        elseif ($hasShift1) $shiftDoneMessage = 'Shift 1 selesai.';
-        elseif ($hasShift3) $shiftDoneMessage = 'Shift 3 selesai.';
+        if ($hasShift1Completed && $hasShift3Completed) {
+            $shiftDoneMessage = 'Shift 1 dan 3 selesai.';
+        } elseif ($hasShift1Completed) {
+            $shiftDoneMessage = 'Shift 1 selesai.';
+        } elseif ($hasShift3Completed) {
+            $shiftDoneMessage = 'Shift 3 selesai.';
+        }
 
         // Ambil total planning untuk hari ini
         $todayPlanning = PlanningLb::query()
             ->where('location', $location)
-            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
+            ->whereDate('process_date', $today)
+            // ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
             ->first();
 
         $totalPlanningAyam = $todayPlanning ? (int) $todayPlanning->total_plan_chicken : 0;
@@ -64,7 +71,8 @@ class LiveMonitorController extends Controller
 
         $todayRegisteredTruckCount = MonitorControl::query()
             ->where('location', $location)
-            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
+            ->whereDate('process_date', $today)
+            // ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
             ->count();
 
         $targetReached = ($totalPlanningTruk > 0) && ($todayRegisteredTruckCount >= $totalPlanningTruk);
@@ -72,7 +80,8 @@ class LiveMonitorController extends Controller
         // Ambil semua MonitorControl hari ini
         $allTodayControls = MonitorControl::query()
             ->where('location', $location)
-            ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
+            ->whereDate('process_date', $today)
+            //->whereDate('process_date', now('Asia/Jakarta')->toDateString())
             ->with(['hangingForm.lines.sets'])
             ->get();
 
@@ -102,6 +111,10 @@ class LiveMonitorController extends Controller
             ->whereHas('hangingForm.lines.sets', fn($q) => $q->whereNotNull('empty_count'))
             ->count();
 
+        $hasAnyShiftCompleted = $hasShift1Completed || $hasShift3Completed;
+        $isNoProcess = (!$active || !$active->hangingForm);
+        $showShiftCompleteBanner = $isNoProcess && $hasAnyShiftCompleted && $shiftDoneMessage;
+
         if (!$active || !$active->hangingForm) {
             return response()->json([
                 'active' => false,
@@ -110,10 +123,8 @@ class LiveMonitorController extends Controller
                 'today_truck_count' => $todayTruckCount,
                 'total_planning_ayam' => $totalPlanningAyam,
                 'total_planning_truk' => $totalPlanningTruk,
-                'no_process_reason' => ($totalPlanningTruk <= 0 && $totalPlanningAyam <= 0)
-                    ? 'no_planning'
-                    : (($targetReached && $shiftDoneMessage) ? 'target_reached' : 'no_running'),
-                'shift_done_message' => ($targetReached ? $shiftDoneMessage : null),
+                'no_process_reason' => $showShiftCompleteBanner ? 'target_reached' : 'no_running',
+                'shift_done_message' => $showShiftCompleteBanner ? $shiftDoneMessage : null,
                 
                 // Data kosong untuk bagian lain
                 'report_code' => null,

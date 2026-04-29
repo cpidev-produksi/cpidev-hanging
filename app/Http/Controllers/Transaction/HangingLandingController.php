@@ -7,8 +7,10 @@ use App\Models\HangingForm;
 use App\Models\HangingLine;
 use App\Models\HangingLineSet;
 use App\Models\MonitorControl;
+use App\Models\ShiftCompletion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class HangingLandingController extends Controller
 {
@@ -164,5 +166,100 @@ class HangingLandingController extends Controller
                 ->route('hanging-forms.show', $hangingForm)
                 ->with('status', 'Proses dimulai. Silakan input Form Hanging.');
         });
+    }
+
+    public function finishShift(Request $request, $location, $shift, $date)
+    {
+        // Validasi ketat dengan konfirmasi
+        $validator = Validator::make([
+            'location' => $location,
+            'shift' => $shift,
+            'date' => $date,
+        ], [
+            'location' => 'required|in:SH01,SH02',
+            'shift' => 'required|in:pagi,malam',
+            'date' => 'required|date',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors(['finish_shift' => 'Parameter tidak valid.']);
+        }
+
+        // Cek apakah shift sudah difinish sebelumnya
+        $alreadyFinished = ShiftCompletion::where([
+            'location' => $location,
+            'shift' => $shift,
+            'process_date' => $date,
+        ])->exists();
+
+        if ($alreadyFinished) {
+            return back()->withErrors(['finish_shift' => "Shift {$shift} di {$location} sudah difinish sebelumnya."]);
+        }
+
+        // Ambil semua monitor control yang belum done di shift ini
+        $allMonitors = MonitorControl::query()
+            ->where('location', $location)
+            ->where('shift', $shift)
+            ->whereDate('process_date', $date)
+            ->with('hangingForm')
+            ->get();
+
+        if ($allMonitors->isEmpty()) {
+            return back()->withErrors(['finish_shift' => "Tidak ada data monitor untuk shift {$shift} {$location}."]);
+        }
+
+        // Hitung total target vs realisasi
+        $totalTarget = $allMonitors->sum('shackle_count');
+        $totalCompleted = $allMonitors->filter(function($mc) {
+            return $mc->hangingForm && $mc->hangingForm->status === 'done';
+        })->sum('shackle_count');
+        
+        $completedCount = $allMonitors->filter(function($mc) {
+            return $mc->hangingForm && $mc->hangingForm->status === 'done';
+        })->count();
+        
+        $pendingCount = $allMonitors->count() - $completedCount;
+        $remainingTarget = $totalTarget - $totalCompleted;
+
+        // Simpan record completion
+        $completion = ShiftCompletion::create([
+            'location' => $location,
+            'shift' => $shift,
+            'process_date' => $date,
+            'finished_at' => now(),
+            'total_target' => $totalTarget,
+            'total_completed' => $totalCompleted,
+            'remaining_target' => $remainingTarget,
+            'remaining_units' => $pendingCount,
+            'notes' => $request->input('notes'),
+        ]);
+
+        // Update status monitor yang belum done menjadi 'force_finished'
+        $updatedCount = 0;
+        foreach ($allMonitors as $monitor) {
+            // Cek apakah belum done
+            $isNotDone = !$monitor->hangingForm || $monitor->hangingForm->status !== 'done';
+            
+            if ($isNotDone) {
+                $monitor->update(['status' => 'force_finished']);
+                if ($monitor->hangingForm) {
+                    $monitor->hangingForm->update([
+                        'status' => 'force_finished',
+                        'finish_time' => now(),
+                    ]);
+                }
+                $updatedCount++;
+            }
+        }
+
+        $message = "Shift {$shift} {$location} telah difinish. ";
+        if ($pendingCount > 0) {
+            $message .= "Sisa {$pendingCount} antrian ({$remainingTarget} ekor) tidak diproses.";
+        } else {
+            $message .= "Semua antrian sudah selesai diproses.";
+        }
+
+        return redirect()->route('hanging.landing', ['date' => $date])
+            ->with('success', $message);
     }
 }

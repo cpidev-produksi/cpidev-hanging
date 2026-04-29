@@ -892,18 +892,33 @@
                     @endif
 
                     {{-- Shift Complete Banner --}}
-                    <div class="shift-done-block" id="shiftDone_{{ $loc }}">
-                        <div class="shift-done-icon">✓</div>
-                        <div class="shift-done-text" id="shiftDoneText_{{ $loc }}">Shift selesai</div>
-                        <div class="shift-done-badge">Selesai</div>
-                    </div>
+                    @php
+                        $hasShiftComplete = isset($s['shift_completion_message']) && $s['shift_completion_message'];
+                        $showBanner = !$s['running'] && $hasShiftComplete;
+                    @endphp
+
+                    @if($showBanner)
+                        <div class="shift-done-block visible" id="shiftDone_{{ $loc }}">
+                            <div class="shift-done-icon">✓</div>
+                            <div class="shift-done-text" id="shiftDoneText_{{ $loc }}">
+                                {{ $s['shift_completion_message'] }}
+                            </div>
+                            <div class="shift-done-badge">Selesai</div>
+                        </div>
+                    @else
+                        <div class="shift-done-block" id="shiftDone_{{ $loc }}" style="display:none">
+                            <div class="shift-done-icon">✓</div>
+                            <div class="shift-done-text" id="shiftDoneText_{{ $loc }}"></div>
+                            <div class="shift-done-badge">Selesai</div>
+                        </div>
+                    @endif
                 </div>
                 {{-- Shift Complete Banner --}}
-                <div class="shift-done-block" id="shiftDone_{{ $loc }}">
+                {{-- <div class="shift-done-block" id="shiftDone_{{ $loc }}">
                     <div class="shift-done-icon">✓</div>
                     <div class="shift-done-text" id="shiftDoneText_{{ $loc }}">Shift selesai</div>
                     <div class="shift-done-badge">Selesai</div>
-                </div>
+                </div> --}}
             </div>
         </div>
         @endforeach

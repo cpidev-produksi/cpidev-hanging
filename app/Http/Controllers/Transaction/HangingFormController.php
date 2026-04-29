@@ -38,36 +38,26 @@ class HangingFormController extends Controller
         $totalAyamShackle = 0;
         $fullBlockCount = 0;
 
-        $lastLineNo = (int) ($hangingForm->lines->max('line_no') ?? 0);
-        $lastSetNo  = (int) ($hangingForm->monitorControl?->set_count ?? 0);
+        //$lastLineNo = (int) ($hangingForm->lines->max('line_no') ?? 0);
+        //$lastSetNo  = (int) ($hangingForm->monitorControl?->set_count ?? 0);
 
         foreach ($hangingForm->lines as $line) {
             $cap = $this->getMaxCapacity($location, (int) $line->line_no);
 
             foreach ($line->sets as $set) {
+                // Skip jika belum diisi
                 if ($set->empty_count === null) {
-                    continue;
-                }
-                $empty = (int) $set->empty_count;
-
-                $totalKosong += $empty;
-                $totalAyamShackle += ($cap - $empty);
-
-                $isLastSet = ((int) $line->line_no === $lastLineNo)
-                    && ((int) $set->set_no === $lastSetNo);
-
-                if ($set->empty_count === null) {
-                    if ($isLastSet) {
-                        $fullBlockCount++;
-                    }
                     continue;
                 }
 
                 $empty = (int) $set->empty_count;
+                $empty = min($empty, $cap);
                 $totalKosong += $empty;
                 $totalAyamShackle += ($cap - $empty);
 
-                if (($cap === 50 && $empty === 0) || $isLastSet) {
+                // 🔥 HANYA blok dengan kapasitas 50 DAN empty_count = 0
+                // (custom blok seperti 18 atau 46 TIDAK dihitung)
+                if ($cap === 50 && $empty === 0) {
                     $fullBlockCount++;
                 }
             }
@@ -75,7 +65,7 @@ class HangingFormController extends Controller
 
         $totalChickenMC = (int) ($hangingForm->monitorControl?->total_chicken ?? 0);
         $targetMC = max(0, $totalChickenMC - $deadCount - $returCount);
-        $selisihAyam = $targetMC - $totalAyamShackle;
+        $selisihAyam = $totalAyamShackle - $targetMC;
 
         return view('transaction.hanging_forms.show', [
             'form'         => $hangingForm,

@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Expedition;
 use App\Models\Farm;
 use App\Models\MonitorControl;
-use App\Models\PlateNumber;
 use App\Models\PlanningLb;
+use App\Models\PlateNumber;
+use App\Models\ShiftCompletion;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -119,6 +120,26 @@ class DashboardController extends Controller
                     'total_ayam'  => $runningTotalAyam,
                 ] : null,
             ];
+
+            $shiftCompletions = ShiftCompletion::where('location', $loc)
+                ->whereDate('process_date', $today)
+                ->get();
+
+            $completedShifts = [];
+            foreach ($shiftCompletions as $sc) {
+                $completedShifts[] = $sc->shift;
+            }
+
+            $statsByLoc[$loc]['completed_shifts'] = $completedShifts;
+            $statsByLoc[$loc]['shift_completion_message'] = null;
+
+            if (in_array('pagi', $completedShifts) && in_array('malam', $completedShifts)) {
+                $statsByLoc[$loc]['shift_completion_message'] = 'Shift 1 dan 3 selesai.';
+            } elseif (in_array('pagi', $completedShifts)) {
+                $statsByLoc[$loc]['shift_completion_message'] = 'Shift 1 selesai.';
+            } elseif (in_array('malam', $completedShifts)) {
+                $statsByLoc[$loc]['shift_completion_message'] = 'Shift 3 selesai.';
+            }
 
             // Grand total
             $grand['truk_total']    += $trukTotal;

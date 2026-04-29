@@ -25,23 +25,30 @@ $condLabel = function(?string $val): string {
     };
 };
 
-$customCaps = ['SH01' => [17 => 46], 'SH02' => [30 => 19]];
+$customCaps = ['SH02' => [30 => 18]];
 $location = $mc->location ?? '';
 $normalSetCount = 0;
-$customSetCounts = [19 => 0, 46 => 0];
+$customSetCounts = [18 => 0];
 $totalKosongCalc = 0;
 $totalAyamCap = 0;
 
 foreach ($form->lines as $line) {
-    $cap = $customCaps[$location][$line->line_no] ?? 50;
-    foreach ($line->sets as $set) {
-        if ($set->empty_count === null) continue;
-        $empty = (int) $set->empty_count;
-        $totalKosongCalc += $empty;
-        $totalAyamCap += ($cap - $empty);
-        if ($cap === 50) { $normalSetCount++; }
-        else { $customSetCounts[$cap] = ($customSetCounts[$cap] ?? 0) + 1; }
+  $cap = $customCaps[$location][$line->line_no] ?? 50;
+  foreach ($line->sets as $set) {
+    if ($set->empty_count === null) continue;
+    $empty = (int) $set->empty_count;
+    $totalKosongCalc += $empty;
+    $totalAyamCap += ($cap - $empty);
+    
+    // 🔥 BLOK TERISI PENUH: kapasitas 50 DAN empty_count = 0
+    if ($cap === 50 && $empty === 0) {
+        $normalSetCount++;
     }
+    // Blok custom untuk statistik (bukan untuk "terisi penuh")
+    if ($cap !== 50) {
+        $customSetCounts[$cap] = ($customSetCounts[$cap] ?? 0) + 1;
+    }
+  }
 }
 
 $normalEkor  = $normalSetCount * 50;
@@ -61,6 +68,8 @@ $hasilShackle = $totalAyamCap; // sudah hitung cap - empty
 // Selisih = hasil shackle - target
 $selisih = $hasilShackle - $targetAyam;
 $isMatch = ($selisih === 0);
+$isExcess = $selisih > 0;
+$isDeficit = $selisih < 0;
 
 $condLevel = function(?string $val): int {
     return match($val) {
@@ -254,8 +263,7 @@ $fc = $form->feather_condition;
           <div class="sm-kv">
             <span class="sm-kv-key">Kondisional Blok</span>
             <span class="sm-kv-val sm-val-mono">
-              @if(($customSetCounts[19] ?? 0) > 0){{ $customSetCounts[19] }}×19 @endif
-              @if(($customSetCounts[46] ?? 0) > 0){{ ($customSetCounts[19] ?? 0) > 0 ? '+ ' : '' }}{{ $customSetCounts[46] }}×46 @endif
+              @if(($customSetCounts[18] ?? 0) > 0){{ $customSetCounts[18] }}×18 @endif
               = {{ number_format($customEkor) }}
             </span>
           </div>
@@ -273,23 +281,29 @@ $fc = $form->feather_condition;
 
         <div class="sm-kv-group" style="margin-top:10px">
           <div class="sm-kv">
-            <span class="sm-kv-key">Status</span>
-            <span class="sm-kv-val">
-              <span class="sm-status {{ $isMatch ? 'sm-status-match' : 'sm-status-diff' }}">
-                @if($isMatch)
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                  MATCH
-                @else
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  SELISIH {{ $selisih > 0 ? '(KELEBIHAN)' : '(KEKURANGAN)' }}
-                @endif
+              <span class="sm-kv-key">Status</span>
+              <span class="sm-kv-val">
+                  <span class="sm-status {{ $isMatch ? 'sm-status-match' : ($isExcess ? 'sm-status-excess' : 'sm-status-deficit') }}">
+                      @if($isMatch)
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                          MATCH
+                      @elseif($isExcess)
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 8 22 12 18 16"/><polyline points="6 8 2 12 6 16"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
+                          KELEBIHAN
+                      @else
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 8 2 12 6 16"/><polyline points="18 8 22 12 18 16"/><line x1="10" y1="4" x2="14" y2="20"/></svg>
+                          KEKURANGAN
+                      @endif
+                  </span>
               </span>
-            </span>
           </div>
           @if(!$isMatch)
           <div class="sm-kv">
-            <span class="sm-kv-key">Selisih</span>
-            <span class="sm-kv-val sm-val-warn">{{ number_format($selisih) }}</span>
+              <span class="sm-kv-key">Selisih</span>
+              <span class="sm-kv-val sm-val-{{ $isExcess ? 'warn' : 'danger' }}">
+                  {{ $isExcess ? '+' : '' }}{{ number_format(abs($selisih)) }} ekor
+                  <span style="font-size:10px; font-weight:500;">({{ $isExcess ? 'Lebih' : 'Kurang' }})</span>
+              </span>
           </div>
           @endif
         </div>
@@ -418,6 +432,21 @@ $fc = $form->feather_condition;
   --sm-violet:    #7c3aed;
   --sm-slate:     #475569;
   --sm-amber:     #d97706;
+}
+
+.sm-status-excess {
+    background: #fef3c7;
+    border-color: #fcd34d;
+    color: #92400e;
+}
+.sm-status-deficit {
+    background: #fee2e2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+.sm-val-danger {
+    color: #dc2626;
+    font-weight: 800;
 }
 
 /* ══ PAGE ══ */

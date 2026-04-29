@@ -312,10 +312,10 @@ $qcLevel = function(?string $val): int {
 };
 $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
 
-$customCaps = ['SH01' => [17 => 46], 'SH02' => [30 => 19]];
+$customCaps = ['SH02' => [30 => 18]];
 $location = $mc->location ?? '';
 $normalSetCount = 0;
-$customSetCounts = [19 => 0, 46 => 0];
+$customSetCounts = [18 => 0];
 $totalKosongCalc = 0;
 $totalAyamCap = 0;
 
@@ -324,10 +324,17 @@ foreach ($form->lines as $line) {
     foreach ($line->sets as $set) {
         if ($set->empty_count === null) continue;
         $empty = (int) $set->empty_count;
+        $empty = min($empty, $cap);
         $totalKosongCalc += $empty;
         $totalAyamCap += ($cap - $empty);
-        if ($cap === 50) { $normalSetCount++; }
-        else { $customSetCounts[$cap] = ($customSetCounts[$cap] ?? 0) + 1; }
+        
+        // 🔥 HANYA blok kapasitas 50 DAN empty = 0
+        if ($cap === 50 && $empty === 0) {
+            $normalSetCount++;
+        }
+        if ($cap !== 50) {
+            $customSetCounts[$cap] = ($customSetCounts[$cap] ?? 0) + 1;
+        }
     }
 }
 
@@ -340,8 +347,10 @@ $retur  = (int)($form->retur_count ?? 0);
 $totalEkorMC = (int)($mc->total_chicken ?? 0);
 $targetAyam = max(0, $totalEkorMC - $dead - $retur);
 $hasilShackle = $totalAyamCap;
-$selisih = $hasilShackle - $targetAyam;
+$selisih = $totalAyamCap - $targetAyam;
 $isMatch = ($selisih === 0);
+$isExcess = $selisih > 0;
+$isDeficit = $selisih < 0;
 @endphp
 
   {{-- KOP --}}
@@ -438,8 +447,7 @@ $isMatch = ($selisih === 0);
           <div class="hl-row">
             <span class="hl-key">Kondisional Blok</span>
             <span class="hl-val">
-              @if(($customSetCounts[19] ?? 0) > 0){{ $customSetCounts[19] }}×19 @endif
-              @if(($customSetCounts[46] ?? 0) > 0){{ $customSetCounts[46] }}×46 @endif
+              @if(($customSetCounts[18] ?? 0) > 0){{ $customSetCounts[18] }}×18 @endif
               = {{ number_format($customEkor) }}
             </span>
           </div>
@@ -457,7 +465,7 @@ $isMatch = ($selisih === 0);
               @if($isMatch)
                 <span class="hl-badge-match">✓ MATCH</span>
               @else
-                <span class="hl-badge-diff">SELISIH {{ $selisih > 0 ? '(KELEBIHAN)' : '(KEKURANGAN)' }}</span>
+                <span class="hl-badge-diff">SELISIH {{ $selisih < 0 ? '(KELEBIHAN)' : '(KEKURANGAN)' }}</span>
               @endif
             </span>
           </div>

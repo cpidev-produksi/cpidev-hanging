@@ -113,6 +113,9 @@
             @include('transaction.hanging_landing.partials.list', [
               'location' => $loc,
               'list'     => $shiftMap[$shift]->getCollection(),
+              'shift'    => $shift,
+              'date'     => $date,
+              'paginator'=> $shiftMap[$shift],
             ])
 
             @include('transaction.hanging_landing.partials.pagination', [
@@ -123,6 +126,7 @@
       </div>
     </div>
   @endforeach
+  @include('transaction.hanging_landing.partials.finish_shift_modal')
 </div>
 
 <script>
