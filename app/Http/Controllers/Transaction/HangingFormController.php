@@ -15,7 +15,7 @@ class HangingFormController extends Controller
     {
         $custom = [
             //'SH01' => [17 => 46],
-            'SH02' => [30 => 18],
+            'SH02' => [30 => 13],
         ];
 
         return $custom[$location][$lineNo] ?? 50;
