@@ -84,7 +84,8 @@
       @if($doneRows->isNotEmpty())
         @include('transaction.hanging_landing.partials.done', [
           'rows' => $doneRows,
-          'key'  => $key
+          'key'  => $key,
+          'shift' => $shift
         ])
       @endif
 

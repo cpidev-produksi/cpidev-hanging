@@ -1,6 +1,6 @@
 @php
   /** @var \Illuminate\Support\Collection $rows */
-  $domId = 'done-' . $key;
+  $domId = 'done-' . $key . '-' . ($shift ?? 'shift');
   $slug = auth()->user()?->role?->slug;
   $canEditDone = in_array($slug, ['supervisor','superadmin'], true);
 @endphp
