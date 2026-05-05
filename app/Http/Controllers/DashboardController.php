@@ -382,6 +382,72 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function todayStats()
+    {
+        try {
+            $today = date('Y-m-d');
+            
+            // Ambil semua MonitorControl hari ini
+            $mcsToday = MonitorControl::with(['hangingForm.lines.sets'])
+                ->whereDate('process_date', $today)
+                ->get();
+            
+            // Hitung total ayam diterima
+            $totalAyamDiterima = 0;
+            $totalTrukTerhitung = 0;
+            
+            foreach ($mcsToday as $mc) {
+                $hasCounting = false;
+                $ayamPerTruk = 0;
+                
+                if ($mc->hangingForm && $mc->hangingForm->lines) {
+                    foreach ($mc->hangingForm->lines as $line) {
+                        if ($line->sets && count($line->sets) > 0) {
+                            foreach ($line->sets as $set) {
+                                if ($set->empty_count !== null) {
+                                    $hasCounting = true;
+                                    // Asumsikan kapasitas 50 per cage
+                                    $ayamPerTruk += (50 - (int)$set->empty_count);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if ($hasCounting) {
+                    $totalTrukTerhitung++;
+                    $totalAyamDiterima += $ayamPerTruk;
+                }
+            }
+            
+            // Hitung planning
+            $totalPlanChicken = PlanningLb::whereDate('process_date', $today)
+                ->sum('total_plan_chicken');
+            
+            $totalPlanTruck = PlanningLb::whereDate('process_date', $today)
+                ->sum('total_plan_truck');
+            
+            return response()->json([
+                'success' => true,
+                'ayam_received' => $totalAyamDiterima,
+                'truk_counted' => $totalTrukTerhitung,
+                'plan_chicken' => (int)$totalPlanChicken,
+                'plan_truck' => (int)$totalPlanTruck,
+                'ayam_progress' => $totalPlanChicken > 0 
+                    ? round(($totalAyamDiterima / $totalPlanChicken) * 100, 1) 
+                    : 0,
+                'truk_progress' => $totalPlanTruck > 0 
+                    ? round(($totalTrukTerhitung / $totalPlanTruck) * 100, 1) 
+                    : 0,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     protected function getMaxCapacity(string $location, int $lineNo): int
     {
         $custom = [

@@ -434,7 +434,7 @@
     <div class="rk-header">
         <div class="rk-title">
             <span class="rk-eyebrow">Laporan Harian</span>
-            <h1 class="rk-h1">Detail Truk Terhitung</h1>
+            <h1 class="rk-h1">Detail Truk</h1>
             <div class="rk-period">
                 @if(($f['mode'] ?? 'single') === 'single')
                     {{ \Carbon\Carbon::parse($f['from'])->translatedFormat('d F Y') }}
@@ -474,7 +474,7 @@
             <div class="rk-card-icon icon-ayam">🐔</div>
             <div class="rk-card-label">Total Ayam Diterima</div>
             <div class="rk-card-value val-ayam">{{ number_format($totalAyam) }}</div>
-            <div class="rk-card-sub">ekor · setelah mati &amp; retur</div>
+            <div class="rk-card-sub">ekor</div>
             <div class="rk-card-deco">{{ number_format($totalAyam) }}</div>
         </div>
     </div>
@@ -547,7 +547,7 @@
                                 <td colspan="10">
                                     <div class="rk-empty">
                                         <div class="rk-empty-icon">📭</div>
-                                        Tidak ada data untuk periode ini.
+                                        Tidak ada data.
                                     </div>
                                 </td>
                             </tr>

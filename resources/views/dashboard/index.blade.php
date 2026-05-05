@@ -1000,7 +1000,7 @@
                             </td>
                             <td>
                                 @if($truckCount === 0)
-                                    <span class="rekap-mini">Tidak ada truk terhitung.</span>
+                                    <span class="rekap-mini">Tidak ada data.</span>
                                 @else
                                     <a href="{{ route('dashboard.rekap', ['mode' => 'single', 'date' => $row['date']]) }}"
                                     style="display:inline-flex;align-items:center;gap:8px;

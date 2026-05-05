@@ -524,7 +524,7 @@
         </div>
         <h1 class="hp-hero-title">
           Paperless System Management<br>
-          <em>Slaughter House</em>
+          <em>Slaughter House</em> Dept.
         </h1>
         <p class="hp-hero-sub">
           Platform terpadu untuk monitoring produksi, pengelolaan inventaris, dan analisis data
@@ -710,7 +710,6 @@
 </div>
 <script>
 // Auto-refresh untuk data real-time
-const locations = ['SH01', 'SH02'];
 let refreshInterval = null;
 
 function formatNumber(num) {
@@ -719,103 +718,84 @@ function formatNumber(num) {
 
 async function fetchRealTimeData() {
     try {
-        // Hitung total ayam diterima dari kedua lokasi
-        let totalAyam = 0;
-        let totalTruk = 0;
-        let totalPlanChicken = {{ $planChicken ?? 0 }};
-        let totalPlanTruck = {{ $planTruck ?? 0 }};
-        
-        for (const loc of locations) {
-            const response = await fetch(`/monitor/${encodeURIComponent(loc)}/data`, {
-                headers: { 'Accept': 'application/json' }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                
-                // Akumulasi ayam dari running process
-                if (data.active && data.total_ayam_running !== undefined) {
-                    totalAyam += parseInt(data.total_ayam_running) || 0;
-                }
-                
-                // Bisa juga tambahkan dari data lain jika diperlukan
-                if (data.total_ayam_today !== undefined) {
-                    totalAyam = parseInt(data.total_ayam_today) || totalAyam;
-                }
+        // Fetch data dari API endpoint yang sudah dibuat
+        const response = await fetch('/api/dashboard/today-stats', {
+            headers: { 
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
-        }
-        
-        // Alternatif: fetch langsung ke endpoint aggregator (lebih baik)
-        // Gunakan endpoint yang mengembalikan total keseluruhan
-        const summaryResponse = await fetch('/api/dashboard/summary', {
-            headers: { 'Accept': 'application/json' }
         });
         
-        if (summaryResponse.ok) {
-            const summary = await summaryResponse.json();
-            totalAyam = summary.total_ayam_diterima || totalAyam;
-            totalTruk = summary.total_truk_terhitung || totalTruk;
-            totalPlanChicken = summary.total_plan_chicken || totalPlanChicken;
-            totalPlanTruck = summary.total_plan_truck || totalPlanTruck;
-        } else {
-            // Fallback: hitung sendiri via multiple requests
-            // Ini sebaiknya dibuatkan endpoint khusus di backend
-            const allDataResponse = await fetch('/api/dashboard/today-stats', {
-                headers: { 'Accept': 'application/json' }
-            });
-            
-            if (allDataResponse.ok) {
-                const stats = await allDataResponse.json();
-                totalAyam = stats.ayam_received || 0;
-                totalTruk = stats.truk_counted || 0;
-            }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        // Update DOM
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.error('API Error:', data.error);
+            return;
+        }
+        
+        // Update DOM dengan data real-time
         const ayamElement = document.getElementById('ayamCount');
         const trukElement = document.getElementById('trukCount');
         
         if (ayamElement) {
-            ayamElement.textContent = formatNumber(totalAyam);
+            ayamElement.textContent = formatNumber(data.ayam_received);
+            // Add smooth transition effect
+            ayamElement.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                ayamElement.style.transform = 'scale(1)';
+            }, 200);
         }
         
         if (trukElement) {
-            trukElement.textContent = formatNumber(totalTruk);
+            trukElement.textContent = formatNumber(data.truk_counted);
+            trukElement.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                trukElement.style.transform = 'scale(1)';
+            }, 200);
         }
         
         // Update progress bar
-        const ayamProgress = totalPlanChicken > 0 
-            ? Math.min(Math.round((totalAyam / totalPlanChicken) * 100), 100) 
-            : 0;
-        const trukProgress = totalPlanTruck > 0 
-            ? Math.min(Math.round((totalTruk / totalPlanTruck) * 100), 100) 
-            : 0;
-        
         const ayamFill = document.querySelector('.hp-visual-card.main .hp-vc-fill');
         if (ayamFill) {
-            ayamFill.style.width = ayamProgress + '%';
+            ayamFill.style.width = data.ayam_progress + '%';
         }
         
         // Update subtext
         const ayamSub = document.querySelector('.hp-visual-card.main .hp-vc-sub');
         if (ayamSub) {
-            ayamSub.innerHTML = `ekor · dari target ${formatNumber(totalPlanChicken)}`;
+            ayamSub.innerHTML = `ekor · dari target ${formatNumber(data.plan_chicken)}`;
         }
         
         const trukSub = document.querySelector('.hp-visual-card.mini .hp-vc-sub');
         if (trukSub) {
-            trukSub.innerHTML = `unit hari ini · dari ${formatNumber(totalPlanTruck)}`;
+            trukSub.innerHTML = `unit hari ini · dari ${formatNumber(data.plan_truck)}`;
+        }
+        
+        // Optional: Update progress bar truk jika ada
+        const trukFill = document.querySelector('.hp-visual-card.mini .hp-vc-fill');
+        if (trukFill && data.truk_progress > 0) {
+            trukFill.style.width = data.truk_progress + '%';
         }
         
     } catch (error) {
         console.error('Error fetching real-time data:', error);
+        
+        // Fallback: tampilkan pesan error di console tapi tidak mengganggu UI
+        const ayamElement = document.getElementById('ayamCount');
+        if (ayamElement && ayamElement.textContent === '0') {
+            console.warn('Data masih 0, pastikan ada data hanging form yang sudah di-count');
+        }
     }
 }
 
-// Start auto-refresh setiap 3 detik
+// Start auto-refresh setiap 5 detik (lebih ringan)
 function startAutoRefresh() {
     if (refreshInterval) clearInterval(refreshInterval);
-    refreshInterval = setInterval(fetchRealTimeData, 3000);
+    refreshInterval = setInterval(fetchRealTimeData, 5000);
 }
 
 // Stop auto-refresh saat page di-unload
@@ -825,8 +805,24 @@ window.addEventListener('beforeunload', () => {
 
 // Initial load dan start refresh
 document.addEventListener('DOMContentLoaded', () => {
-    fetchRealTimeData();
-    startAutoRefresh();
+    // Delay initial load untuk memastikan DOM siap
+    setTimeout(() => {
+        fetchRealTimeData();
+        startAutoRefresh();
+    }, 500);
 });
+
+// Tambahkan CSS transition untuk smooth update
+const style = document.createElement('style');
+style.textContent = `
+    #ayamCount, #trukCount {
+        transition: transform 0.2s ease-in-out;
+        display: inline-block;
+    }
+    .hp-vc-fill {
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+`;
+document.head.appendChild(style);
 </script>
 @endsection

@@ -38,6 +38,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::middleware('role:supervisor,superadmin')
     ->get('/menu', [MenuController::class, 'index'])
     ->name('menu.index');
+    Route::get('/api/dashboard/today-stats', [DashboardController::class, 'todayStats'])->name('api.dashboard.today-stats');
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/rekap', [DashboardController::class, 'rekap'])->name('dashboard.rekap');
