@@ -286,7 +286,7 @@ class DashboardController extends Controller
         $today = date('Y-m-d');
 
         // mode single/last7/range
-        $mode = $request->get('mode', 'single'); // default biar cocok klik dari dashboard
+        $mode = $request->get('mode', 'single');
         $date = $request->get('date', $today);
         $from = $request->get('from', date('Y-m-d', strtotime('-6 days')));
         $to   = $request->get('to', $today);
@@ -299,7 +299,7 @@ class DashboardController extends Controller
         } elseif ($mode === 'last7') {
             $from = date('Y-m-d', strtotime('-6 days'));
             $to   = $today;
-        } else { // range
+        } else {
             $from = $from ?: $today;
             $to   = $to ?: $today;
         }
@@ -308,7 +308,6 @@ class DashboardController extends Controller
             [$from, $to] = [$to, $from];
         }
 
-        // max 31 days
         $diffDays = (int) floor((strtotime($to) - strtotime($from)) / 86400);
         if ($diffDays > 31) {
             $to = date('Y-m-d', strtotime($from . ' +31 days'));
@@ -317,56 +316,73 @@ class DashboardController extends Controller
         $mcs = MonitorControl::query()
             ->whereBetween('process_date', [$from, $to])
             ->whereHas('hangingForm.lines.sets', fn ($q) => $q->whereNotNull('empty_count'))
-            ->with(['farm', 'plateNumber', 'hangingForm.lines.sets'])
+            ->with(['farm', 'plateNumber', 'hangingForm']) // Pastikan hangingForm di-load
             ->orderBy('process_date')
             ->orderBy('location')
             ->orderBy('truck_no')
             ->get();
 
-        // build rows
         $rows = [];
         $no = 1;
 
         foreach ($mcs as $mc) {
-            // ayam diterima dari hanging sets
+            $hangingForm = $mc->hangingForm;
+            
+            // Hitung ayam diterima dari hanging sets
             $ayamDiterima = 0;
-            if ($mc->hangingForm) {
-                $sets = $mc->hangingForm->lines->flatMap->sets;
+            if ($hangingForm && $hangingForm->lines) {
+                $hangingForm->loadMissing('lines.sets');
+                $sets = $hangingForm->lines->flatMap->sets;
                 $ayamDiterima = (int) $sets->sum(function ($s) {
                     if ($s->empty_count === null) return 0;
                     return 50 - (int) $s->empty_count;
                 });
             }
 
-            // total ekor (dari monitor control)
+            // Total ekor dari monitor control
             $totalEkor = (int) ($mc->total_chicken ?? 0);
 
-            // ayam mati & retur:
-            // GANTI nama field jika di DB Anda beda
-            $ayamMati  = (int) ($mc->dead_chicken ?? ($mc->ayam_mati ?? 0));
-            $ayamRetur = (int) ($mc->return_chicken ?? ($mc->ayam_retur ?? 0));
+            // ✅ AMBIL DARI HangingForm
+            $ayamMati  = (int) ($hangingForm->dead_count ?? 0);
+            $ayamRetur = (int) ($hangingForm->retur_count ?? 0);
+            $returKg   = (float) ($hangingForm->retur_total_kg ?? 0);
 
-            // jam bongkar & selesai (format H:i jika ada)
-            $jamBongkar = $mc->truck_arrival_time ? $mc->truck_arrival_time->format('H:i') : null;
+            // ✅ JAM BONGKAR: prioritaskan unloading_time dari HangingForm, fallback ke truck_arrival_time
+            $jamBongkar = null;
+            if ($hangingForm && $hangingForm->unloading_time) {
+                $jamBongkar = $hangingForm->unloading_time instanceof \DateTime 
+                    ? $hangingForm->unloading_time->format('H:i') 
+                    : date('H:i', strtotime($hangingForm->unloading_time));
+            } elseif ($mc->truck_arrival_time) {
+                $jamBongkar = $mc->truck_arrival_time instanceof \DateTime 
+                    ? $mc->truck_arrival_time->format('H:i') 
+                    : date('H:i', strtotime($mc->truck_arrival_time));
+            }
 
-            // asumsi jam selesai dari supervisor_signed_at (ubah jika ada field lain)
-            $jamSelesai = $mc->supervisor_signed_at ? $mc->supervisor_signed_at->format('H:i') : null;
+            // ✅ JAM SELESAI: dari finish_time di HangingForm
+            $jamSelesai = null;
+            if ($hangingForm && $hangingForm->finish_time) {
+                $jamSelesai = $hangingForm->finish_time instanceof \DateTime 
+                    ? $hangingForm->finish_time->format('H:i') 
+                    : date('H:i', strtotime($hangingForm->finish_time));
+            }
 
             $rows[] = [
-                'no'           => $no++,
-                'no_polisi'    => $mc->plateNumber?->plate_number ?? null,
-                'jam_bongkar'  => $jamBongkar,
-                'jam_selesai'  => $jamSelesai,
-                'nama_farm'    => $mc->farm?->name ?? null,
-                'size'         => $mc->size ?? null,
-                'total_ekor'   => $totalEkor,
-                'ayam_mati'    => $ayamMati,
-                'ayam_retur'   => $ayamRetur,
-                'ayam_diterima'=> $ayamDiterima,
-                // optional kalau mau debugging:
-                'process_date' => optional($mc->process_date)->format('Y-m-d'),
-                'truck_no'     => $mc->truck_no,
-                'location'     => $mc->location,
+                'no'            => $no++,
+                'no_polisi'     => $mc->plateNumber?->plate_number ?? null,
+                'jam_bongkar'   => $jamBongkar,
+                'jam_selesai'   => $jamSelesai,
+                'nama_farm'     => $mc->farm?->name ?? null,
+                'size'          => $mc->size ?? null,
+                'total_ekor'    => $totalEkor,
+                'ayam_mati'     => $ayamMati,
+                'ayam_retur'    => $ayamRetur,
+                'retur_kg'      => $returKg,
+                'ayam_diterima' => $ayamDiterima,
+                'process_date'  => optional($mc->process_date)->format('Y-m-d'),
+                'truck_no'      => $mc->truck_no,
+                'location'      => $mc->location,
+                'status'        => $mc->status,
             ];
         }
 
@@ -387,12 +403,10 @@ class DashboardController extends Controller
         try {
             $today = date('Y-m-d');
             
-            // Ambil semua MonitorControl hari ini
             $mcsToday = MonitorControl::with(['hangingForm.lines.sets'])
                 ->whereDate('process_date', $today)
                 ->get();
             
-            // Hitung total ayam diterima
             $totalAyamDiterima = 0;
             $totalTrukTerhitung = 0;
             
@@ -406,7 +420,6 @@ class DashboardController extends Controller
                             foreach ($line->sets as $set) {
                                 if ($set->empty_count !== null) {
                                     $hasCounting = true;
-                                    // Asumsikan kapasitas 50 per cage
                                     $ayamPerTruk += (50 - (int)$set->empty_count);
                                 }
                             }
@@ -420,12 +433,8 @@ class DashboardController extends Controller
                 }
             }
             
-            // Hitung planning
-            $totalPlanChicken = PlanningLb::whereDate('process_date', $today)
-                ->sum('total_plan_chicken');
-            
-            $totalPlanTruck = PlanningLb::whereDate('process_date', $today)
-                ->sum('total_plan_truck');
+            $totalPlanChicken = PlanningLb::whereDate('process_date', $today)->sum('total_plan_chicken');
+            $totalPlanTruck = PlanningLb::whereDate('process_date', $today)->sum('total_plan_truck');
             
             return response()->json([
                 'success' => true,
