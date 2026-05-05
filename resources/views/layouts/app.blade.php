@@ -785,7 +785,7 @@
         <nav class="topnav" aria-label="Main navigation">
             <a href="{{ in_array(auth()->user()?->role?->slug, ['supervisor','superadmin']) ? route('menu.index') : route('dashboard') }}"
             class="topnav-link {{ request()->routeIs('dashboard') || request()->routeIs('menu.*') ? 'active' : '' }}">
-                {{ in_array(auth()->user()?->role?->slug, ['supervisor','superadmin']) ? 'Menu' : 'Dashboard' }}
+                {{ in_array(auth()->user()?->role?->slug, ['supervisor','superadmin']) ? 'Homepage' : 'Dashboard' }}
             </a>
 
             {{-- Master Data --}}
