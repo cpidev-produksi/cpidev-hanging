@@ -783,8 +783,9 @@
 
         {{-- Desktop nav --}}
         <nav class="topnav" aria-label="Main navigation">
-            <a href="{{ route('dashboard') }}" class="topnav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                Dashboard
+            <a href="{{ in_array(auth()->user()?->role?->slug, ['supervisor','superadmin']) ? route('menu.index') : route('dashboard') }}"
+            class="topnav-link {{ request()->routeIs('dashboard') || request()->routeIs('menu.*') ? 'active' : '' }}">
+                {{ in_array(auth()->user()?->role?->slug, ['supervisor','superadmin']) ? 'Menu' : 'Dashboard' }}
             </a>
 
             {{-- Master Data --}}
@@ -886,6 +887,15 @@
                 </svg>
                 Profil Saya
             </a>
+            @if(auth()->user()?->role?->slug === 'superadmin')
+                <a href="{{ route('account.role-permissions.index') }}"
+                class="user-drawer-link {{ request()->routeIs('account.role-permissions.*') ? 'active' : '' }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1l3 5 5 1-3.5 4 1 6-5.5-3-5.5 3 1-6L4 7l5-1 3-5z"></path>
+                    </svg>
+                    Role Permissions
+                </a>
+            @endif
 
             <div style="margin-top:auto; padding-top: 12px;">
                 <button type="button" class="user-drawer-logout" onclick="openLogoutModal()">
@@ -904,7 +914,7 @@
     <div id="mobileNavOverlay" class="mobile-overlay" onclick="closeMobileNav()"></div>
     <div id="mobileNav" class="mobile-drawer" aria-hidden="true">
         <div class="mobile-drawer-head">
-            <div class="mobile-drawer-title">Menu</div>
+            <div class="mobile-drawer-title">Homepage</div>
             <button type="button" class="mobile-close" aria-label="Tutup menu" onclick="closeMobileNav()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -919,7 +929,6 @@
             <div class="avatar">{{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}</div>
             <div class="mobile-user-info">
                 <div class="mobile-user-name">{{ auth()->user()->name ?? 'Admin' }}</div>
-                <div class="mobile-user-role">{{ auth()->user()->role ?? 'User' }}</div>
             </div>
         </div>
 

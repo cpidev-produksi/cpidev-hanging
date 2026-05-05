@@ -17,6 +17,39 @@ class DashboardController extends Controller
         $today = date('Y-m-d');
         $locations = ['SH01', 'SH02'];
 
+        // =========================
+        // Filter Rekapan (single / last7 / range)
+        // =========================
+        $mode = $request->get('rekap_mode', 'last7'); // single|last7|range
+        $date = $request->get('rekap_date', $today);
+        $from = $request->get('rekap_from', date('Y-m-d', strtotime('-6 days')));
+        $to   = $request->get('rekap_to', $today);
+
+        // normalize & safety
+        $mode = in_array($mode, ['single', 'last7', 'range'], true) ? $mode : 'last7';
+
+        if ($mode === 'single') {
+            $from = $date ?: $today;
+            $to   = $date ?: $today;
+        } elseif ($mode === 'last7') {
+            $from = date('Y-m-d', strtotime('-6 days'));
+            $to   = $today;
+        } else { // range
+            $from = $from ?: $today;
+            $to   = $to ?: $today;
+        }
+
+        // swap if inverted
+        if (strtotime($from) > strtotime($to)) {
+            [$from, $to] = [$to, $from];
+        }
+
+        // max 31 days
+        $diffDays = (int) floor((strtotime($to) - strtotime($from)) / 86400);
+        if ($diffDays > 31) {
+            $to = date('Y-m-d', strtotime($from . ' +31 days'));
+        }
+
         // Master counts
         $master = [
             'expeditions' => Expedition::count(),
@@ -24,6 +57,9 @@ class DashboardController extends Controller
             'plates'      => class_exists(PlateNumber::class) ? PlateNumber::count() : null,
         ];
 
+        // =========================
+        // Existing: stats hari ini per lokasi + grand
+        // =========================
         $statsByLoc = [];
         $grand = [
             'truk_total'      => 0,
@@ -66,7 +102,6 @@ class DashboardController extends Controller
                 });
             });
 
-            // Planning LB untuk lokasi & tanggal ini
             $planning = PlanningLb::where('location', $loc)
                 ->whereDate('process_date', $today)
                 ->first();
@@ -82,10 +117,10 @@ class DashboardController extends Controller
 
             $runningTotalAyam = 0;
             if ($running && $running->hangingForm) {
-                $loc = $running->location ?? '';
+                $locx = $running->location ?? '';
 
                 foreach ($running->hangingForm->lines as $line) {
-                    $cap = $this->getMaxCapacity($loc, (int) $line->line_no);
+                    $cap = $this->getMaxCapacity($locx, (int) $line->line_no);
 
                     foreach ($line->sets as $set) {
                         if ($set->empty_count === null) continue;
@@ -141,7 +176,6 @@ class DashboardController extends Controller
                 $statsByLoc[$loc]['shift_completion_message'] = 'Shift 3 selesai.';
             }
 
-            // Grand total
             $grand['truk_total']    += $trukTotal;
             $grand['truk_counted']  += $trukCounted;
             $grand['truk_queue']    += $trukQueue;
@@ -152,15 +186,16 @@ class DashboardController extends Controller
             $grand['plan_chicken']  += $planChicken;
         }
 
-        // ── Chart: Ayam diterima vs planning 7 hari terakhir ──
+        // =========================
+        // Existing: chart 7 hari terakhir
+        // =========================
         $chartDays = 7;
         $chartData = [];
         for ($i = $chartDays - 1; $i >= 0; $i--) {
-            $date = date('Y-m-d', strtotime("-{$i} days"));
+            $datex = date('Y-m-d', strtotime("-{$i} days"));
 
-            // Ayam diterima (sum dari semua lokasi)
             $mcsDay = MonitorControl::query()
-                ->whereDate('process_date', $date)
+                ->whereDate('process_date', $datex)
                 ->with(['hangingForm.lines.sets'])
                 ->get();
 
@@ -173,20 +208,58 @@ class DashboardController extends Controller
                 });
             });
 
-            // Planning ayam (sum semua lokasi di tanggal itu)
-            $planDay = PlanningLb::whereDate('process_date', $date)
+            $planDay = PlanningLb::whereDate('process_date', $datex)
                 ->sum('total_plan_chicken');
 
             $chartData[] = [
-                'date'         => $date,
-                'label'        => date('d/m', strtotime($date)),
+                'date'         => $datex,
+                'label'        => date('d/m', strtotime($datex)),
                 'ayam'         => (int) $ayamDay,
                 'plan_chicken' => (int) $planDay,
-                'truk_counted' => MonitorControl::whereDate('process_date', $date)  // tambah ini
-                                    ->whereHas('hangingForm.lines.sets', fn($q) => $q->whereNotNull('empty_count'))
-                                    ->count(),
-                'plan_truck'   => (int) PlanningLb::whereDate('process_date', $date)->sum('total_plan_truck'),
-                'is_today'     => $date === $today,
+                'truk_counted' => MonitorControl::whereDate('process_date', $datex)
+                    ->whereHas('hangingForm.lines.sets', fn($q) => $q->whereNotNull('empty_count'))
+                    ->count(),
+                'plan_truck'   => (int) PlanningLb::whereDate('process_date', $datex)->sum('total_plan_truck'),
+                'is_today'     => $datex === $today,
+            ];
+        }
+
+        // =========================
+        // NEW: Rekapan per Tanggal (sesuai filter)
+        // - total ayam diterima (sum semua truk di tanggal tsb)
+        // - jumlah truk terhitung
+        // - daftar truk terhitung (detail MonitorControl + relasi)
+        // =========================
+        $rekap = [];
+        $startTs = strtotime($from);
+        $endTs   = strtotime($to);
+
+        for ($ts = $startTs; $ts <= $endTs; $ts += 86400) {
+            $d = date('Y-m-d', $ts);
+
+            $countedTrucks = MonitorControl::query()
+                ->whereDate('process_date', $d)
+                ->whereHas('hangingForm.lines.sets', fn ($q) => $q->whereNotNull('empty_count'))
+                ->with(['expedition', 'farm', 'plateNumber', 'hangingForm.lines.sets'])
+                ->orderBy('location')
+                ->orderBy('truck_no')
+                ->get();
+
+            $ayamTotal = $countedTrucks->sum(function ($mc) {
+                if (!$mc->hangingForm) return 0;
+                $sets = $mc->hangingForm->lines->flatMap->sets;
+                return (int) $sets->sum(function ($s) {
+                    if ($s->empty_count === null) return 0;
+                    return 50 - (int) $s->empty_count;
+                });
+            });
+
+            $rekap[] = [
+                'date' => $d,
+                'label_long' => \Carbon\Carbon::parse($d)->translatedFormat('d F Y'),
+                'ayam_received' => (int) $ayamTotal,
+                'truk_counted' => (int) $countedTrucks->count(),
+                'trucks' => $countedTrucks,
             ];
         }
 
@@ -196,13 +269,123 @@ class DashboardController extends Controller
             'statsByLoc' => $statsByLoc,
             'grand'      => $grand,
             'chartData'  => $chartData,
+
+            // NEW
+            'rekap'      => $rekap,
+            'rekapFilter' => [
+                'mode' => $mode,
+                'date' => $date,
+                'from' => $from,
+                'to'   => $to,
+            ],
+        ]);
+    }
+
+    public function rekap(Request $request)
+    {
+        $today = date('Y-m-d');
+
+        // mode single/last7/range
+        $mode = $request->get('mode', 'single'); // default biar cocok klik dari dashboard
+        $date = $request->get('date', $today);
+        $from = $request->get('from', date('Y-m-d', strtotime('-6 days')));
+        $to   = $request->get('to', $today);
+
+        $mode = in_array($mode, ['single', 'last7', 'range'], true) ? $mode : 'single';
+
+        if ($mode === 'single') {
+            $from = $date ?: $today;
+            $to   = $date ?: $today;
+        } elseif ($mode === 'last7') {
+            $from = date('Y-m-d', strtotime('-6 days'));
+            $to   = $today;
+        } else { // range
+            $from = $from ?: $today;
+            $to   = $to ?: $today;
+        }
+
+        if (strtotime($from) > strtotime($to)) {
+            [$from, $to] = [$to, $from];
+        }
+
+        // max 31 days
+        $diffDays = (int) floor((strtotime($to) - strtotime($from)) / 86400);
+        if ($diffDays > 31) {
+            $to = date('Y-m-d', strtotime($from . ' +31 days'));
+        }
+
+        $mcs = MonitorControl::query()
+            ->whereBetween('process_date', [$from, $to])
+            ->whereHas('hangingForm.lines.sets', fn ($q) => $q->whereNotNull('empty_count'))
+            ->with(['farm', 'plateNumber', 'hangingForm.lines.sets'])
+            ->orderBy('process_date')
+            ->orderBy('location')
+            ->orderBy('truck_no')
+            ->get();
+
+        // build rows
+        $rows = [];
+        $no = 1;
+
+        foreach ($mcs as $mc) {
+            // ayam diterima dari hanging sets
+            $ayamDiterima = 0;
+            if ($mc->hangingForm) {
+                $sets = $mc->hangingForm->lines->flatMap->sets;
+                $ayamDiterima = (int) $sets->sum(function ($s) {
+                    if ($s->empty_count === null) return 0;
+                    return 50 - (int) $s->empty_count;
+                });
+            }
+
+            // total ekor (dari monitor control)
+            $totalEkor = (int) ($mc->total_chicken ?? 0);
+
+            // ayam mati & retur:
+            // GANTI nama field jika di DB Anda beda
+            $ayamMati  = (int) ($mc->dead_chicken ?? ($mc->ayam_mati ?? 0));
+            $ayamRetur = (int) ($mc->return_chicken ?? ($mc->ayam_retur ?? 0));
+
+            // jam bongkar & selesai (format H:i jika ada)
+            $jamBongkar = $mc->truck_arrival_time ? $mc->truck_arrival_time->format('H:i') : null;
+
+            // asumsi jam selesai dari supervisor_signed_at (ubah jika ada field lain)
+            $jamSelesai = $mc->supervisor_signed_at ? $mc->supervisor_signed_at->format('H:i') : null;
+
+            $rows[] = [
+                'no'           => $no++,
+                'no_polisi'    => $mc->plateNumber?->plate_number ?? null,
+                'jam_bongkar'  => $jamBongkar,
+                'jam_selesai'  => $jamSelesai,
+                'nama_farm'    => $mc->farm?->name ?? null,
+                'size'         => $mc->size ?? null,
+                'total_ekor'   => $totalEkor,
+                'ayam_mati'    => $ayamMati,
+                'ayam_retur'   => $ayamRetur,
+                'ayam_diterima'=> $ayamDiterima,
+                // optional kalau mau debugging:
+                'process_date' => optional($mc->process_date)->format('Y-m-d'),
+                'truck_no'     => $mc->truck_no,
+                'location'     => $mc->location,
+            ];
+        }
+
+        return view('dashboard.rekap', [
+            'today' => $today,
+            'filter' => [
+                'mode' => $mode,
+                'date' => $date,
+                'from' => $from,
+                'to'   => $to,
+            ],
+            'rows' => $rows,
         ]);
     }
 
     protected function getMaxCapacity(string $location, int $lineNo): int
     {
         $custom = [
-            'SH02' => [30 => 19],
+            'SH02' => [30 => 13],
         ];
 
         return $custom[$location][$lineNo] ?? 50;

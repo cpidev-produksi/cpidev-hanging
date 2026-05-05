@@ -1,12 +1,16 @@
 <?php
 
+use App\Http\Controllers\Account\RolePermissionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HistoryController;
+use App\Http\Controllers\Inventory\InventoryApiController;
+use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Master\ExpeditionController;
 use App\Http\Controllers\Master\FarmController;
 use App\Http\Controllers\Master\UserController;
+use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Monitor\LiveMonitorController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Transaction\ConditionController;
@@ -31,8 +35,12 @@ Route::get('monitor/{location}/data', [LiveMonitorController::class, 'data'])->n
 
 
 Route::middleware(['auth', 'nocache'])->group(function () {
-
+    Route::middleware('role:supervisor,superadmin')
+    ->get('/menu', [MenuController::class, 'index'])
+    ->name('menu.index');
+    
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/rekap', [DashboardController::class, 'rekap'])->name('dashboard.rekap');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
@@ -103,5 +111,32 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'sign'])->name('monitor-controls.summary.sign');
         Route::delete('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'unsign'])->name('monitor-controls.summary.unsign');
         Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])->name('monitor-controls.summary.pdf');
+    });
+
+    Route::middleware('perm:shfi.view')->prefix('inventory')->name('inventory.')->group(function () {
+        Route::get('/', [InventoryController::class, 'index'])->name('index');
+
+        Route::get('/api/roots', [InventoryApiController::class, 'roots'])->name('api.roots');
+        Route::get('/api/breadcrumbs', [InventoryApiController::class, 'breadcrumbs'])->name('api.breadcrumbs');
+        Route::get('/api/list', [InventoryApiController::class, 'list'])->name('api.list');
+
+        Route::middleware('perm:shfi.upload')->post('/api/upload', [InventoryApiController::class, 'upload'])->name('api.upload');
+        Route::middleware('perm:shfi.edit')->post('/api/folder', [InventoryApiController::class, 'createFolder'])->name('api.folder.create');
+        Route::middleware('perm:shfi.edit')->post('/api/rename', [InventoryApiController::class, 'rename'])->name('api.rename');
+        Route::middleware('perm:shfi.edit')->post('/api/move', [InventoryApiController::class, 'move'])->name('api.move');
+        Route::middleware('perm:shfi.edit')->post('/api/copy', [InventoryApiController::class, 'copy'])->name('api.copy');
+
+        Route::middleware('perm:shfi.delete')->delete('/api/delete', [InventoryApiController::class, 'softDelete'])->name('api.delete');
+
+        Route::get('/api/download/{file}', [InventoryApiController::class, 'download'])->name('api.download');
+        Route::get('/api/preview/{file}', [InventoryApiController::class, 'preview'])->name('api.preview');
+
+        Route::get('/trash', [InventoryController::class, 'trash'])->name('trash');
+        Route::get('/api/trash', [InventoryApiController::class, 'trashList'])->name('api.trash.list');
+        Route::middleware('perm:shfi.restore')->post('/api/restore', [InventoryApiController::class, 'restore'])->name('api.restore');
+    });
+    Route::middleware('role:superadmin')->prefix('account')->name('account.')->group(function () {
+        Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role-permissions.index');
+        Route::post('/role-permissions', [RolePermissionController::class, 'store'])->name('role-permissions.store');
     });
 });

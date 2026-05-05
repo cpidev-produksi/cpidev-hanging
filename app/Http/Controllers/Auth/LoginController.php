@@ -22,6 +22,14 @@ class LoginController extends Controller
 
         if (Auth::attempt(['username' => $data['username'], 'password' => $data['password']], true)) {
             $request->session()->regenerate();
+
+            $roleSlug = Auth::user()?->role?->slug;
+
+            if (in_array($roleSlug, ['supervisor', 'superadmin'], true)) {
+                return redirect()->route('menu.index');
+            }
+
+            // role lain -> dashboard
             return redirect()->route('dashboard');
         }
 

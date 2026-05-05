@@ -588,6 +588,126 @@
         height: 260px;
     }
 
+    /* ─── Rekap Panel ─── */
+    .rekap-panel{
+        background: var(--c-surface);
+        border-radius: var(--radius);
+        border: 1px solid var(--c-border);
+        overflow: hidden;
+        margin-bottom: 28px;
+        box-shadow: var(--shadow);
+    }
+    .rekap-header{
+        padding: 18px 24px 14px;
+        border-bottom: 1px solid var(--c-border);
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        flex-wrap:wrap;
+        gap:12px;
+    }
+    .rekap-title{
+        font-family:'Inter',sans-serif;
+        font-size:15px;
+        font-weight:800;
+        color:var(--c-text);
+    }
+    .rekap-sub{
+        font-size:12px;
+        color:var(--c-muted);
+        font-weight:600;
+        margin-top:3px;
+    }
+    .rekap-filter{
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        align-items:flex-end;
+    }
+    .rekap-filter .field{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+    }
+    .rekap-filter label{
+        font-size:10px;
+        font-weight:800;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+        color:var(--c-muted);
+    }
+    .rekap-filter select,
+    .rekap-filter input{
+        height:34px;
+        border-radius:10px;
+        border:1px solid var(--c-border);
+        background:#fff;
+        padding:6px 10px;
+        font-size:12px;
+        font-weight:700;
+        color:var(--c-text);
+        outline:none;
+    }
+    .rekap-filter button{
+        height:34px;
+        border-radius:10px;
+        border:1px solid var(--c-border);
+        background: linear-gradient(90deg, #2563eb, #60a5fa);
+        color:#fff;
+        font-weight:800;
+        padding:0 14px;
+        cursor:pointer;
+    }
+    .rekap-body{ padding: 14px 24px 20px; }
+    .rekap-table{
+        width:100%;
+        border-collapse:separate;
+        border-spacing:0;
+        overflow:hidden;
+        border:1px solid var(--c-border);
+        border-radius:14px;
+    }
+    .rekap-table th{
+        text-align:left;
+        font-size:10px;
+        font-weight:900;
+        letter-spacing:.1em;
+        text-transform:uppercase;
+        color:var(--c-muted);
+        background:#fafbff;
+        padding:12px 12px;
+        border-bottom:1px solid var(--c-border);
+    }
+    .rekap-table td{
+        padding:12px 12px;
+        border-bottom:1px solid #f0f3f9;
+        vertical-align:top;
+        font-size:12px;
+        font-weight:700;
+        color:var(--c-text);
+    }
+    .rekap-table tr:last-child td{ border-bottom:none; }
+    .rekap-mini{
+        font-size:11px;
+        font-weight:700;
+        color:var(--c-muted);
+        margin-top:4px;
+    }
+    .rekap-chip{
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        padding:3px 10px;
+        border-radius:999px;
+        background:#f5f7fb;
+        border:1px solid var(--c-border);
+        color:var(--c-muted);
+        font-size:11px;
+        font-weight:800;
+        margin:3px 6px 0 0;
+    }
+    .rekap-truck-list.visible{ display:block; }
+
     /* ─── Master Data ─── */
     .master-row {
         display: grid;
@@ -797,8 +917,108 @@
         </div>
     </div>
 
+    {{-- ── Rekapan Per Tanggal Operasional ── --}}
+    <p class="section-label">Data Summary · Per Tanggal Operasional</p>
+    <div class="rekap-panel">
+        <div class="rekap-header">
+            <div>
+                <div class="rekap-title">Rekapitulasi Ayam Diterima & Truk Terhitung</div>
+                <div class="rekap-sub">
+                    @php
+                        $rf = $rekapFilter ?? ['mode'=>'last7','date'=>$today,'from'=>$today,'to'=>$today];
+                    @endphp
+                    @if(($rf['mode'] ?? 'last7') === 'single')
+                        Tanggal {{ \Carbon\Carbon::parse($rf['from'])->translatedFormat('d F Y') }}
+                    @elseif(($rf['mode'] ?? 'last7') === 'range')
+                        {{ \Carbon\Carbon::parse($rf['from'])->translatedFormat('d F Y') }} – {{ \Carbon\Carbon::parse($rf['to'])->translatedFormat('d F Y') }}
+                    @else
+                        7 hari terakhir
+                    @endif
+                </div>
+            </div>
+
+            <form method="GET" class="rekap-filter">
+                <div class="field">
+                    <label>Mode</label>
+                    <select name="rekap_mode" id="rekap_mode">
+                        <option value="last7"  {{ ($rf['mode'] ?? '')==='last7' ? 'selected' : '' }}>7 hari terakhir</option>
+                        <option value="single" {{ ($rf['mode'] ?? '')==='single' ? 'selected' : '' }}>Pilih tanggal</option>
+                        <option value="range"  {{ ($rf['mode'] ?? '')==='range' ? 'selected' : '' }}>Range tanggal</option>
+                    </select>
+                </div>
+
+                <div class="field" id="field_single">
+                    <label>Tanggal</label>
+                    <input type="date" name="rekap_date" value="{{ $rf['date'] ?? $today }}">
+                </div>
+
+                <div class="field" id="field_from">
+                    <label>Dari</label>
+                    <input type="date" name="rekap_from" value="{{ $rf['from'] ?? $today }}">
+                </div>
+
+                <div class="field" id="field_to">
+                    <label>Sampai</label>
+                    <input type="date" name="rekap_to" value="{{ $rf['to'] ?? $today }}">
+                </div>
+
+                <button type="submit">Filter</button>
+            </form>
+        </div>
+
+        <div class="rekap-body">
+            <table class="rekap-table">
+                <thead>
+                    <tr>
+                        <th style="width:190px">Tanggal</th>
+                        <th style="width:200px">Counting Ayam Diterima</th>
+                        <th style="width:180px">Truk / Batch</th>
+                        <th style="width:220px">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(($rekap ?? []) as $i => $row)
+                        @php
+                            $dateKey = $row['date'];
+                            $truckCount = (int) ($row['truk_counted'] ?? 0);
+                            $ayamTotal  = (int) ($row['ayam_received'] ?? 0);
+                            $listId = 'rekap_trucks_' . $i;
+                        @endphp
+                        <tr>
+                            <td>
+                                <div style="font-weight:900">{{ $row['label_long'] ?? $dateKey }}</div>
+                            </td>
+                            <td>
+                                <div style="font-size:16px;font-weight:900;color:#7c3aed">
+                                    {{ number_format($ayamTotal) }}
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-size:16px;font-weight:900;color:#0ea472">
+                                    {{ $truckCount }}
+                                </div>
+                            </td>
+                            <td>
+                                @if($truckCount === 0)
+                                    <span class="rekap-mini">Tidak ada truk terhitung.</span>
+                                @else
+                                    <a href="{{ route('dashboard.rekap', ['mode' => 'single', 'date' => $row['date']]) }}"
+                                    style="display:inline-flex;align-items:center;gap:8px;
+                                            padding:8px 12px;border-radius:10px;border:1px solid var(--c-border);
+                                            background:#fff;color:var(--c-blue);font-weight:900;text-decoration:none">
+                                        Lihat Detail
+                                    </a>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     {{-- ── Per Lokasi ── --}}
-    <p class="section-label">Detail Per Lokasi</p>
+    <p class="section-label">Detail Per Lokasi Saat Ini</p>
     <div class="loc-grid">
         @foreach($statsByLoc as $loc => $s)
         @php
@@ -1189,7 +1409,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     // ── Auto-refresh: running ayam count & shift-done banner per lokasi ──
-    // Ambil semua lokasi yang ada di panel
     const locPanels = document.querySelectorAll('.loc-panel[data-loc]');
     const locList   = Array.from(locPanels).map(p => p.dataset.loc);
 
@@ -1240,6 +1459,35 @@ document.addEventListener('DOMContentLoaded', function () {
     refreshAllLoc();
     const dashRefreshId = setInterval(refreshAllLoc, 2000);
     window.addEventListener('beforeunload', () => clearInterval(dashRefreshId));
+
+    // ── Rekap: show/hide filter fields by mode ──
+    const modeSel = document.getElementById('rekap_mode');
+    const fieldSingle = document.getElementById('field_single');
+    const fieldFrom = document.getElementById('field_from');
+    const fieldTo = document.getElementById('field_to');
+
+    function applyRekapModeUI() {
+        const m = (modeSel && modeSel.value) ? modeSel.value : 'last7';
+        if (!fieldSingle || !fieldFrom || !fieldTo) return;
+
+        if (m === 'single') {
+            fieldSingle.style.display = '';
+            fieldFrom.style.display = 'none';
+            fieldTo.style.display = 'none';
+        } else if (m === 'range') {
+            fieldSingle.style.display = 'none';
+            fieldFrom.style.display = '';
+            fieldTo.style.display = '';
+        } else { // last7
+            fieldSingle.style.display = 'none';
+            fieldFrom.style.display = 'none';
+            fieldTo.style.display = 'none';
+        }
+    }
+    if (modeSel) {
+        modeSel.addEventListener('change', applyRekapModeUI);
+        applyRekapModeUI();
+    }
 });
 </script>
 
