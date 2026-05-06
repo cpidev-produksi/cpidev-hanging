@@ -225,10 +225,7 @@ class DashboardController extends Controller
         }
 
         // =========================
-        // NEW: Rekapan per Tanggal (sesuai filter)
-        // - total ayam diterima (sum semua truk di tanggal tsb)
-        // - jumlah truk terhitung
-        // - daftar truk terhitung (detail MonitorControl + relasi)
+        // Rekapan per Tanggal (sesuai filter)
         // =========================
         $rekap = [];
         $startTs = strtotime($from);
@@ -237,15 +234,26 @@ class DashboardController extends Controller
         for ($ts = $startTs; $ts <= $endTs; $ts += 86400) {
             $d = date('Y-m-d', $ts);
 
-            $countedTrucks = MonitorControl::query()
+            $countedTrucksSH01 = MonitorControl::query()
                 ->whereDate('process_date', $d)
+                ->where('location', 'SH01')
                 ->whereHas('hangingForm.lines.sets', fn ($q) => $q->whereNotNull('empty_count'))
                 ->with(['expedition', 'farm', 'plateNumber', 'hangingForm.lines.sets'])
-                ->orderBy('location')
                 ->orderBy('truck_no')
                 ->get();
 
-            $ayamTotal = $countedTrucks->sum(function ($mc) {
+            $countedTrucksSH02 = MonitorControl::query()
+                ->whereDate('process_date', $d)
+                ->where('location', 'SH02')
+                ->whereHas('hangingForm.lines.sets', fn ($q) => $q->whereNotNull('empty_count'))
+                ->with(['expedition', 'farm', 'plateNumber', 'hangingForm.lines.sets'])
+                ->orderBy('truck_no')
+                ->get();
+
+            $countedTrucks = $countedTrucksSH01->merge($countedTrucksSH02);
+
+            // Hitung ayam SH01 + jumlah truk SH01
+            $ayamSH01 = $countedTrucksSH01->sum(function ($mc) {
                 if (!$mc->hangingForm) return 0;
                 $sets = $mc->hangingForm->lines->flatMap->sets;
                 return (int) $sets->sum(function ($s) {
@@ -253,12 +261,37 @@ class DashboardController extends Controller
                     return 50 - (int) $s->empty_count;
                 });
             });
+            $trukSH01 = $countedTrucksSH01->count();
+
+            // Hitung ayam SH02 + jumlah truk SH02
+            $ayamSH02 = $countedTrucksSH02->sum(function ($mc) {
+                if (!$mc->hangingForm) return 0;
+                $sets = $mc->hangingForm->lines->flatMap->sets;
+                return (int) $sets->sum(function ($s) {
+                    if ($s->empty_count === null) return 0;
+                    return 50 - (int) $s->empty_count;
+                });
+            });
+            $trukSH02 = $countedTrucksSH02->count();
+
+            // Hitung total ayam
+            $ayamTotal = $ayamSH01 + $ayamSH02;
 
             $rekap[] = [
                 'date' => $d,
                 'label_long' => \Carbon\Carbon::parse($d)->translatedFormat('d F Y'),
                 'ayam_received' => (int) $ayamTotal,
+                'ayam_received_sh01' => (int) $ayamSH01,
+                'ayam_received_sh02' => (int) $ayamSH02,
+                'truk_sh01' => (int) $trukSH01,
+                'truk_sh02' => (int) $trukSH02,
                 'truk_counted' => (int) $countedTrucks->count(),
+                'display_sh01' => $trukSH01 > 0 
+                    ? number_format($ayamSH01) . ' / ' . $trukSH01 
+                    : '0 / 0',
+                'display_sh02' => $trukSH02 > 0 
+                    ? number_format($ayamSH02) . ' / ' . $trukSH02 
+                    : '0 / 0',
                 'trucks' => $countedTrucks,
             ];
         }

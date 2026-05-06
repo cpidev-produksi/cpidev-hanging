@@ -971,8 +971,10 @@
                 <thead>
                     <tr>
                         <th style="width:190px">Tanggal</th>
-                        <th style="width:200px">Counting Ayam Diterima</th>
-                        <th style="width:180px">Truk / Batch</th>
+                        <th style="width:200px">Total Ayam Diterima</th>
+                        <th style="width:160px">SH01</th>
+                        <th style="width:160px">SH02</th>
+                        <th style="width:180px">Total Truk</th>
                         <th style="width:220px">Aksi</th>
                     </tr>
                 </thead>
@@ -982,6 +984,8 @@
                             $dateKey = $row['date'];
                             $truckCount = (int) ($row['truk_counted'] ?? 0);
                             $ayamTotal  = (int) ($row['ayam_received'] ?? 0);
+                            $displaySH01 = $row['display_sh01'] ?? '0 / 0';
+                            $displaySH02 = $row['display_sh02'] ?? '0 / 0';
                             $listId = 'rekap_trucks_' . $i;
                         @endphp
                         <tr>
@@ -992,6 +996,18 @@
                                 <div style="font-size:16px;font-weight:900;color:#7c3aed">
                                     {{ number_format($ayamTotal) }}
                                 </div>
+                            </td>
+                            <td>
+                                <div style="font-size:16px;font-weight:900;color:#2563eb">
+                                    {{ $displaySH01 }}
+                                </div>
+                                <div class="rekap-mini">ekor / truk</div>
+                            </td>
+                            <td>
+                                <div style="font-size:16px;font-weight:900;color:#0891b2">
+                                    {{ $displaySH02 }}
+                                </div>
+                                <div class="rekap-mini">ekor / truk</div>
                             </td>
                             <td>
                                 <div style="font-size:16px;font-weight:900;color:#0ea472">

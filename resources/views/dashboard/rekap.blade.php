@@ -433,8 +433,8 @@
     {{-- Header --}}
     <div class="rk-header">
         <div class="rk-title">
-            <span class="rk-eyebrow">Laporan Harian</span>
-            <h1 class="rk-h1">Detail Truk</h1>
+            <span class="rk-eyebrow">Laporan</span>
+            <h1 class="rk-h1">Detail Operasional</h1>
             <div class="rk-period">
                 @if(($f['mode'] ?? 'single') === 'single')
                     {{ \Carbon\Carbon::parse($f['from'])->translatedFormat('d F Y') }}
