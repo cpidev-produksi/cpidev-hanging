@@ -373,7 +373,7 @@
                     <td class="num">{{ number_format((int)($r['hasil_shackle'] ?? 0)) }}</td>
                     <td class="num {{ $selisih < 0 ? 'selisih-neg' : ($selisih > 0 ? 'selisih-pos' : '') }}"
                         style="border-right:2px solid #e8eaf0;">
-                        {{ $selisih > 0 ? '+' : '-' }}{{ number_format($selisih) }}
+                        {{ $selisih > 0 ? '+' : '' }}{{ number_format($selisih) }}
                     </td>
 
                     <td class="qc">{{ $r['qc_keranjang'] }}</td>

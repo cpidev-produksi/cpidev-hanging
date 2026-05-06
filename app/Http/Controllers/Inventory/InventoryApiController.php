@@ -372,27 +372,98 @@ class InventoryApiController extends Controller
             $filesQ->where('name', 'like', '%'.$data['q'].'%');
         }
 
-        $folders = $foldersQ->orderBy('name', 'asc')->get();
+        $folders = $foldersQ->orderBy('name', 'asc')->get()->map(function (ShfiFolder $f) {
+            return [
+                'id'         => $f->id,
+                'type'       => 'folder',
+                'name'       => $f->name,
+                'mime_type'  => null,
+                'size'       => null,
+                'deleted_at' => optional($f->deleted_at)->toISOString(),
+            ];
+        });
 
         if ($sort === 'uploaded_at') $filesQ->orderBy('uploaded_at', $dir);
         else $filesQ->orderBy('name', $dir);
 
         $files = $filesQ->get()->map(function (ShfiFile $f) {
             return [
-                'id' => $f->id,
-                'name' => $f->name,
-                'mime_type' => $f->mime_type,
-                'size' => $f->size,
+                'id'         => $f->id,
+                'type'       => 'file',
+                'name'       => $f->name,
+                'mime_type'  => $f->mime_type,
+                'size'       => $f->size,
                 'deleted_at' => optional($f->deleted_at)->toISOString(),
             ];
         });
 
-        return response()->json([
-            'data' => [
-                'folders' => $folders,
-                'files' => $files,
-            ],
+        // Merged flat list: folders first, then files
+        $merged = $folders->concat($files)->values();
+
+        return response()->json(['data' => $merged]);
+    }
+
+    /**
+     * GET /api/folders?root_id=&parent_id=
+     * Returns direct child folders (for sidebar tree lazy-load).
+     */
+    public function folders(Request $request)
+    {
+        $data = $request->validate([
+            'root_id'   => ['required', 'integer', Rule::exists('shfi_roots', 'id')],
+            'parent_id' => ['nullable', 'integer', Rule::exists('shfi_folders', 'id')],
         ]);
+
+        $folders = ShfiFolder::query()
+            ->where('root_id', $data['root_id'])
+            ->where('parent_id', $data['parent_id'] ?? null)
+            ->orderBy('name')
+            ->get(['id', 'name', 'parent_id']);
+
+        return response()->json(['data' => $folders]);
+    }
+
+    /**
+     * DELETE /api/trash/purge  — permanently delete a single trashed item.
+     */
+    public function purge(Request $request)
+    {
+        $data = $request->validate([
+            'type' => ['required', Rule::in(['file', 'folder'])],
+            'id'   => ['required', 'integer'],
+        ]);
+
+        if ($data['type'] === 'file') {
+            $file = ShfiFile::onlyTrashed()->findOrFail($data['id']);
+            Storage::disk($file->disk)->delete($file->disk_path);
+            $file->forceDelete();
+        } else {
+            $folder = ShfiFolder::onlyTrashed()->findOrFail($data['id']);
+            DB::transaction(function () use ($folder) {
+                $this->purgefolderRecursive($folder->id);
+            });
+        }
+
+        return response()->json(['data' => true]);
+    }
+
+    /**
+     * DELETE /api/trash/empty  — permanently delete ALL trashed items for every root the user can see.
+     */
+    public function emptyTrash(Request $request)
+    {
+        DB::transaction(function () {
+            // Purge all trashed files (physical + record)
+            ShfiFile::onlyTrashed()->get()->each(function (ShfiFile $f) {
+                Storage::disk($f->disk)->delete($f->disk_path);
+                $f->forceDelete();
+            });
+
+            // Force-delete all trashed folders (records only, files already gone above)
+            ShfiFolder::onlyTrashed()->get()->each->forceDelete();
+        });
+
+        return response()->json(['data' => true]);
     }
 
     public function restore(Request $request)
@@ -465,6 +536,31 @@ class InventoryApiController extends Controller
             $cur = $cur->parent_id ? ShfiFolder::find($cur->parent_id) : null;
         }
         return false;
+    }
+
+    private function purgeFolderRecursive(int $folderId): void
+    {
+        // purge child files from disk + DB
+        ShfiFile::onlyTrashed()->where('folder_id', $folderId)->get()->each(function (ShfiFile $f) {
+            Storage::disk($f->disk)->delete($f->disk_path);
+            $f->forceDelete();
+        });
+
+        // also purge any non-trashed files (children of a trashed parent)
+        ShfiFile::query()->where('folder_id', $folderId)->get()->each(function (ShfiFile $f) {
+            Storage::disk($f->disk)->delete($f->disk_path);
+            $f->forceDelete();
+        });
+
+        // recurse into sub-folders (trashed or not)
+        $allChildren = ShfiFolder::withTrashed()->where('parent_id', $folderId)->get();
+        foreach ($allChildren as $child) {
+            $this->purgeFolderRecursive($child->id);
+        }
+
+        // force-delete self
+        $folder = ShfiFolder::withTrashed()->findOrFail($folderId);
+        $folder->forceDelete();
     }
 
     private function softDeleteFolderRecursive(int $folderId): void

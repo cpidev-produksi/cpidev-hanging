@@ -122,6 +122,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/api/roots', [InventoryApiController::class, 'roots'])->name('api.roots');
         Route::get('/api/breadcrumbs', [InventoryApiController::class, 'breadcrumbs'])->name('api.breadcrumbs');
         Route::get('/api/list', [InventoryApiController::class, 'list'])->name('api.list');
+        Route::get('/api/folders', [InventoryApiController::class, 'folders'])->name('api.folders');
 
         Route::middleware('perm:shfi.upload')->post('/api/upload', [InventoryApiController::class, 'upload'])->name('api.upload');
         Route::middleware('perm:shfi.edit')->post('/api/folder', [InventoryApiController::class, 'createFolder'])->name('api.folder.create');
@@ -136,7 +137,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
         Route::get('/trash', [InventoryController::class, 'trash'])->name('trash');
         Route::get('/api/trash', [InventoryApiController::class, 'trashList'])->name('api.trash.list');
-        Route::middleware('perm:shfi.restore')->post('/api/restore', [InventoryApiController::class, 'restore'])->name('api.restore');
+        Route::middleware('perm:shfi.restore')->post('/api/restore', [InventoryApiController::class, 'restore'])->name('api.trash.restore');
+        Route::middleware('perm:shfi.delete')->delete('/api/trash/purge', [InventoryApiController::class, 'purge'])->name('api.trash.purge');
+        Route::middleware('perm:shfi.delete')->delete('/api/trash/empty', [InventoryApiController::class, 'emptyTrash'])->name('api.trash.empty');
     });
     Route::middleware('role:superadmin')->prefix('account')->name('account.')->group(function () {
         Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role-permissions.index');
