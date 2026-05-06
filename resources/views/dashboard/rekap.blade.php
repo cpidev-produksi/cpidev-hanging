@@ -445,9 +445,17 @@
                 @endif
             </div>
         </div>
-        <a class="rk-back-btn" href="{{ route('dashboard') }}">
-            ← Kembali ke Dashboard
-        </a>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="rk-back-btn" href="{{ route('dashboard') }}">← Kembali ke Dashboard</a>
+            {{-- <a class="rk-back-btn"
+            href="{{ route('dashboard.rekap.export.excel', request()->only(['mode','date','from','to'])) }}">
+                Export Excel
+            </a> --}}
+            <a class="rk-back-btn"
+            href="{{ route('dashboard.rekap.export.pdf', request()->only(['mode','date','from','to'])) }}">
+                Export PDF
+            </a>
+        </div>
     </div>
 
     {{-- Summary Cards --}}

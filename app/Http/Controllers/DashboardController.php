@@ -9,6 +9,7 @@ use App\Models\PlanningLb;
 use App\Models\PlateNumber;
 use App\Models\ShiftCompletion;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DashboardController extends Controller
 {
@@ -93,14 +94,7 @@ class DashboardController extends Controller
                 ->with(['hangingForm.lines.sets'])
                 ->get();
 
-            $ayamReceived = $mcs->sum(function ($mc) {
-                if (!$mc->hangingForm) return 0;
-                $sets = $mc->hangingForm->lines->flatMap->sets;
-                return (int) $sets->sum(function ($s) {
-                    if ($s->empty_count === null) return 0;
-                    return 50 - (int) $s->empty_count;
-                });
-            });
+            $ayamReceived = $mcs->sum(fn($mc) => $this->calcAyamDiterimaFromHanging($mc));
 
             $planning = PlanningLb::where('location', $loc)
                 ->whereDate('process_date', $today)
@@ -115,19 +109,7 @@ class DashboardController extends Controller
                 ->with(['expedition', 'farm', 'plateNumber', 'hangingForm.lines.sets'])
                 ->first();
 
-            $runningTotalAyam = 0;
-            if ($running && $running->hangingForm) {
-                $locx = $running->location ?? '';
-
-                foreach ($running->hangingForm->lines as $line) {
-                    $cap = $this->getMaxCapacity($locx, (int) $line->line_no);
-
-                    foreach ($line->sets as $set) {
-                        if ($set->empty_count === null) continue;
-                        $runningTotalAyam += ($cap - (int) $set->empty_count);
-                    }
-                }
-            }
+            $runningTotalAyam = $running ? $this->calcAyamDiterimaFromHanging($running) : 0;
 
             $shiftLabel = null;
             if ($running) {
@@ -143,7 +125,7 @@ class DashboardController extends Controller
                 'truk_queue'    => $trukQueue,
                 'truk_running'  => $trukRunning,
                 'truk_done'     => $trukDone,
-                'ayam_received' => $ayamReceived,
+                'ayam_received' => (int)$ayamReceived,
                 'plan_truck'    => $planTruck,
                 'plan_chicken'  => $planChicken,
                 'running'       => $running ? [
@@ -152,7 +134,7 @@ class DashboardController extends Controller
                     'expedition'  => $running->expedition?->name,
                     'farm'        => $running->farm?->name,
                     'plate'       => $running->plateNumber?->plate_number,
-                    'total_ayam'  => $runningTotalAyam,
+                    'total_ayam'  => (int)$runningTotalAyam,
                 ] : null,
             ];
 
@@ -181,7 +163,7 @@ class DashboardController extends Controller
             $grand['truk_queue']    += $trukQueue;
             $grand['truk_running']  += $trukRunning;
             $grand['truk_done']     += $trukDone;
-            $grand['ayam_received'] += $ayamReceived;
+            $grand['ayam_received'] += (int)$ayamReceived;
             $grand['plan_truck']    += $planTruck;
             $grand['plan_chicken']  += $planChicken;
         }
@@ -199,14 +181,7 @@ class DashboardController extends Controller
                 ->with(['hangingForm.lines.sets'])
                 ->get();
 
-            $ayamDay = $mcsDay->sum(function ($mc) {
-                if (!$mc->hangingForm) return 0;
-                $sets = $mc->hangingForm->lines->flatMap->sets;
-                return (int) $sets->sum(function ($s) {
-                    if ($s->empty_count === null) return 0;
-                    return 50 - (int) $s->empty_count;
-                });
-            });
+            $ayamDay = $mcsDay->sum(fn($mc) => $this->calcAyamDiterimaFromHanging($mc));
 
             $planDay = PlanningLb::whereDate('process_date', $datex)
                 ->sum('total_plan_chicken');
@@ -253,25 +228,10 @@ class DashboardController extends Controller
             $countedTrucks = $countedTrucksSH01->merge($countedTrucksSH02);
 
             // Hitung ayam SH01 + jumlah truk SH01
-            $ayamSH01 = $countedTrucksSH01->sum(function ($mc) {
-                if (!$mc->hangingForm) return 0;
-                $sets = $mc->hangingForm->lines->flatMap->sets;
-                return (int) $sets->sum(function ($s) {
-                    if ($s->empty_count === null) return 0;
-                    return 50 - (int) $s->empty_count;
-                });
-            });
+            $ayamTotal = $countedTrucks->sum(fn($mc) => $this->calcAyamDiterimaFromHanging($mc));
+            $ayamSH01  = $countedTrucks->where('location', 'SH01')->sum(fn($mc) => $this->calcAyamDiterimaFromHanging($mc));
+            $ayamSH02  = $countedTrucks->where('location', 'SH02')->sum(fn($mc) => $this->calcAyamDiterimaFromHanging($mc));
             $trukSH01 = $countedTrucksSH01->count();
-
-            // Hitung ayam SH02 + jumlah truk SH02
-            $ayamSH02 = $countedTrucksSH02->sum(function ($mc) {
-                if (!$mc->hangingForm) return 0;
-                $sets = $mc->hangingForm->lines->flatMap->sets;
-                return (int) $sets->sum(function ($s) {
-                    if ($s->empty_count === null) return 0;
-                    return 50 - (int) $s->empty_count;
-                });
-            });
             $trukSH02 = $countedTrucksSH02->count();
 
             // Hitung total ayam
@@ -362,15 +322,7 @@ class DashboardController extends Controller
             $hangingForm = $mc->hangingForm;
             
             // Hitung ayam diterima dari hanging sets
-            $ayamDiterima = 0;
-            if ($hangingForm && $hangingForm->lines) {
-                $hangingForm->loadMissing('lines.sets');
-                $sets = $hangingForm->lines->flatMap->sets;
-                $ayamDiterima = (int) $sets->sum(function ($s) {
-                    if ($s->empty_count === null) return 0;
-                    return 50 - (int) $s->empty_count;
-                });
-            }
+            $ayamDiterima = $this->calcAyamDiterimaFromHanging($mc);
 
             // Total ekor dari monitor control
             $totalEkor = (int) ($mc->total_chicken ?? 0);
@@ -378,7 +330,8 @@ class DashboardController extends Controller
             // ✅ AMBIL DARI HangingForm
             $ayamMati  = (int) ($hangingForm->dead_count ?? 0);
             $ayamRetur = (int) ($hangingForm->retur_count ?? 0);
-            $returKg   = (float) ($hangingForm->retur_total_kg ?? 0);
+            $totalEkor = (int) ($mc->total_chicken ?? 0);
+            $targetAyam = max(0, $totalEkor - $ayamMati - $ayamRetur);
 
             // ✅ JAM BONGKAR: prioritaskan unloading_time dari HangingForm, fallback ke truck_arrival_time
             $jamBongkar = null;
@@ -410,12 +363,25 @@ class DashboardController extends Controller
                 'total_ekor'    => $totalEkor,
                 'ayam_mati'     => $ayamMati,
                 'ayam_retur'    => $ayamRetur,
-                'retur_kg'      => $returKg,
                 'ayam_diterima' => $ayamDiterima,
-                'process_date'  => optional($mc->process_date)->format('Y-m-d'),
-                'truck_no'      => $mc->truck_no,
-                'location'      => $mc->location,
-                'status'        => $mc->status,
+                // untuk export lengkap (dipakai rekap_export_pdf)
+                'tanggal'       => optional($mc->process_date)->format('Y-m-d'),
+                'shift'         => strtoupper((string)($mc->shift ?? '')),
+                'lokasi'        => $mc->location,
+                'seal_no'       => $mc->seal_no,
+                'expedition'    => $mc->expedition?->name,
+                'farm'          => $mc->farm?->name,
+                'retur_kg'      => (float) ($hangingForm->retur_total_kg ?? 0),
+
+                // ini penting untuk export:
+                'target_ayam'   => $targetAyam,                     // DTA
+                'hasil_shackle' => $ayamDiterima,                   // Ayam diterima versi show
+                'selisih'       => (int)($ayamDiterima - $targetAyam),
+
+                // QC (biar sama dengan summary)
+                'qc_keranjang'  => $hangingForm->basket_condition ?? '—',
+                'qc_platform'   => $hangingForm->truck_platform_condition ?? '—',
+                'qc_bulu'       => $hangingForm->feather_condition ?? '—',
             ];
         }
 
@@ -497,5 +463,308 @@ class DashboardController extends Controller
         ];
 
         return $custom[$location][$lineNo] ?? 50;
+    }
+
+    protected function calcAyamDiterimaFromHanging(?\App\Models\MonitorControl $mc): int
+    {
+        if (!$mc || !$mc->relationLoaded('hangingForm')) {
+            return 0;
+        }
+        if (!$mc->hangingForm) {
+            return 0;
+        }
+
+        // pastikan lines.sets ada
+        $mc->hangingForm->loadMissing('lines.sets');
+
+        $location = (string)($mc->location ?? '');
+        $totalAyamShackle = 0;
+
+        foreach ($mc->hangingForm->lines as $line) {
+            $cap = $this->getMaxCapacity($location, (int)$line->line_no);
+
+            foreach ($line->sets as $set) {
+                if ($set->empty_count === null) continue;
+
+                $empty = (int) $set->empty_count;
+                // safety: empty tidak boleh > cap
+                if ($empty > $cap) $empty = $cap;
+                if ($empty < 0) $empty = 0;
+
+                $totalAyamShackle += ($cap - $empty);
+            }
+        }
+
+        return (int) $totalAyamShackle;
+    }
+
+    private function normalizeRekapRange(Request $request, string $today): array
+    {
+        $mode = $request->get('mode', 'single');
+        $date = $request->get('date', $today);
+        $from = $request->get('from', date('Y-m-d', strtotime('-6 days')));
+        $to   = $request->get('to', $today);
+
+        $mode = in_array($mode, ['single', 'last7', 'range'], true) ? $mode : 'single';
+
+        if ($mode === 'single') {
+            $from = $date ?: $today;
+            $to   = $date ?: $today;
+        } elseif ($mode === 'last7') {
+            $from = date('Y-m-d', strtotime('-6 days'));
+            $to   = $today;
+        } else {
+            $from = $from ?: $today;
+            $to   = $to ?: $today;
+        }
+
+        if (strtotime($from) > strtotime($to)) {
+            [$from, $to] = [$to, $from];
+        }
+
+        $diffDays = (int) floor((strtotime($to) - strtotime($from)) / 86400);
+        if ($diffDays > 31) {
+            $to = date('Y-m-d', strtotime($from . ' +31 days'));
+        }
+
+        return [$mode, $date, $from, $to];
+    }
+
+    private function buildMonitorSummaryRow(MonitorControl $mc): array
+    {
+        $form = $mc->hangingForm;
+
+        // ===== hitungan seperti summary.blade =====
+        $dead   = (int) ($form->dead_count ?? 0);
+        $retur  = (int) ($form->retur_count ?? 0);
+        $returKg = (float) ($form->retur_total_kg ?? 0);
+
+        $totalEkor = (int) ($mc->total_chicken ?? 0);
+        $targetAyam = max(0, $totalEkor - $dead - $retur);
+
+        // hasil shackle: cap custom mengikuti getMaxCapacity()
+        $hasilShackle = 0;
+        $totalKosongCalc = 0;
+        $normalSetCount = 0;
+
+        $location = (string) ($mc->location ?? '');
+
+        if ($form && $form->relationLoaded('lines')) {
+            foreach ($form->lines as $line) {
+                $cap = $this->getMaxCapacity($location, (int) ($line->line_no ?? 0));
+
+                foreach ($line->sets as $set) {
+                    if ($set->empty_count === null) continue;
+
+                    $empty = (int) $set->empty_count;
+                    $empty = min($empty, $cap);
+
+                    $totalKosongCalc += $empty;
+                    $hasilShackle += ($cap - $empty);
+
+                    if ($cap === 50 && $empty === 0) {
+                        $normalSetCount++;
+                    }
+                }
+            }
+        }
+
+        $selisih = $hasilShackle - $targetAyam;
+
+        $status = ($selisih === 0) ? 'MATCH' : (($selisih > 0) ? 'KELEBIHAN' : 'KEKURANGAN');
+
+        // jam
+        $jamDatang = null;
+        if ($mc->truck_arrival_time) {
+            $jamDatang = is_string($mc->truck_arrival_time)
+                ? \Carbon\Carbon::parse($mc->truck_arrival_time)->format('H:i')
+                : $mc->truck_arrival_time->format('H:i');
+        }
+
+        $jamBongkar = $form?->unloading_time ? $form->unloading_time->format('H:i') : null;
+        $jamSelesai = $form?->finish_time ? $form->finish_time->format('H:i') : null;
+
+        // QC
+        $basket = $form->basket_condition ?? null;
+        $platform = $form->truck_platform_condition ?? null;
+        $feather = $form->feather_condition ?? null;
+
+        return [
+            'tanggal' => $mc->process_date?->format('Y-m-d'),
+            'shift' => $mc->shift,
+            'lokasi' => $mc->location,
+            'report_code' => $mc->report_code,
+
+            'truck_no' => $mc->truck_no,
+            'no_polisi' => $mc->plateNumber?->plate_number,
+
+            'farm' => $mc->farm?->name,
+            'expedition' => $mc->expedition?->name,
+
+            'size' => $mc->size,
+            'seal_no' => $mc->seal_no,
+
+            'jam_datang' => $jamDatang,
+            'jam_bongkar' => $jamBongkar,
+            'jam_selesai' => $jamSelesai,
+
+            'total_ekor' => $totalEkor,
+            'total_kilo' => $mc->total_kilo,
+            'abw' => $mc->abw,
+
+            'ayam_mati' => $dead,
+            'ayam_retur' => $retur,
+            'retur_kg' => $returKg,
+
+            'target_ayam' => $targetAyam,
+            'hasil_shackle' => $hasilShackle,
+            'shackle_kosong' => $totalKosongCalc,
+            'blok_penuh_50' => $normalSetCount,
+
+            'selisih' => $selisih,
+            'status' => $status,
+
+            'qc_keranjang' => $basket,
+            'qc_platform' => $platform,
+            'qc_bulu' => $feather,
+        ];
+    }
+
+    // public function rekapExportExcel(Request $request)
+    // {
+    //     $today = date('Y-m-d');
+    //     [$mode, $date, $from, $to] = $this->normalizeRekapRange($request, $today);
+
+    //     $mcs = MonitorControl::query()
+    //         ->whereBetween('process_date', [$from, $to])
+    //         // "yang sudah diinput" minimal punya hangingForm
+    //         ->whereHas('hangingForm')
+    //         ->with([
+    //             'farm',
+    //             'expedition',
+    //             'plateNumber',
+    //             'hangingForm.lines.sets',
+    //         ])
+    //         ->orderBy('process_date')
+    //         ->orderBy('location')
+    //         ->orderBy('truck_no')
+    //         ->get();
+
+    //     $filename = "monitor-summary-list-{$from}-{$to}.xls";
+
+    //     $headers = [
+    //         'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+    //         'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+    //         'Cache-Control' => 'max-age=0',
+    //     ];
+
+    //     $callback = function () use ($mcs) {
+    //         $out = fopen('php://output', 'w');
+    //         fwrite($out, "\xEF\xBB\xBF"); // BOM
+
+    //         $no = 1;
+
+    //         $cols = [
+    //             'No',
+    //             'Tanggal', 'Shift', 'Lokasi', 'Report Code',
+    //             'Truk #', 'No Polisi',
+    //             'Ekspedisi', 'Farm',
+    //             'Size', 'No Segel',
+    //             'Jam Datang', 'Jam Bongkar', 'Jam Selesai',
+    //             'Total Ekor', 'Total Kilo', 'ABW',
+    //             'Ayam Mati', 'Ayam Retur', 'Retur Kg',
+    //             'Target Ayam', 'Hasil Shackle', 'Shackle Kosong', 'Blok Penuh(50)',
+    //             'Selisih', 'Status',
+    //             'QC Keranjang', 'QC Platform', 'QC Bulu',
+    //         ];
+
+    //         // header row TSV
+    //         fwrite($out, implode("\t", $cols) . "\r\n");
+
+    //         $clean = function ($v) {
+    //             $v = (string)($v ?? '');
+    //             return str_replace(["\t", "\r", "\n"], ' ', $v);
+    //         };
+
+    //         foreach ($mcs as $mc) {
+    //             $row = $this->buildMonitorSummaryRow($mc);
+
+    //             $line = [
+    //                 $no++,
+    //                 $clean($row['tanggal']),
+    //                 $clean($row['shift']),
+    //                 $clean($row['lokasi']),
+    //                 $clean($row['report_code']),
+    //                 $clean($row['truck_no']),
+    //                 $clean($row['no_polisi']),
+    //                 $clean($row['expedition']),
+    //                 $clean($row['farm']),
+    //                 $clean($row['size']),
+    //                 $clean($row['seal_no']),
+    //                 $clean($row['jam_datang']),
+    //                 $clean($row['jam_bongkar']),
+    //                 $clean($row['jam_selesai']),
+    //                 (int)$row['total_ekor'],
+    //                 $clean($row['total_kilo']),
+    //                 $clean($row['abw']),
+    //                 (int)$row['ayam_mati'],
+    //                 (int)$row['ayam_retur'],
+    //                 $clean($row['retur_kg']),
+    //                 (int)$row['target_ayam'],
+    //                 (int)$row['hasil_shackle'],
+    //                 (int)$row['shackle_kosong'],
+    //                 (int)$row['blok_penuh_50'],
+    //                 (int)$row['selisih'],
+    //                 $clean($row['status']),
+    //                 $clean($row['qc_keranjang']),
+    //                 $clean($row['qc_platform']),
+    //                 $clean($row['qc_bulu']),
+    //             ];
+
+    //             fwrite($out, implode("\t", $line) . "\r\n");
+    //         }
+
+    //         fclose($out);
+    //     };
+
+    //     return response()->stream($callback, 200, $headers);
+    // }
+
+    public function rekapExportPdf(Request $request)
+    {
+        $today = date('Y-m-d');
+        [$mode, $date, $from, $to] = $this->normalizeRekapRange($request, $today);
+
+        $mcs = MonitorControl::query()
+            ->whereBetween('process_date', [$from, $to])
+            ->whereHas('hangingForm')
+            ->with([
+                'farm',
+                'expedition',
+                'plateNumber',
+                'hangingForm.lines.sets',
+            ])
+            ->orderBy('process_date')
+            ->orderBy('location')
+            ->orderBy('truck_no')
+            ->get();
+
+        $rows = [];
+        $no = 1;
+        foreach ($mcs as $mc) {
+            $r = $this->buildMonitorSummaryRow($mc);
+            $r['no'] = $no++;
+            $rows[] = $r;
+        }
+
+        $filename = "Rekap-LB-{$from}-{$to}.pdf";
+
+        $pdf = Pdf::loadView('dashboard.rekap_export_pdf', [
+            'from' => $from,
+            'to' => $to,
+            'rows' => $rows,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download($filename);
     }
 }

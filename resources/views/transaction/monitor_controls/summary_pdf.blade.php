@@ -10,6 +10,8 @@
       font-size: 10.5px;
       color: #111827;
       background: #fff;
+      margin: 0;
+      padding: 18px 22px 18px 22px;
     }
 
     /* ══ KOP ══ */
@@ -22,7 +24,7 @@
     .kop-inner { display: table-row; }
     .kop-logo-cell {
       display: table-cell; vertical-align: middle;
-      width: 76px; padding: 16px 0 16px 22px;
+      width: 76px; padding: 16px 0 16px 0;
     }
     .kop-logo-cell img {
       width: 48px; height: 48px; object-fit: contain;
@@ -38,7 +40,7 @@
     .kop-tagline  { font-size: 8px; color: rgba(255,255,255,.7); letter-spacing: .1em; text-transform: uppercase; margin-top: 2px; }
     .kop-right-cell {
       display: table-cell; vertical-align: middle;
-      text-align: right; padding: 16px 22px 16px 0;
+      text-align: right; padding: 16px 0 16px 0;
     }
     .kop-doc-eyebrow { font-size: 7.5px; font-weight: 700; color: rgba(255,255,255,.65); letter-spacing: .15em; text-transform: uppercase; margin-bottom: 2px; }
     .kop-doc-title   { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -.01em; line-height: 1; }
@@ -53,7 +55,7 @@
     .meta-strip {
       background: #f0fdf4;
       border-bottom: 1px solid #bbf7d0;
-      padding: 8px 22px;
+      padding: 8px 0;
       display: table; width: 100%;
     }
     .meta-item { display: table-cell; padding-right: 22px; vertical-align: middle; }
@@ -67,7 +69,7 @@
     }
 
     /* ══ CONTENT ══ */
-    .content { padding: 16px 22px 10px; }
+    .content { padding: 16px 0 10px; }
 
     /* ══ SECTION TITLE ══ */
     .sec-title {
@@ -312,10 +314,10 @@ $qcLevel = function(?string $val): int {
 };
 $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
 
-$customCaps = ['SH02' => [30 => 18]];
+$customCaps = ['SH02' => [30 => 13]];
 $location = $mc->location ?? '';
 $normalSetCount = 0;
-$customSetCounts = [18 => 0];
+$customSetCounts = [13 => 0];
 $totalKosongCalc = 0;
 $totalAyamCap = 0;
 
@@ -425,7 +427,7 @@ $isDeficit = $selisih < 0;
           <tr><th>Jam Bongkar</th><td>{{ $form->unloading_time?->format('H:i') ?? '—' }}</td></tr>
           <tr><th>Jam Selesai</th><td>{{ $form->finish_time?->format('H:i') ?? '—' }}</td></tr>
           <tr><th>Shackle Kosong</th><td class="td-num">{{ $totalKosong }}</td></tr>
-          <tr><th>Ayam Diterima</th><td class="td-num">{{ $targetAyam }}</td></tr>
+          <tr><th>Ayam Diterima</th><td class="td-num">{{ $totalAyamCap }}</td></tr>
         </table>
       </div>
       <div class="col-r">
@@ -447,7 +449,7 @@ $isDeficit = $selisih < 0;
           <div class="hl-row">
             <span class="hl-key">Kondisional Blok</span>
             <span class="hl-val">
-              @if(($customSetCounts[18] ?? 0) > 0){{ $customSetCounts[18] }}×18 @endif
+              @if(($customSetCounts[13] ?? 0) > 0){{ $customSetCounts[13] }}×13 @endif
               = {{ number_format($customEkor) }}
             </span>
           </div>
@@ -457,7 +459,7 @@ $isDeficit = $selisih < 0;
           </div>
           <div class="hl-row hl-row-total">
             <span class="hl-key"><b>Ayam Diterima</b></span>
-            <span class="hl-val hl-val-hero">{{ number_format($targetAyam) }}</span>
+            <span class="hl-val hl-val-hero">{{ number_format($totalAyamCap) }}</span>
           </div>
           <div class="hl-row">
             <span class="hl-key">Status</span>
@@ -465,7 +467,7 @@ $isDeficit = $selisih < 0;
               @if($isMatch)
                 <span class="hl-badge-match">✓ MATCH</span>
               @else
-                <span class="hl-badge-diff">SELISIH {{ $selisih < 0 ? '(KELEBIHAN)' : '(KEKURANGAN)' }}</span>
+                <span class="hl-badge-diff">SELISIH {{ $selisih > 0 ? '(KELEBIHAN)' : '(KEKURANGAN)' }}</span>
               @endif
             </span>
           </div>

@@ -25,10 +25,10 @@ $condLabel = function(?string $val): string {
     };
 };
 
-$customCaps = ['SH02' => [30 => 18]];
+$customCaps = ['SH02' => [30 => 13]];
 $location = $mc->location ?? '';
 $normalSetCount = 0;
-$customSetCounts = [18 => 0];
+$customSetCounts = [13 => 0];
 $totalKosongCalc = 0;
 $totalAyamCap = 0;
 
@@ -263,7 +263,7 @@ $fc = $form->feather_condition;
           <div class="sm-kv">
             <span class="sm-kv-key">Kondisional Blok</span>
             <span class="sm-kv-val sm-val-mono">
-              @if(($customSetCounts[18] ?? 0) > 0){{ $customSetCounts[18] }}×18 @endif
+              @if(($customSetCounts[13] ?? 0) > 0){{ $customSetCounts[13] }}×13 @endif
               = {{ number_format($customEkor) }}
             </span>
           </div>
@@ -276,7 +276,7 @@ $fc = $form->feather_condition;
         {{-- Total hero row --}}
         <div class="sm-total-row">
           <span class="sm-total-label">Jumlah Ayam Diterima</span>
-          <span class="sm-kv-val sm-val-green">{{ number_format($targetAyam) }}</span>
+          <span class="sm-kv-val sm-val-green">{{ number_format($hasilShackle) }}</span>
         </div>
 
         <div class="sm-kv-group" style="margin-top:10px">

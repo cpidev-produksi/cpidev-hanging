@@ -39,7 +39,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     ->get('/menu', [MenuController::class, 'index'])
     ->name('menu.index');
     Route::get('/api/dashboard/today-stats', [DashboardController::class, 'todayStats'])->name('api.dashboard.today-stats');
-    
+    //Route::get('/dashboard/rekap/export/excel', [DashboardController::class, 'rekapExportExcel'])->name('dashboard.rekap.export.excel');
+    Route::get('/dashboard/rekap/export/pdf',   [DashboardController::class, 'rekapExportPdf'])->name('dashboard.rekap.export.pdf');
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/rekap', [DashboardController::class, 'rekap'])->name('dashboard.rekap');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
