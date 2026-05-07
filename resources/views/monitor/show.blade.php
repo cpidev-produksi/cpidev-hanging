@@ -480,6 +480,235 @@
             box-shadow: 0 2px 8px rgba(5,150,105,0.4);
         }
 
+        /* ── Shift Done Infographic Panel ── */
+        @keyframes infoPanelIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes countUp {
+            from { opacity: 0; transform: scale(0.7); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes ringFill {
+            from { stroke-dashoffset: 220; }
+        }
+        @keyframes pulseRing {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50%       { opacity: 1;   transform: scale(1.06); }
+        }
+
+        .shift-info-panel {
+            display: none;
+            flex-direction: column;
+            gap: 0.9rem;
+            animation: infoPanelIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        .shift-info-panel.visible { display: flex; }
+
+        /* --- Top row: 2 donut charts + meta --- */
+        .sip-top {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.9rem;
+        }
+
+        /* Donut chart card */
+        .donut-card {
+            background: #fff;
+            border-radius: 1.4rem;
+            padding: 1rem 1.2rem;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .donut-wrap {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+        }
+        .donut-wrap svg {
+            transform: rotate(-90deg);
+        }
+        .donut-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .donut-pct {
+            font-size: 1.05rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.5px;
+        }
+        .donut-unit {
+            font-size: 0.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #94A3B8;
+        }
+        .donut-info { flex: 1; min-width: 0; }
+        .donut-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #94A3B8;
+            margin-bottom: 0.25rem;
+        }
+        .donut-main {
+            font-size: 1.5rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.5px;
+        }
+        .donut-sub {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #64748B;
+            margin-top: 0.15rem;
+        }
+        .donut-detail {
+            font-size: 0.62rem;
+            font-weight: 700;
+            margin-top: 0.35rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 30px;
+            padding: 0.15rem 0.6rem;
+            color: #475569;
+        }
+
+        /* --- Stat pills row --- */
+        .sip-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.7rem;
+        }
+
+        .sip-pill {
+            border-radius: 1.2rem;
+            padding: 0.8rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+            animation: infoPanelIn 0.5s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        .sip-pill::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .pill-ayam {
+            background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+            border-color: #FED7AA;
+        }
+        .pill-truk {
+            background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+            border-color: #BFDBFE;
+        }
+        .pill-mati {
+            background: linear-gradient(135deg, #FFF1F2, #FFE4E6);
+            border-color: #FECDD3;
+        }
+        .pill-retur {
+            background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+            border-color: #FDE68A;
+        }
+
+        .sip-pill-icon {
+            font-size: 1.3rem;
+            margin-bottom: 0.1rem;
+        }
+        .sip-pill-label {
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #64748B;
+        }
+        .sip-pill-value {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            line-height: 1;
+            animation: countUp 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        .sip-pill-sub {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #94A3B8;
+        }
+        .val-orange { color: #EA580C; }
+        .val-blue   { color: #2563EB; }
+        .val-red    { color: #DC2626; }
+        .val-amber  { color: #D97706; }
+
+        /* --- Meta row: lokasi, tanggal, jam --- */
+        .sip-meta {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.7rem;
+        }
+        .sip-meta-card {
+            background: #fff;
+            border-radius: 1.2rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+        .sip-meta-icon {
+            width: 36px; height: 36px; min-width: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+        .meta-icon-loc   { background: #FFF7ED; }
+        .meta-icon-date  { background: #EFF6FF; }
+        .meta-icon-time  { background: #F0FDF4; }
+        .sip-meta-body {}
+        .sip-meta-label {
+            font-size: 0.55rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em;
+            color: #94A3B8;
+        }
+        .sip-meta-value {
+            font-size: 0.9rem; font-weight: 800;
+            color: #0F172A; letter-spacing: -0.2px;
+        }
+        .sip-meta-value.time-range {
+            font-size: 0.78rem;
+        }
+
+        /* responsive */
+        @media (max-width: 700px) {
+            .sip-top    { grid-template-columns: 1fr; }
+            .sip-stats  { grid-template-columns: 1fr 1fr; }
+            .sip-meta   { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 440px) {
+            .sip-stats  { grid-template-columns: 1fr 1fr; }
+            .sip-meta   { grid-template-columns: 1fr; }
+        }
+
         /* responsive: tidak ada border luar, semua menyesuaikan */
         @media (max-width: 800px) {
             .dashboard-inner { padding: 0.9rem 1rem; gap: 0.8rem; }
@@ -646,6 +875,135 @@
             </div>
             <div class="shift-complete-badge">SELESAI</div>
         </div>
+
+        <!-- ── Shift Done Infographic ── -->
+        <div class="shift-info-panel" id="shiftInfoPanel">
+
+            <!-- Row 1: 2 Donut charts -->
+            <div class="sip-top">
+                <!-- Donut: Ayam -->
+                <div class="donut-card">
+                    <div class="donut-wrap">
+                        <svg width="80" height="80" viewBox="0 0 80 80">
+                            <circle cx="40" cy="40" r="34" fill="none" stroke="#F1F5F9" stroke-width="10"/>
+                            <circle id="donutAyamRing" cx="40" cy="40" r="34" fill="none"
+                                stroke="url(#gradOrange)" stroke-width="10"
+                                stroke-linecap="round"
+                                stroke-dasharray="213.6"
+                                stroke-dashoffset="213.6"
+                                style="transition: stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)"/>
+                            <defs>
+                                <linearGradient id="gradOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#F59E0B"/>
+                                    <stop offset="100%" stop-color="#F97316"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="donut-center">
+                            <span class="donut-pct val-orange" id="donutAyamPct">0%</span>
+                            <span class="donut-unit">target</span>
+                        </div>
+                    </div>
+                    <div class="donut-info">
+                        <div class="donut-label">🐔 Total Ayam Diterima</div>
+                        <div class="donut-main val-orange" id="sipTotalAyam">0</div>
+                        <div class="donut-sub">ekor</div>
+                        <div class="donut-detail">
+                            <span>Planning:</span>
+                            <strong id="sipPlanAyam">0</strong> ekor
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Donut: Truk -->
+                <div class="donut-card">
+                    <div class="donut-wrap">
+                        <svg width="80" height="80" viewBox="0 0 80 80">
+                            <circle cx="40" cy="40" r="34" fill="none" stroke="#F1F5F9" stroke-width="10"/>
+                            <circle id="donutTrukRing" cx="40" cy="40" r="34" fill="none"
+                                stroke="url(#gradBlue)" stroke-width="10"
+                                stroke-linecap="round"
+                                stroke-dasharray="213.6"
+                                stroke-dashoffset="213.6"
+                                style="transition: stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)"/>
+                            <defs>
+                                <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#3B82F6"/>
+                                    <stop offset="100%" stop-color="#06B6D4"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="donut-center">
+                            <span class="donut-pct val-blue" id="donutTrukPct">0%</span>
+                            <span class="donut-unit">target</span>
+                        </div>
+                    </div>
+                    <div class="donut-info">
+                        <div class="donut-label">🚛 Truk Terhitung</div>
+                        <div class="donut-main val-blue" id="sipTotalTruk">0</div>
+                        <div class="donut-sub">unit</div>
+                        <div class="donut-detail">
+                            <span>Planning:</span>
+                            <strong id="sipPlanTruk">0</strong> unit
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: stat pills -->
+            <div class="sip-stats">
+                <div class="sip-pill pill-ayam" style="animation-delay:0.05s">
+                    <div class="sip-pill-icon">🐔</div>
+                    <div class="sip-pill-label">Ayam Diterima</div>
+                    <div class="sip-pill-value val-orange" id="sipPillAyam">0</div>
+                    <div class="sip-pill-sub">ekor</div>
+                </div>
+                <div class="sip-pill pill-truk" style="animation-delay:0.1s">
+                    <div class="sip-pill-icon">🚚</div>
+                    <div class="sip-pill-label">Jumlah Truk</div>
+                    <div class="sip-pill-value val-blue" id="sipPillTruk">0</div>
+                    <div class="sip-pill-sub">unit</div>
+                </div>
+                <div class="sip-pill pill-mati" style="animation-delay:0.15s">
+                    <div class="sip-pill-icon">💀</div>
+                    <div class="sip-pill-label">Ayam Mati</div>
+                    <div class="sip-pill-value val-red" id="sipPillMati">0</div>
+                    <div class="sip-pill-sub">ekor</div>
+                </div>
+                <div class="sip-pill pill-retur" style="animation-delay:0.2s">
+                    <div class="sip-pill-icon">↩️</div>
+                    <div class="sip-pill-label">Ayam Retur</div>
+                    <div class="sip-pill-value val-amber" id="sipPillRetur">0</div>
+                    <div class="sip-pill-sub" id="sipReturWeight">0 kg</div>
+                </div>
+            </div>
+
+            <!-- Row 3: meta info -->
+            <div class="sip-meta">
+                <div class="sip-meta-card">
+                    <div class="sip-meta-icon meta-icon-loc">📍</div>
+                    <div class="sip-meta-body">
+                        <div class="sip-meta-label">Lokasi</div>
+                        <div class="sip-meta-value" id="sipLokasi">—</div>
+                    </div>
+                </div>
+                <div class="sip-meta-card">
+                    <div class="sip-meta-icon meta-icon-date">📅</div>
+                    <div class="sip-meta-body">
+                        <div class="sip-meta-label">Tanggal Operasional</div>
+                        <div class="sip-meta-value" id="sipTanggal">—</div>
+                    </div>
+                </div>
+                <div class="sip-meta-card">
+                    <div class="sip-meta-icon meta-icon-time">⏱️</div>
+                    <div class="sip-meta-body">
+                        <div class="sip-meta-label">Durasi Operasional</div>
+                        <div class="sip-meta-value time-range" id="sipJam">—</div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /shift-info-panel -->
     </div>
 </div>
 
@@ -757,19 +1115,31 @@
     const carouselModule = document.querySelector('.carousel-module');
     const progressStrip = document.querySelector('.progress-strip');
 
+    // Flag: animasi shift-selesai hanya sekali per sesi
+    let shiftDoneAnimated = false;
+
     function setActiveUI(active) {
-        if(active) {
+        if (active) {
             emptyOverlay.classList.add('hidden');
-            heroGrid.style.display = '';
+            heroGrid.style.display       = '';
             carouselModule.style.display = '';
-            // PROGRESS STRIP TETAP DITAMPILKAN meskipun tidak active
-            progressStrip.style.display = '';
+            progressStrip.style.display  = '';
         } else {
             emptyOverlay.classList.remove('hidden');
-            heroGrid.style.display = 'none';
+            heroGrid.style.display       = 'none';
             carouselModule.style.display = 'none';
-            // Progress strip tetap ditampilkan (jangan disembunyikan)
-            // progressStrip.style.display = 'none';  // HAPUS atau COMMENT baris ini
+            progressStrip.style.display  = '';   // tetap tampil saat idle biasa
+        }
+    }
+
+    // Saat shift selesai: sembunyikan semua section kecuali header + banner + infographic
+    function setShiftDoneUI(isDone) {
+        const sections = [heroGrid, carouselModule, progressStrip, emptyOverlay];
+        if (isDone) {
+            sections.forEach(el => { if (el) el.style.display = 'none'; });
+            emptyOverlay.classList.add('hidden');
+        } else {
+            progressStrip.style.display = '';
         }
     }
 
@@ -799,57 +1169,120 @@
             ayamPercentLabel.innerText = Math.floor(ayamPercent) + '%';
             truckPercentLabel.innerText = Math.floor(truckPercent) + '%';
 
+            // ── Deteksi status shift ──
+            const shiftBanner    = document.getElementById('shiftCompleteBanner');
+            const shiftTitleEl   = document.getElementById('shiftCompleteTitle');
+            const shiftSubEl     = document.getElementById('shiftCompleteSub');
+            const shiftInfoPanel = document.getElementById('shiftInfoPanel');
+            const isShiftDone    = !data.active
+                                   && data.no_process_reason === 'target_reached'
+                                   && !!data.shift_done_message;
+
+            // ── Shift selesai: sembunyikan semua section utama ──
+            setShiftDoneUI(isShiftDone);
+
             // ── Shift Complete Banner ──
-            const shiftBanner     = document.getElementById('shiftCompleteBanner');
-            const shiftTitleEl    = document.getElementById('shiftCompleteTitle');
-            const shiftSubEl      = document.getElementById('shiftCompleteSub');
-            const isShiftDone     = !data.active && data.no_process_reason === 'target_reached' && data.shift_done_message;
             if (shiftBanner) {
                 if (isShiftDone) {
                     shiftTitleEl.textContent = data.shift_done_message;
                     shiftSubEl.textContent   = 'Semua proses hanging pada shift ini telah selesai.';
-                    // Re-trigger animation by removing + re-adding class
-                    shiftBanner.classList.remove('visible');
-                    void shiftBanner.offsetWidth;
-                    shiftBanner.classList.add('visible');
+                    if (!shiftDoneAnimated) {
+                        // Pertama kali: trigger animasi masuk
+                        shiftBanner.classList.remove('visible');
+                        void shiftBanner.offsetWidth;
+                        shiftBanner.classList.add('visible');
+                    } else {
+                        // Fetch berikutnya: pastikan tampil, tanpa re-animasi
+                        shiftBanner.classList.add('visible');
+                    }
                 } else {
                     shiftBanner.classList.remove('visible');
+                    shiftDoneAnimated = false; // reset saat shift tidak lagi selesai
                 }
             }
 
-            if (!data.active) {
-                setActiveUI(false);
-                reportCodeSpan.innerText = '—';
+            // ── Shift Info Panel (infographic) ──
+            if (shiftInfoPanel) {
+                if (isShiftDone) {
+                    if (!shiftDoneAnimated) {
+                        shiftInfoPanel.classList.remove('visible');
+                        void shiftInfoPanel.offsetWidth;
+                        shiftInfoPanel.classList.add('visible');
+                    } else {
+                        shiftInfoPanel.classList.add('visible');
+                    }
 
-                const reasonEl = document.getElementById('emptyReasonText');
-                if (reasonEl) {
-                    reasonEl.textContent = ''; // Banner sudah menampilkan pesan shift selesai
+                    const _todayAyam   = data.today_total_ayam    || 0;
+                    const _planAyam    = data.total_planning_ayam  || 0;
+                    const _todayTruk   = data.today_truck_count    || 0;
+                    const _planTruk    = data.total_planning_truk  || 0;
+                    const _deadCount   = data.total_dead_count     || 0;
+                    const _returCount  = data.total_retur_count    || 0;
+                    const _returWeight = data.total_retur_weight   || 0;
+
+                    const _ayamPct = _planAyam > 0 ? Math.min((_todayAyam / _planAyam) * 100, 100) : 0;
+                    const _trukPct = _planTruk > 0 ? Math.min((_todayTruk / _planTruk) * 100, 100)  : 0;
+                    const CIRC = 213.6;
+
+                    document.getElementById('donutAyamRing').style.strokeDashoffset = CIRC - (CIRC * _ayamPct / 100);
+                    document.getElementById('donutTrukRing').style.strokeDashoffset = CIRC - (CIRC * _trukPct / 100);
+                    document.getElementById('donutAyamPct').textContent = Math.round(_ayamPct) + '%';
+                    document.getElementById('donutTrukPct').textContent = Math.round(_trukPct) + '%';
+
+                    document.getElementById('sipTotalAyam').textContent = fmt(_todayAyam);
+                    document.getElementById('sipPlanAyam').textContent  = fmt(_planAyam);
+                    document.getElementById('sipTotalTruk').textContent = fmt(_todayTruk);
+                    document.getElementById('sipPlanTruk').textContent  = fmt(_planTruk);
+
+                    document.getElementById('sipPillAyam').textContent  = fmt(_todayAyam);
+                    document.getElementById('sipPillTruk').textContent  = fmt(_todayTruk);
+                    document.getElementById('sipPillMati').textContent  = fmt(_deadCount);
+                    document.getElementById('sipPillRetur').textContent = fmt(_returCount);
+                    document.getElementById('sipReturWeight').textContent = _returWeight > 0
+                        ? fmt(_returWeight) + ' kg' : '— kg';
+
+                    document.getElementById('sipLokasi').textContent = data.location || '—';
+
+                    if (data.process_date) {
+                        const d = new Date(data.process_date + 'T00:00:00');
+                        const days   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+                        document.getElementById('sipTanggal').textContent =
+                            `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+                    }
+
+                    const startT  = data.shift_start_time  || '—';
+                    const finishT = data.shift_finish_time || '—';
+                    document.getElementById('sipJam').textContent = `${startT} → ${finishT}`;
+
+                    // Tandai sudah dianimasikan — fetch berikutnya tidak re-trigger
+                    shiftDoneAnimated = true;
+
+                } else {
+                    shiftInfoPanel.classList.remove('visible');
                 }
-                
-                // Kosongkan atau set default value untuk field yang tidak ada datanya
-                heroAyamSpan.innerText = '0';
-                statEkorSpan.innerText = '0';
-                statTruckNoSpan.innerText = '—';
-                carouselFarm.innerText = '—';
-                carouselSize.innerText = '—';
-                carouselExpedisi.innerText = '—';
-                carouselDriver.innerText = '—';
-                
-                // Update progress saja, tanpa return
-                todayAyamSpan.innerText = fmt(data.today_total_ayam || 0);
-                planningAyamSpan.innerText = fmt(data.total_planning_ayam || 0);
-                todayTruckSpan.innerText = fmt(data.today_truck_count || 0);
-                planningTruckSpan.innerText = fmt(data.total_planning_truk || 0);
-                
-                let ayamPercent = (data.total_planning_ayam || 0) > 0 ? ((data.today_total_ayam || 0) / (data.total_planning_ayam || 1)) * 100 : 0;
-                let truckPercent = (data.total_planning_truk || 0) > 0 ? ((data.today_truck_count || 0) / (data.total_planning_truk || 1)) * 100 : 0;
-                ayamPercent = Math.min(ayamPercent, 100);
-                truckPercent = Math.min(truckPercent, 100);
-                progressAyamFill.style.width = ayamPercent + '%';
-                progressTruckFill.style.width = truckPercent + '%';
-                ayamPercentLabel.innerText = Math.floor(ayamPercent) + '%';
-                truckPercentLabel.innerText = Math.floor(truckPercent) + '%';
-                
+            }
+
+            // ── Tidak ada proses aktif (bukan shift selesai, hanya idle) ──
+            if (!data.active) {
+                if (!isShiftDone) {
+                    setActiveUI(false);
+                    // Update progress strip saat idle biasa
+                    todayAyamSpan.innerText    = fmt(data.today_total_ayam || 0);
+                    planningAyamSpan.innerText = fmt(data.total_planning_ayam || 0);
+                    todayTruckSpan.innerText   = fmt(data.today_truck_count || 0);
+                    planningTruckSpan.innerText = fmt(data.total_planning_truk || 0);
+                    let _ap = (data.total_planning_ayam || 0) > 0
+                        ? ((data.today_total_ayam || 0) / (data.total_planning_ayam || 1)) * 100 : 0;
+                    let _tp = (data.total_planning_truk || 0) > 0
+                        ? ((data.today_truck_count || 0) / (data.total_planning_truk || 1)) * 100 : 0;
+                    _ap = Math.min(_ap, 100); _tp = Math.min(_tp, 100);
+                    progressAyamFill.style.width = _ap + '%';
+                    progressTruckFill.style.width = _tp + '%';
+                    ayamPercentLabel.innerText  = Math.floor(_ap) + '%';
+                    truckPercentLabel.innerText = Math.floor(_tp) + '%';
+                }
+                reportCodeSpan.innerText = '—';
                 return;
             }
             setActiveUI(true);

@@ -13,7 +13,7 @@ class LiveMonitorController extends Controller
     {
         $custom = [
             // 'SH01' => [17 => 46],
-            'SH02' => [30 => 19],
+            'SH02' => [30 => 13],
         ];
 
         return $custom[$location][$lineNo] ?? 50;
@@ -115,6 +115,33 @@ class LiveMonitorController extends Controller
         $isNoProcess = (!$active || !$active->hangingForm);
         $showShiftCompleteBanner = $isNoProcess && $hasAnyShiftCompleted && $shiftDoneMessage;
 
+        // ── Shift summary: jam mulai, jam selesai, mati, retur, berat retur ──
+        // Kolom: unloading_time (jam mulai), finish_time (jam selesai),
+        //        dead_count, retur_count, retur_total_kg — semua dari HangingForm
+        $allHangingForms = $allTodayControls
+            ->filter(fn($mc) => $mc->hangingForm !== null)
+            ->map(fn($mc) => $mc->hangingForm);
+
+        // Jam mulai = unloading_time terkecil; jam selesai = finish_time terbesar
+        $unloadingTimes = $allHangingForms
+            ->filter(fn($hf) => $hf->unloading_time !== null)
+            ->map(fn($hf) => $hf->unloading_time instanceof \Carbon\Carbon
+                ? $hf->unloading_time->format('H:i')
+                : \Carbon\Carbon::parse($hf->unloading_time)->format('H:i'));
+
+        $finishTimes = $allHangingForms
+            ->filter(fn($hf) => $hf->finish_time !== null)
+            ->map(fn($hf) => $hf->finish_time instanceof \Carbon\Carbon
+                ? $hf->finish_time->format('H:i')
+                : \Carbon\Carbon::parse($hf->finish_time)->format('H:i'));
+
+        $shiftStartTime  = $unloadingTimes->isNotEmpty() ? $unloadingTimes->min() : null;
+        $shiftFinishTime = $finishTimes->isNotEmpty()    ? $finishTimes->max()    : null;
+
+        $totalDeadCount   = $allHangingForms->sum(fn($hf) => (int)   ($hf->dead_count     ?? 0));
+        $totalReturCount  = $allHangingForms->sum(fn($hf) => (int)   ($hf->retur_count    ?? 0));
+        $totalReturWeight = $allHangingForms->sum(fn($hf) => (float) ($hf->retur_total_kg ?? 0));
+
         if (!$active || !$active->hangingForm) {
             return response()->json([
                 'active' => false,
@@ -125,7 +152,15 @@ class LiveMonitorController extends Controller
                 'total_planning_truk' => $totalPlanningTruk,
                 'no_process_reason' => $showShiftCompleteBanner ? 'target_reached' : 'no_running',
                 'shift_done_message' => $showShiftCompleteBanner ? $shiftDoneMessage : null,
-                
+
+                // Shift summary infographic
+                'shift_start_time'   => $shiftStartTime,
+                'shift_finish_time'  => $shiftFinishTime,
+                'total_dead_count'   => $totalDeadCount,
+                'total_retur_count'  => $totalReturCount,
+                'total_retur_weight' => $totalReturWeight,
+                'process_date'       => $today,
+
                 // Data kosong untuk bagian lain
                 'report_code' => null,
                 'total_ayam_running' => 0,
