@@ -151,6 +151,24 @@
         background: radial-gradient(ellipse at top right, rgba(124,58,237,.08) 0%, transparent 65%);
     }
 
+    .rk-card-mati {
+        background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+        border-color: #fecdd3;
+    }
+
+    .rk-card-mati::before {
+        background: radial-gradient(ellipse at top right, rgba(220,38,38,.08) 0%, transparent 65%);
+    }
+
+    .rk-card-retur {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border-color: #fde68a;
+    }
+
+    .rk-card-retur::before {
+        background: radial-gradient(ellipse at top right, rgba(217,119,6,.08) 0%, transparent 65%);
+    }
+
     .rk-card-icon {
         width: 42px;
         height: 42px;
@@ -165,6 +183,8 @@
 
     .icon-truk { background: rgba(37,99,235,.12); }
     .icon-ayam { background: rgba(124,58,237,.12); }
+    .icon-mati { background: rgba(220,38,38,.12); }
+    .icon-retur { background: rgba(217,119,6,.12); }
 
     .rk-card-label {
         font-size: 10px;
@@ -188,6 +208,8 @@
 
     .val-truk { color: #1d4ed8; }
     .val-ayam { color: #6d28d9; }
+    .val-mati { color: #b91c1c; }
+    .val-retur { color: #b45309; }
 
     .rk-card-sub {
         font-size: 11px;
@@ -424,8 +446,10 @@
 
 @php
     $f = $filter ?? ['mode'=>'single','date'=>$today,'from'=>$today,'to'=>$today];
-    $totalTruk = is_countable($rows ?? []) ? count($rows) : 0;
-    $totalAyam = array_sum(array_column($rows ?? [], 'ayam_diterima'));
+    $totalTruk  = is_countable($rows ?? []) ? count($rows) : 0;
+    $totalAyam  = array_sum(array_column($rows ?? [], 'ayam_diterima'));
+    $totalMati  = array_sum(array_column($rows ?? [], 'ayam_mati'));
+    $totalRetur = array_sum(array_column($rows ?? [], 'ayam_retur'));
 @endphp
 
 <div class="rk-wrap">
@@ -484,6 +508,24 @@
             <div class="rk-card-value val-ayam">{{ number_format($totalAyam) }}</div>
             <div class="rk-card-sub">ekor</div>
             <div class="rk-card-deco">{{ number_format($totalAyam) }}</div>
+        </div>
+
+        {{-- Card: Jumlah Ayam Mati --}}
+        <div class="rk-card rk-card-mati">
+            <div class="rk-card-icon icon-mati">💀</div>
+            <div class="rk-card-label">Jumlah Ayam Mati</div>
+            <div class="rk-card-value val-mati">{{ number_format($totalMati) }}</div>
+            <div class="rk-card-sub">ekor</div>
+            <div class="rk-card-deco">{{ number_format($totalMati) }}</div>
+        </div>
+
+        {{-- Card: Jumlah Ayam Retur --}}
+        <div class="rk-card rk-card-retur">
+            <div class="rk-card-icon icon-retur">↩️</div>
+            <div class="rk-card-label">Jumlah Ayam Retur</div>
+            <div class="rk-card-value val-retur">{{ number_format($totalRetur) }}</div>
+            <div class="rk-card-sub">ekor</div>
+            <div class="rk-card-deco">{{ number_format($totalRetur) }}</div>
         </div>
     </div>
 
