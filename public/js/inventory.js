@@ -59,13 +59,13 @@
 
   async function api(url, opts = {}) {
     const res = await fetch(url, {
+      ...opts,
       headers: {
         'X-CSRF-TOKEN': window.SHFI.csrf,
         'Accept': 'application/json',
         ...(opts.headers || {})
       },
-      credentials: 'same-origin',
-      ...opts
+      credentials: 'same-origin'
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || 'Request failed');
@@ -75,6 +75,11 @@
   // ── State ──────────────────────────────────────────────────────────────────
 
   let state = {
+    treeOpen: new Set(),
+    selectedKeys: new Set(),   // ex: "folder:12", "file:44"
+    lastFileAnchorKey: null,       // key terakhir untuk shift range
+    lastOrderedFileKeys: [],       // urutan row key terakhir hasil render list (untuk range)
+    clipboardItems: null,        // {mode:'copy'|'cut', items:[{type,id,name}]}
     root_id: null,
     folder_id: null,
     path: [],         // [{id, name}]
@@ -84,13 +89,71 @@
     lastFiles: [],
   };
 
+  function treeKey(parentId, isRoot) {
+    return isRoot ? `root:${parentId}` : `folder:${parentId}`;
+  }
+
+  function keyOf(type, id) { return `${type}:${id}`; }
+
+  function rowKeyFromTr(tr) {
+    return keyOf(tr.dataset.type, tr.dataset.id);
+  }
+
+  function clearSelection() {
+    state.selectedKeys.clear();
+    state.lastFileAnchorKey = null;
+    document.querySelectorAll('#listBody tr.selected').forEach(tr => tr.classList.remove('selected'));
+  }
+
+  function applySelectionToDom() {
+    document.querySelectorAll('#listBody tr[data-type]').forEach(tr => {
+      const key = rowKeyFromTr(tr);
+      tr.classList.toggle('selected', state.selectedKeys.has(key));
+    });
+  }
+
+  function rebuildFileOrderCache() {
+    state.lastOrderedFileKeys = Array.from(document.querySelectorAll('#listBody tr[data-type="file"]'))
+      .map(tr => rowKeyFromTr(tr));
+  }
+
+  function getSelectedItems() {
+    const selected = [];
+    document.querySelectorAll('#listBody tr[data-type]').forEach(tr => {
+      const key = rowKeyFromTr(tr);
+      if (state.selectedKeys.has(key)) {
+        selected.push({
+          type: tr.dataset.type,
+          id: parseInt(tr.dataset.id, 10),
+          name: tr.dataset.name,
+        });
+      }
+    });
+    return selected;
+  }
+
+  function ensureRowSelectedForContext(tr) {
+    if (!tr) return;
+    const key = rowKeyFromTr(tr);
+
+    if (!state.selectedKeys.has(key)) {
+      state.selectedKeys.clear();
+      state.selectedKeys.add(key);
+      if (tr.dataset.type === 'file') state.lastFileAnchorKey = key;
+      applySelectionToDom();
+    }
+  }
+
   // ── Context Menu ───────────────────────────────────────────────────────────
 
   const ctxMenu = $('ctxMenu');
+  
+  function persistTreeState() {}
 
   function showCtxMenu(x, y, tr) {
     state.ctxTarget = tr;
     const type = tr ? tr.dataset.type : null;
+    ensureRowSelectedForContext(tr);
 
     // Show/hide relevant items
     ctxMenu.querySelector('[data-action="open"]').style.display     = (type === 'folder') ? '' : 'none';
@@ -99,7 +162,7 @@
     ctxMenu.querySelector('[data-action="copy"]').style.display     = tr ? '' : 'none';
     ctxMenu.querySelector('[data-action="cut"]').style.display      = tr ? '' : 'none';
     ctxMenu.querySelector('[data-action="delete"]').style.display   = tr ? '' : 'none';
-    ctxMenu.querySelector('[data-action="paste"]').style.display    = state.clipboard ? '' : 'none';
+    ctxMenu.querySelector('[data-action="paste"]').style.display = state.clipboardItems ? '' : 'none';
 
     // Position
     const vw = window.innerWidth, vh = window.innerHeight;
@@ -137,9 +200,6 @@
 
   // ── Sidebar Tree ───────────────────────────────────────────────────────────
 
-  // We'll render a tree from the root's folder structure.
-  // For simplicity we lazy-load children on expand.
-
   let treeRoots = [];
 
   function buildTreeNode(folder, depth = 0) {
@@ -167,18 +227,33 @@
       </div>`;
   }
 
-  async function loadTreeChildren(parentId, isRoot, containerEl, chevronEl) {
+  async function loadTreeChildren(parentId, isRoot, containerEl, chevronEl, { mode = 'toggle', forceReload = false } = {}) {
+    const key = treeKey(parentId, isRoot);
     const isOpen = containerEl.classList.contains('open');
-    if (isOpen) {
+
+    // mode reloadIfOpen: kalau node lagi close, jangan buka
+    if (mode === 'reloadIfOpen' && !isOpen) return;
+
+    // mode toggle: close kalau sedang open
+    if (mode === 'toggle' && isOpen) {
       containerEl.classList.remove('open');
       chevronEl.classList.remove('open');
+      state.treeOpen.delete(key);
+      persistTreeState();
       return;
     }
 
-    // Already loaded
-    if (containerEl.childElementCount > 0) {
+    // mode ensureOpen: kalau sudah open dan tidak forceReload, cukup return
+    if (mode === 'ensureOpen' && isOpen && !forceReload) return;
+
+    if (forceReload) containerEl.innerHTML = '';
+
+    // kalau sudah pernah loaded dan hanya ensureOpen, jangan fetch ulang
+    if (!forceReload && containerEl.childElementCount > 0) {
       containerEl.classList.add('open');
       chevronEl.classList.add('open');
+      state.treeOpen.add(key);
+      persistTreeState();
       return;
     }
 
@@ -203,7 +278,10 @@
       containerEl.classList.add('open');
       chevronEl.textContent = '▶';
       chevronEl.classList.add('open');
-    } catch(err) {
+
+      state.treeOpen.add(key);
+      persistTreeState();
+    } catch (err) {
       chevronEl.textContent = '▶';
       toast('Failed to load tree: ' + err.message, 'error');
     }
@@ -221,38 +299,48 @@
 
   function bindTreeEvents(container) {
     container.querySelectorAll('.tree-row').forEach(row => {
-      row.addEventListener('click', async e => {
+      row.addEventListener('click', async (e) => {
         e.stopPropagation();
 
+        const clickedChevron = e.target.closest('.tree-chevron');
+
         if (row.dataset.rootId) {
-          // Clicked a root
           const rid = row.dataset.rootId;
+
+          // navigasi selalu jalan
           state.root_id = rid;
           $('rootSelect').value = rid;
           state.folder_id = null;
           state.path = [];
           updateTreeActive();
-
-          const chevron = container.querySelector(`[data-chevron="root-${rid}"]`);
-          const children = container.querySelector(`[data-children="root-${rid}"]`);
-          if (chevron && children) {
-            await loadTreeChildren(rid, true, children, chevron);
-          }
           await loadList();
-        } else if (row.dataset.folderId) {
-          // Clicked a folder
-          state.folder_id = row.dataset.folderId;
-          updateTreeActive();
 
+          // expand/collapse hanya kalau klik chevron
+          if (clickedChevron) {
+            const chevron = document.querySelector(`[data-chevron="root-${rid}"]`);
+            const children = document.querySelector(`[data-children="root-${rid}"]`);
+            if (chevron && children) {
+              await loadTreeChildren(rid, true, children, chevron, { mode: 'toggle' });
+            }
+          }
+
+          return;
+        }
+
+        if (row.dataset.folderId) {
           const fid = row.dataset.folderId;
-          const chevron = container.querySelector(`[data-chevron="${fid}"]`) ||
-                          document.querySelector(`[data-chevron="${fid}"]`);
-          const children = container.querySelector(`[data-children="${fid}"]`) ||
-                           document.querySelector(`[data-children="${fid}"]`);
-          if (chevron && children) {
-            await loadTreeChildren(fid, false, children, chevron);
-          }
+
+          state.folder_id = fid;
+          updateTreeActive();
           await loadList();
+
+          if (clickedChevron) {
+            const chevron = document.querySelector(`[data-chevron="${fid}"]`);
+            const children = document.querySelector(`[data-children="${fid}"]`);
+            if (chevron && children) {
+              await loadTreeChildren(fid, false, children, chevron, { mode: 'toggle' });
+            }
+          }
         }
       });
     });
@@ -264,6 +352,29 @@
     sidebar.innerHTML = roots.map(r => buildRootTreeNode(r)).join('');
     bindTreeEvents(sidebar);
     updateTreeActive();
+  }
+
+  async function refreshExplorerTree({ openIfClosed = true } = {}) {
+    const { parentId, isRoot, childrenEl, chevronEl } = getActiveTreeNodeEls();
+
+    if (!childrenEl || !chevronEl) return;
+
+    childrenEl.innerHTML = '';
+
+    if (openIfClosed) {
+      childrenEl.classList.remove('open');
+    }
+
+    await loadTreeChildren(parentId, isRoot, childrenEl, chevronEl);
+  }
+
+  async function refreshAllPanels({ refreshTree = true } = {}) {
+    await loadList();
+
+    if (refreshTree) {
+      updateTreeActive();
+      await refreshExplorerTree({ openIfClosed: false });
+    }
   }
 
   // ── Breadcrumbs ────────────────────────────────────────────────────────────
@@ -403,13 +514,19 @@
 
       if (!folders.length && !files.length) {
         body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📭</div><p>This folder is empty.</p></div></td></tr>`;
+        clearSelection();
+        rebuildFileOrderCache();
       } else {
         body.innerHTML = folders.map(rowHtmlFolder).join('') + files.map(rowHtmlFile).join('');
+        clearSelection();
+        rebuildFileOrderCache();
       }
 
       updateStatusBar(folders, files);
     } catch(err) {
       body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">❌</div><p>${escapeHtml(err.message)}</p></div></td></tr>`;
+      clearSelection();
+      rebuildFileOrderCache();
       toast(err.message, 'error');
     }
   }
@@ -444,6 +561,18 @@
     setTimeout(() => $('newFolderName').focus(), 80);
   }
 
+  function getActiveTreeNodeEls() {
+    if (!state.folder_id) {
+      const childrenEl = document.querySelector(`[data-children="root-${state.root_id}"]`);
+      const chevronEl  = document.querySelector(`[data-chevron="root-${state.root_id}"]`);
+      return { parentId: state.root_id, isRoot: true, childrenEl, chevronEl };
+    }
+
+    const childrenEl = document.querySelector(`[data-children="${state.folder_id}"]`);
+    const chevronEl  = document.querySelector(`[data-chevron="${state.folder_id}"]`);
+    return { parentId: state.folder_id, isRoot: false, childrenEl, chevronEl };
+  }
+
   async function createFolder() {
     const name = $('newFolderName').value.trim();
     const errEl = $('newFolderError');
@@ -467,7 +596,8 @@
       });
       closeModal('modalNewFolder');
       toast(`Folder "${name}" created.`, 'success');
-      await loadList();
+      closeModal('modalNewFolder');
+      await refreshAllPanels({ refreshTree: true });
     } catch(err) {
       errEl.textContent = err.message;
       errEl.style.display = 'block';
@@ -514,7 +644,7 @@
       });
       closeModal('modalRename');
       toast(`Renamed to "${newName}".`, 'success');
-      await loadList();
+      await refreshAllPanels({ refreshTree: true });
     } catch(err) {
       errEl.textContent = err.message;
       errEl.style.display = 'block';
@@ -532,35 +662,68 @@
 
   function showDeleteModal(tr) {
     pendingDeleteTr = tr;
-    const name = tr.dataset.name;
-    const label = tr.dataset.type === 'folder' ? `folder "${name}" and all its contents` : `file "${name}"`;
-    $('deleteItemName').textContent = label;
+
+    const selected = getSelectedItems();
+
+    if (selected.length > 1) {
+      $('deleteItemName').textContent = `${selected.length} items`;
+    } else if (selected.length === 1) {
+      const it = selected[0];
+      const label = it.type === 'folder'
+        ? `folder "${it.name}" and all its contents`
+        : `file "${it.name}"`;
+      $('deleteItemName').textContent = label;
+    } else if (tr) {
+      const name = tr.dataset.name;
+      const label = tr.dataset.type === 'folder'
+        ? `folder "${name}" and all its contents`
+        : `file "${name}"`;
+      $('deleteItemName').textContent = label;
+    } else {
+      return toast('No items selected.', 'warn');
+    }
+
     openModal('modalDelete');
   }
 
   async function doDelete() {
-    const tr = pendingDeleteTr;
-    if (!tr) return;
+    let items = getSelectedItems();
+    if (!items.length && pendingDeleteTr) {
+      items = [{
+        type: pendingDeleteTr.dataset.type,
+        id: parseInt(pendingDeleteTr.dataset.id, 10),
+        name: pendingDeleteTr.dataset.name
+      }];
+    }
+    if (!items.length) return toast('No items selected.', 'warn');
 
     const btn = $('btnDeleteConfirm');
     btn.disabled = true; btn.textContent = 'Moving to trash...';
 
-    try {
-      const payload = { type: tr.dataset.type, id: parseInt(tr.dataset.id, 10) };
-      if (tr.dataset.type === 'folder') payload.confirm = true;
+    let ok = 0, fail = 0;
 
-      await api(window.SHFI.routes.delete, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+    for (const it of items) {
+      try {
+        const payload = { type: it.type, id: it.id };
+        if (it.type === 'folder') payload.confirm = true;
 
-      closeModal('modalDelete');
-      toast(`"${tr.dataset.name}" moved to trash.`, 'info');
-      await loadList();
-    } catch(err) {
-      toast(err.message, 'error');
+        await api(window.SHFI.routes.delete, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        ok++;
+      } catch (err) {
+        fail++;
+        toast(`Failed to delete "${it.name}": ${err.message}`, 'error');
+      }
     }
+
+    closeModal('modalDelete');
+    clearSelection();
+
+    toast(`Move to trash done. Success: ${ok}, Failed: ${fail}`, fail ? 'warn' : 'info');
+    await refreshAllPanels({ refreshTree: true });
 
     btn.disabled = false; btn.textContent = 'Move to Trash';
   }
@@ -570,31 +733,48 @@
   // ── Copy / Cut / Paste ─────────────────────────────────────────────────────
 
   function copyCut(tr, mode) {
-    state.clipboard = { mode, type: tr.dataset.type, id: parseInt(tr.dataset.id, 10), name: tr.dataset.name };
-    toast(`"${tr.dataset.name}" ${mode === 'copy' ? 'copied' : 'cut'}. Navigate to destination and paste (Ctrl+V).`, 'info', 5000);
+    // pastikan selection konsisten dengan item yg di-klik kanan
+    ensureRowSelectedForContext(tr);
+
+    const items = getSelectedItems();
+    if (!items.length) return toast('No items selected.', 'warn');
+
+    state.clipboardItems = { mode, items };
+    toast(`${items.length} item(s) ${mode === 'copy' ? 'copied' : 'cut'}. Open destination folder then paste (Ctrl+V).`, 'info', 5000);
   }
 
   async function pasteHere() {
-    if (!state.clipboard) return toast('Clipboard is empty.', 'warn');
+    if (!state.clipboardItems) return toast('Clipboard is empty.', 'warn');
     if (!state.folder_id) return toast('Please open a destination folder first.', 'warn');
 
-    const { mode, type, id, name } = state.clipboard;
-    const payload = { type, id, target_folder_id: parseInt(state.folder_id, 10) };
+    const { mode, items } = state.clipboardItems;
     const url = mode === 'copy' ? window.SHFI.routes.copy : window.SHFI.routes.move;
 
-    try {
-      await api(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+    let ok = 0, fail = 0;
 
-      if (mode === 'cut') state.clipboard = null;
-      toast(`"${name}" ${mode === 'copy' ? 'copied' : 'moved'} successfully.`, 'success');
-      await loadList();
-    } catch(err) {
-      toast(err.message, 'error');
+    for (const it of items) {
+      try {
+        await api(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: it.type,
+            id: it.id,
+            target_folder_id: parseInt(state.folder_id, 10)
+          })
+        });
+        ok++;
+      } catch (err) {
+        fail++;
+        toast(`Failed to ${mode} "${it.name}": ${err.message}`, 'error');
+      }
     }
+
+    if (mode === 'cut' && ok > 0 && fail === 0) {
+      state.clipboardItems = null;
+    }
+    toast(`Paste done. Success: ${ok}, Failed: ${fail}`, fail ? 'warn' : 'success');
+    await refreshAllPanels({ refreshTree: true });
   }
 
   // ── Upload ─────────────────────────────────────────────────────────────────
@@ -619,7 +799,7 @@
 
     if (successCount > 0) {
       toast(`${successCount} file${successCount > 1 ? 's' : ''} uploaded successfully.`, 'success');
-      await loadList();
+      await refreshAllPanels({ refreshTree: true });
     }
     if (failCount > 0) {
       toast(`${failCount} file${failCount > 1 ? 's' : ''} failed to upload.`, 'error');
@@ -665,6 +845,7 @@
       state.path = [];
       updateTreeActive();
       await loadList();
+      await refreshExplorerTree({ openIfClosed: false });
     });
 
     ['qInput', 'monthInput', 'fromInput', 'toInput', 'sortSelect', 'dirSelect'].forEach(id => {
@@ -699,6 +880,60 @@
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
         pasteHere();
       }
+    });
+
+    $('listBody').addEventListener('click', (e) => {
+      const tr = e.target.closest('tr[data-type]');
+      if (!tr) return;
+
+      const type = tr.dataset.type;
+      const key = rowKeyFromTr(tr);
+
+      const isCtrl = e.ctrlKey || e.metaKey;
+      const isShift = e.shiftKey;
+
+      // SHIFT range select: FILES ONLY
+      if (isShift && type === 'file' && state.lastFileAnchorKey && state.lastOrderedFileKeys.length) {
+        const a = state.lastOrderedFileKeys.indexOf(state.lastFileAnchorKey);
+        const b = state.lastOrderedFileKeys.indexOf(key);
+
+        if (a !== -1 && b !== -1) {
+          const [start, end] = a < b ? [a, b] : [b, a];
+
+          // SHIFT tanpa ctrl => replace selection
+          if (!isCtrl) state.selectedKeys.clear();
+
+          for (let i = start; i <= end; i++) state.selectedKeys.add(state.lastOrderedFileKeys[i]);
+
+          applySelectionToDom();
+          return;
+        }
+      }
+
+      // CTRL/CMD toggle
+      if (isCtrl) {
+        if (state.selectedKeys.has(key)) state.selectedKeys.delete(key);
+        else state.selectedKeys.add(key);
+
+        // anchor hanya untuk file
+        if (type === 'file') state.lastFileAnchorKey = key;
+
+        applySelectionToDom();
+        return;
+      }
+
+      // normal click: single select
+      state.selectedKeys.clear();
+      state.selectedKeys.add(key);
+
+      if (type === 'file') state.lastFileAnchorKey = key;
+      else state.lastFileAnchorKey = null;
+
+      applySelectionToDom();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') clearSelection();
     });
   }
 
