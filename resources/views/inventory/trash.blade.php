@@ -417,6 +417,20 @@ async function loadRootsAndTrash() {
   }
 }
 
+function toFormBody(obj) {
+  const p = new URLSearchParams();
+  Object.entries(obj).forEach(([k,v]) => p.set(k, String(v)));
+  return p.toString();
+}
+
+async function apiForm(url, method, payload) {
+  return api(url, {
+    method,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+    body: toFormBody(payload)
+  });
+}
+
 // ── Load Trash ─────────────────────────────────────────
 async function loadTrash() {
   try {
@@ -496,11 +510,7 @@ document.getElementById('trashBody').addEventListener('click', async e => {
   if (action === 'restore') {
     try {
       btn.disabled = true; btn.textContent = '...';
-      await api(window.SHFI.routes.trashRestore, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({type, id: parseInt(id)})
-      });
+      await apiForm(window.SHFI.routes.trashRestore, 'POST', { type, id: parseInt(id,10) });
       allItems = allItems.filter(i => !(i.id==id && i.type===type));
       renderTrash();
       toast(`"${name}" has been restored successfully.`, 'success');
@@ -519,11 +529,7 @@ document.getElementById('btnPurgeConfirm').addEventListener('click', async () =>
   const btn = document.getElementById('btnPurgeConfirm');
   btn.disabled = true; btn.textContent = 'Deleting...';
   try {
-    await api(window.SHFI.routes.trashPurge, {
-      method: 'DELETE',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({type: pendingPurgeType, id: pendingPurgeId})
-    });
+    await apiForm(window.SHFI.routes.trashPurge, 'DELETE', { type: pendingPurgeType, id: pendingPurgeId });
     allItems = allItems.filter(i => !(i.id===pendingPurgeId && i.type===pendingPurgeType));
     renderTrash();
     closeModal('modalPurge');
