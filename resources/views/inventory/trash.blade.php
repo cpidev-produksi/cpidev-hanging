@@ -514,7 +514,7 @@ document.getElementById('trashBody').addEventListener('click', async e => {
       allItems = allItems.filter(i => !(i.id==id && i.type===type));
       renderTrash();
       toast(`"${name}" has been restored successfully.`, 'success');
-    } catch(err) { toast(err.message, 'error'); btn.disabled=false; btn.innerHTML='♻️ Restore'; }
+    } catch(err) { toast(err.message || 'Anda tidak memliki izin melakukan aksi ini.', 'error'); btn.disabled=false; btn.innerHTML='♻️ Restore'; }
   }
 
   if (action === 'purge') {
@@ -529,7 +529,10 @@ document.getElementById('btnPurgeConfirm').addEventListener('click', async () =>
   const btn = document.getElementById('btnPurgeConfirm');
   btn.disabled = true; btn.textContent = 'Deleting...';
   try {
-    await apiForm(window.SHFI.routes.trashPurge, 'DELETE', { type: pendingPurgeType, id: pendingPurgeId });
+    const purgeUrl = window.SHFI.routes.trashPurge 
+      + '?type=' + encodeURIComponent(pendingPurgeType) 
+      + '&id=' + pendingPurgeId;
+    await api(purgeUrl, { method: 'DELETE' });
     allItems = allItems.filter(i => !(i.id===pendingPurgeId && i.type===pendingPurgeType));
     renderTrash();
     closeModal('modalPurge');

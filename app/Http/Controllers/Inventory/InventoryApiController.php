@@ -403,10 +403,6 @@ class InventoryApiController extends Controller
         return response()->json(['data' => $merged]);
     }
 
-    /**
-     * GET /api/folders?root_id=&parent_id=
-     * Returns direct child folders (for sidebar tree lazy-load).
-     */
     public function folders(Request $request)
     {
         $data = $request->validate([
@@ -423,11 +419,9 @@ class InventoryApiController extends Controller
         return response()->json(['data' => $folders]);
     }
 
-    /**
-     * DELETE /api/trash/purge  — permanently delete a single trashed item.
-     */
     public function purge(Request $request)
     {
+        $request->merge($request->query());
         $data = $request->validate([
             'type' => ['required', Rule::in(['file', 'folder'])],
             'id'   => ['required', 'integer'],
@@ -447,9 +441,6 @@ class InventoryApiController extends Controller
         return response()->json(['data' => true]);
     }
 
-    /**
-     * DELETE /api/trash/empty  — permanently delete ALL trashed items for every root the user can see.
-     */
     public function emptyTrash(Request $request)
     {
         DB::transaction(function () {
