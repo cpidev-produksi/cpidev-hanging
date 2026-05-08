@@ -440,7 +440,7 @@ class InventoryApiController extends Controller
         } else {
             $folder = ShfiFolder::onlyTrashed()->findOrFail($data['id']);
             DB::transaction(function () use ($folder) {
-                $this->purgefolderRecursive($folder->id);
+                $this->purgeFolderRecursive($folder->id);
             });
         }
 

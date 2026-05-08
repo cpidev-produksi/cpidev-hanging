@@ -980,6 +980,12 @@
                 History Perubahan
             </a>
             <a href="{{ route('profile.show') }}" class="mobile-link">Profil Saya</a>
+            @if(auth()->user()?->role?->slug === 'superadmin')
+                <a href="{{ route('account.role-permissions.index') }}"
+                class="mobile-link {{ request()->routeIs('account.role-permissions.*') ? 'active' : '' }}">
+                    Role Permissions
+                </a>
+            @endif
 
             <button type="button" class="mobile-logout-btn" onclick="openLogoutModal()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
