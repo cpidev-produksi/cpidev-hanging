@@ -200,7 +200,7 @@ class MonitorControlController extends Controller
     {
         $slug = $request->user()?->role?->slug;
 
-        if ($monitorControl->status !== 'draft' && !in_array($slug, ['supervisor', 'spv', 'superadmin'], true)) {
+        if ($monitorControl->status !== 'draft' && !in_array($slug, ['supervisor', 'superadmin'], true)) {
             return back()->with('status', 'Tidak bisa edit jika sudah running/done.');
         }
 
@@ -215,7 +215,7 @@ class MonitorControlController extends Controller
             'farm_id' => ['required', 'exists:farms,id'],
 
             'seal_no' => ['nullable', 'string', 'max:50'],
-            'truck_arrival_time' => ['nullable', 'date_format:H:i'],
+            'truck_arrival_time' => ['nullable', 'datetime:H:i'],
             'catch_date' => ['nullable', 'date'],
             'total_chicken' => ['nullable', 'integer', 'min:0'],
             'total_kilo' => ['nullable', 'numeric', 'min:0'],
@@ -256,9 +256,9 @@ class MonitorControlController extends Controller
     private function locationMeta(string $location): array
     {
         return match ($location) {
-            'SH01' => ['set_count' => 4, 'shackle_count' => 20],
-            'SH02' => ['set_count' => 3, 'shackle_count' => 35],
-            default => ['set_count' => 4, 'shackle_count' => 20],
+            'SH01' => ['set_count' => 4, 'shackle_count' => 17],
+            'SH02' => ['set_count' => 3, 'shackle_count' => 30],
+            default => ['set_count' => 4, 'shackle_count' => 17],
         };
     }
 

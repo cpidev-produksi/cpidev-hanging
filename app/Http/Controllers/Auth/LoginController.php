@@ -23,14 +23,14 @@ class LoginController extends Controller
         if (Auth::attempt(['username' => $data['username'], 'password' => $data['password']], true)) {
             $request->session()->regenerate();
 
-            $roleSlug = Auth::user()?->role?->slug;
+            // $roleSlug = Auth::user()?->role?->slug;
 
-            if (in_array($roleSlug, ['supervisor', 'superadmin'], true)) {
-                return redirect()->route('menu.index');
-            }
+            // if (in_array($roleSlug, ['supervisor', 'superadmin'], true)) {
+            //     return redirect()->route('menu.index');
+            // }
 
             // role lain -> dashboard
-            return redirect()->route('dashboard');
+            return redirect()->route('menu.index');
         }
 
         return back()->withErrors(['username' => 'Username atau password salah.'])->onlyInput('username');

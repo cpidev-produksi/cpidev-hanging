@@ -459,6 +459,7 @@ class InventoryApiController extends Controller
 
     public function restore(Request $request)
     {
+        $request->merge($request->query());
         $data = $request->validate([
             'type' => ['required', Rule::in(['file','folder'])],
             'id' => ['required','integer'],
@@ -467,7 +468,6 @@ class InventoryApiController extends Controller
         if ($data['type'] === 'file') {
             $file = ShfiFile::onlyTrashed()->findOrFail($data['id']);
 
-            // optional: cek duplikat nama di folder target
             if ($this->fileNameExists($file->root_id, $file->folder_id, $file->name)) {
                 // auto rename
                 $file->name = $this->nextAvailableNameForFile($file->root_id, $file->folder_id, $file->name);

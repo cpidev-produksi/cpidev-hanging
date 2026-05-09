@@ -38,9 +38,6 @@ class HangingFormController extends Controller
         $totalAyamShackle = 0;
         $fullBlockCount = 0;
 
-        //$lastLineNo = (int) ($hangingForm->lines->max('line_no') ?? 0);
-        //$lastSetNo  = (int) ($hangingForm->monitorControl?->set_count ?? 0);
-
         foreach ($hangingForm->lines as $line) {
             $cap = $this->getMaxCapacity($location, (int) $line->line_no);
 
@@ -55,8 +52,6 @@ class HangingFormController extends Controller
                 $totalKosong += $empty;
                 $totalAyamShackle += ($cap - $empty);
 
-                // 🔥 HANYA blok dengan kapasitas 50 DAN empty_count = 0
-                // (custom blok seperti 18 atau 46 TIDAK dihitung)
                 if ($cap === 50 && $empty === 0) {
                     $fullBlockCount++;
                 }

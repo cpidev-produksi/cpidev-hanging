@@ -48,7 +48,7 @@ class MonitorControl extends Model
         'total_kilo' => 'decimal:2',
         'abw' => 'decimal:2',
 
-        'truck_arrival_time' => 'datetime:H:i',
+        'truck_arrival_time' => 'datetime',
     ];
 
     public function farm() { return $this->belongsTo(Farm::class); }
@@ -56,7 +56,7 @@ class MonitorControl extends Model
     public function plateNumber() { return $this->belongsTo(PlateNumber::class); }
 
     public function hangingForm() { return $this->hasOne(HangingForm::class); }
-    protected $appends = ['calculated_abw']; // optional
+    protected $appends = ['calculated_abw'];
 
     public function getCalculatedAbwAttribute()
     {
@@ -65,7 +65,7 @@ class MonitorControl extends Model
         }
         return null;
     }
-    // Auto-calculate ABW before save
+    
     protected static function booted()
     {
         static::saving(function ($model) {
