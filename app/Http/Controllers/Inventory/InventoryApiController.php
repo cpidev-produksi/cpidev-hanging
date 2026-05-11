@@ -64,20 +64,30 @@ class InventoryApiController extends Controller
 
         $sort = $data['sort'] ?? 'name';
         $dir  = $data['dir'] ?? 'asc';
+        $isSearching = !empty($data['q']);
 
-        $foldersQ = ShfiFolder::query()
-            ->where('root_id', $data['root_id'])
-            ->where('parent_id', $data['folder_id'] ?? null);
+        // ── Folders ──────────────────────────────────────────────────────────────
+        $foldersQ = ShfiFolder::query()->where('root_id', $data['root_id']);
 
-        if (!empty($data['q'])) $foldersQ->where('name', 'like', '%'.$data['q'].'%');
+        if ($isSearching) {
+            // Global: cari di semua folder dalam root ini
+            $foldersQ->where('name', 'like', '%'.$data['q'].'%');
+        } else {
+            // Normal: hanya tampilkan anak langsung dari folder saat ini
+            $foldersQ->where('parent_id', $data['folder_id'] ?? null);
+        }
 
         $folders = $foldersQ->orderBy('name', 'asc')->get();
 
-        $filesQ = ShfiFile::query()
-            ->where('root_id', $data['root_id'])
-            ->where('folder_id', $data['folder_id'] ?? null);
+        // ── Files ─────────────────────────────────────────────────────────────────
+        $filesQ = ShfiFile::query()->where('root_id', $data['root_id']);
 
-        if (!empty($data['q'])) $filesQ->where('name', 'like', '%'.$data['q'].'%');
+        if ($isSearching) {
+            // Global: cari di seluruh root, tanpa filter folder_id
+            $filesQ->where('name', 'like', '%'.$data['q'].'%');
+        } else {
+            $filesQ->where('folder_id', $data['folder_id'] ?? null);
+        }
 
         $tz = 'Asia/Jakarta';
 
@@ -100,22 +110,31 @@ class InventoryApiController extends Controller
         if ($sort === 'uploaded_at') $filesQ->orderBy('uploaded_at', $dir);
         else $filesQ->orderBy('name', $dir);
 
-        $files = $filesQ->get()->map(function (ShfiFile $f) {
-            return [
-                'id' => $f->id,
-                'name' => $f->name,
-                'mime_type' => $f->mime_type,
-                'size' => $f->size,
-                'uploaded_at' => optional($f->uploaded_at)->toISOString(),
+        $files = $filesQ->get()->map(function (ShfiFile $f) use ($isSearching) {
+            $result = [
+                'id'           => $f->id,
+                'name'         => $f->name,
+                'mime_type'    => $f->mime_type,
+                'size'         => $f->size,
+                'uploaded_at'  => optional($f->uploaded_at)->toISOString(),
                 'download_url' => route('inventory.api.download', $f->id),
-                'preview_url' => route('inventory.api.preview', $f->id),
+                'preview_url'  => route('inventory.api.preview', $f->id),
             ];
+
+            // Saat global search: sertakan folder_path agar user tahu lokasi file
+            if ($isSearching && $f->folder_id) {
+                $result['folder_id']   = $f->folder_id;
+                $result['folder_name'] = optional(ShfiFolder::find($f->folder_id))->name;
+            }
+
+            return $result;
         });
 
         return response()->json([
             'data' => [
                 'folders' => $folders,
                 'files' => $files,
+                'is_searching' => $isSearching,
             ],
         ]);
     }

@@ -421,7 +421,11 @@
 
   // ── Table Rows ─────────────────────────────────────────────────────────────
 
-  function rowHtmlFolder(f) {
+  function rowHtmlFolder(f, isSearching = false) {
+    const locationCell = isSearching
+    ? `<td style="font-size:11px;color:var(--text3)">${f.folder_name ? '📁 ' + escapeHtml(f.folder_name) : '— root'}</td>`
+    : '';
+
     return `
       <tr data-type="folder" data-id="${f.id}" data-name="${escapeAttr(f.name)}">
         <td>
@@ -430,13 +434,18 @@
             <strong>${escapeHtml(f.name)}</strong>
           </div>
         </td>
+        ${locationCell}
         <td><span class="badge folder">Folder</span></td>
         <td>—</td>
         <td style="font-size:12px;color:var(--text3)">${f.created_at ? new Date(f.created_at).toLocaleString('id-ID') : '—'}</td>
       </tr>`;
   }
 
-  function rowHtmlFile(f) {
+  function rowHtmlFile(f, isSearching = false) {
+    const locationCell = isSearching
+    ? `<td style="font-size:11px;color:var(--text3)">${f.folder_name ? '📁 ' + escapeHtml(f.folder_name) : '— root'}</td>`
+    : '';
+
     return `
       <tr data-type="file" data-id="${f.id}" data-name="${escapeAttr(f.name)}" data-download="${escapeAttr(f.download_url || '')}">
         <td>
@@ -445,6 +454,7 @@
             <a href="${f.download_url}" target="_blank">${escapeHtml(f.name)}</a>
           </div>
         </td>
+        ${locationCell}
         <td><span class="badge">${escapeHtml(f.mime_type || 'file')}</span></td>
         <td style="font-family:var(--mono);font-size:12px">${formatBytes(f.size || 0)}</td>
         <td style="font-size:12px;color:var(--text3)">${f.uploaded_at ? new Date(f.uploaded_at).toLocaleString('id-ID') : '—'}</td>
@@ -483,9 +493,11 @@
 
     const params = new URLSearchParams();
     params.set('root_id', state.root_id);
-    if (state.folder_id) params.set('folder_id', state.folder_id);
 
     const q = $('qInput').value.trim();
+    const isSearching = q.length > 0;
+
+    if (state.folder_id && !isSearching) params.set('folder_id', state.folder_id);
     if (q) params.set('q', q);
 
     const month = $('monthInput').value;
@@ -502,7 +514,11 @@
     params.set('dir',  $('dirSelect').value);
 
     const body = $('listBody');
-    body.innerHTML = `<tr><td colspan="4" style="padding:20px;color:var(--text3);text-align:center"><span class="spinner"></span></td></tr>`;
+    const colSpan = isSearching ? 5 : 4;
+    body.innerHTML = `<tr><td colspan="${colSpan}" style="padding:20px;color:var(--text3);text-align:center"><span class="spinner"></span></td></tr>`;
+
+    const thLocation = document.getElementById('thLocation');
+    if (thLocation) thLocation.style.display = isSearching ? '' : 'none';
 
     try {
       const out = await api(window.SHFI.routes.list + '?' + params.toString());
@@ -512,19 +528,24 @@
       state.lastFolders = folders;
       state.lastFiles   = files;
 
+      const emptyMsg = isSearching
+        ? `No results found for "<strong>${escapeHtml(q)}</strong>".`
+        : 'This folder is empty.';
+
       if (!folders.length && !files.length) {
-        body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📭</div><p>This folder is empty.</p></div></td></tr>`;
+        body.innerHTML = `<tr><td colspan="${colSpan}"><div class="empty-state"><div class="empty-icon">📭</div><p>${emptyMsg}</p></div></td></tr>`;
         clearSelection();
         rebuildFileOrderCache();
       } else {
-        body.innerHTML = folders.map(rowHtmlFolder).join('') + files.map(rowHtmlFile).join('');
+        body.innerHTML = folders.map(f => rowHtmlFolder(f, isSearching)).join('')
+                       + files.map(f => rowHtmlFile(f, isSearching)).join('');
         clearSelection();
         rebuildFileOrderCache();
       }
 
       updateStatusBar(folders, files);
     } catch(err) {
-      body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">❌</div><p>${escapeHtml(err.message)}</p></div></td></tr>`;
+      body.innerHTML = `<tr><td colspan="${colSpan}"><div class="empty-state"><div class="empty-icon">❌</div><p>${escapeHtml(err.message)}</p></div></td></tr>`;
       clearSelection();
       rebuildFileOrderCache();
       toast(err.message, 'error');

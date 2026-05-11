@@ -662,6 +662,7 @@
         <thead>
           <tr>
             <th style="width:50%">Name</th>
+            <th id="thLocation" style="display:none">Location</th>
             <th>Type</th>
             <th>Size</th>
             <th>Uploaded</th>
