@@ -25,10 +25,10 @@ $condLabel = function(?string $val): string {
     };
 };
 
-$customCaps = ['SH02' => [30 => 13]];
+$customCaps = ['SH02' => [30 => 16]];
 $location = $mc->location ?? '';
 $normalSetCount = 0;
-$customSetCounts = [13 => 0];
+$customSetCounts = [16 => 0];
 $totalKosongCalc = 0;
 $totalAyamCap = 0;
 
@@ -263,7 +263,7 @@ $fc = $form->feather_condition;
           <div class="sm-kv">
             <span class="sm-kv-key">Kondisional Blok</span>
             <span class="sm-kv-val sm-val-mono">
-              @if(($customSetCounts[13] ?? 0) > 0){{ $customSetCounts[13] }}×13 @endif
+              @if(($customSetCounts[16] ?? 0) > 0){{ $customSetCounts[16] }}×16 @endif
               = {{ number_format($customEkor) }}
             </span>
           </div>

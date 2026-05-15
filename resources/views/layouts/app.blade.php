@@ -783,9 +783,9 @@
 
         {{-- Desktop nav --}}
         <nav class="topnav" aria-label="Main navigation">
-            <a href="{{ in_array(auth()->user()?->role?->slug, ['supervisor','superadmin']) ? route('menu.index') : route('dashboard') }}"
-            class="topnav-link {{ request()->routeIs('dashboard') || request()->routeIs('menu.*') ? 'active' : '' }}">
-                {{ in_array(auth()->user()?->role?->slug, ['supervisor','superadmin']) ? 'Homepage' : 'Dashboard' }}
+            <a href="{{ route('menu.index') }}"
+            class="topnav-link {{ request()->routeIs('menu.*') ? 'active' : '' }}">
+                Homepage
             </a>
 
             {{-- Master Data --}}

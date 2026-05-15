@@ -25,7 +25,6 @@ use App\Http\Controllers\Transaction\ReturMatiRecapController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
-
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -37,51 +36,55 @@ Route::get('monitor/{location}/data', [LiveMonitorController::class, 'data'])->n
 Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/menu', [MenuController::class, 'index'])
     ->name('menu.index');
-    // Route::middleware('role:superadmin,supervisor,manager')
-    // ->get('/menu', [MenuController::class, 'index'])
-    // ->name('menu.index');
+
     Route::get('/api/dashboard/today-stats', [DashboardController::class, 'todayStats'])->name('api.dashboard.today-stats');
     //Route::get('/dashboard/rekap/export/excel', [DashboardController::class, 'rekapExportExcel'])->name('dashboard.rekap.export.excel');
     Route::get('/dashboard/rekap/export/pdf',   [DashboardController::class, 'rekapExportPdf'])->name('dashboard.rekap.export.pdf');
-
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/rekap', [DashboardController::class, 'rekap'])->name('dashboard.rekap');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
     // History
     Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
     Route::get('/history/{auditLog}', [HistoryController::class, 'show'])->name('history.show');
+
     // Planning LB
     Route::middleware('role:admin,supervisor,superadmin,manager')->resource('planning-lb', PlanningLbController::class);
+
     // Master Data (Operator TS)
-    Route::middleware('role:operator_ts,supervisor,superadmin,manager')->prefix('master')->name('master.')->group(function () {
+    Route::middleware('role:operator_ts,supervisor,superadmin,manager,foreman')->prefix('master')->name('master.')->group(function () {
         Route::resource('expeditions', ExpeditionController::class)->except(['destroy']);
         Route::resource('farms', FarmController::class)->except(['destroy']);
     });
+
     // Delete Master Data (Supervisor only)
-    Route::middleware('role:supervisor,superadmin,manager')->prefix('master')->name('master.')->group(function () {
+    Route::middleware('role:supervisor,superadmin,manager,foreman,admin')->prefix('master')->name('master.')->group(function () {
         Route::delete('expeditions/{expedition}', [ExpeditionController::class, 'destroy'])->name('expeditions.destroy');
         Route::delete('farms/{farm}', [FarmController::class, 'destroy'])->name('farms.destroy');
     });
+
     // Master Users (Superadmin only)
     Route::middleware('role:superadmin')->prefix('master')->name('master.')->group(function () {
         Route::resource('users', UserController::class);
     });
+
     // Monitor Controls (Operator TS)
-    Route::middleware('role:operator_ts,supervisor,superadmin,manager')->group(function () {
+    Route::middleware('role:operator_ts,supervisor,superadmin,manager,checker,foreman')->group(function () {
         Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])->name('monitor-controls.summary');
         Route::resource('monitor-controls', MonitorControlController::class)->except(['destroy','show']);
         Route::delete('monitor-controls/{monitorControl}', [MonitorControlController::class, 'destroy'])->name('monitor-controls.destroy');
         Route::post('monitor-controls/{monitorControl}/start', [MonitorControlController::class, 'start'])->name('monitor-controls.start');
         Route::post('monitor-controls/{monitorControl}/move', [MonitorControlController::class, 'moveTruckNo'])->name('monitor-controls.move');
     });
+
     // Delete monitor-controls (Supervisor only)
     // Route::delete('monitor-controls/{monitorControl}', [MonitorControlController::class, 'destroy'])
     //     ->middleware('supervisor')
     //     ->name('monitor-controls.destroy');
     // Hanging (Checker Hanging)
-    Route::middleware('role:checker_hanging,supervisor,superadmin,manager')->group(function () {
+    Route::middleware('role:checker_hanging,supervisor,superadmin,manager,checker,foreman')->group(function () {
         Route::get('/hanging', [HangingLandingController::class, 'index'])->name('hanging.landing');
         Route::post('/hanging/open/{monitorControl}', [HangingLandingController::class, 'open'])->name('hanging.open');
         Route::post('/hanging/start/{hangingForm}', [HangingLandingController::class, 'start'])->name('hanging.start');
@@ -91,10 +94,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/hanging/finish-shift/{location}/{shift}/{date}', [HangingLandingController::class, 'finishShift'])
             ->name('hanging.finish-shift');
     });
-    // Retur & Mati (Checker Hanging OR Checker Retur)
-    Route::middleware('role:checker_hanging,checker_retur,supervisor,superadmin,manager')->group(function () {
 
-        // ✅ taruh REKAP dulu (statis)
+    // Retur & Mati (Checker Hanging OR Checker Retur)
+    Route::middleware('role:checker_hanging,checker_retur,supervisor,superadmin,manager,checker,foreman')->group(function () {
         Route::get('/retur-mati/rekap', [ReturMatiRecapController::class, 'index'])->name('retur-mati.rekap');
         Route::get('/retur-mati/rekap/export', [ReturMatiRecapController::class, 'export'])->name('retur-mati.rekap.export');
         // baru route yang dinamis
@@ -103,14 +105,16 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/retur-mati/{hangingForm}', [ReturMatiController::class, 'edit'])->name('retur-mati.edit');
         Route::post('/retur-mati/{hangingForm}', [ReturMatiController::class, 'update'])->name('retur-mati.update');
     });
+
     // QC Kondisi (Operator TS OR QC TS)
-    Route::middleware('role:operator_ts,qc_ts,supervisor,superadmin,manager')->group(function () {
+    Route::middleware('role:operator_ts,qc_ts,supervisor,superadmin,manager,checker,foreman')->group(function () {
         Route::get('/conditions', [ConditionController::class, 'landing'])->name('conditions.landing');
         Route::post('/conditions/open/{monitorControl}', [ConditionController::class, 'open'])->name('conditions.open');
         Route::get('/conditions/{hangingForm}', [ConditionController::class, 'edit'])->name('conditions.edit');
         Route::post('/conditions/{hangingForm}', [ConditionController::class, 'update'])->name('conditions.update');
         Route::get('monitor-controls/{monitorControl}/summary', [MonitorSummaryController::class, 'show'])->name('monitor-controls.summary');
     });
+
     // Summary + Sign + PDF (Supervisor only)
     Route::middleware('role:supervisor,superadmin,manager')->group(function () {
         Route::post('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'sign'])->name('monitor-controls.summary.sign');
@@ -120,7 +124,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     Route::middleware('perm:shfi.view')->prefix('inventory')->name('inventory.')->group(function () {
         Route::get('/', [InventoryController::class, 'index'])->name('index');
-
         Route::get('/api/roots', [InventoryApiController::class, 'roots'])->name('api.roots');
         Route::get('/api/breadcrumbs', [InventoryApiController::class, 'breadcrumbs'])->name('api.breadcrumbs');
         Route::get('/api/list', [InventoryApiController::class, 'list'])->name('api.list');
@@ -131,7 +134,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::middleware('perm:shfi.edit')->post('/api/rename', [InventoryApiController::class, 'rename'])->name('api.rename');
         Route::middleware('perm:shfi.edit')->post('/api/move', [InventoryApiController::class, 'move'])->name('api.move');
         Route::middleware('perm:shfi.edit')->post('/api/copy', [InventoryApiController::class, 'copy'])->name('api.copy');
-
         Route::middleware('perm:shfi.delete')->delete('/api/delete', [InventoryApiController::class, 'softDelete'])->name('api.delete');
 
         Route::get('/api/download/{file}', [InventoryApiController::class, 'download'])->name('api.download');
@@ -143,6 +145,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::middleware('perm:shfi.delete')->delete('/api/trash/purge', [InventoryApiController::class, 'purge'])->name('api.trash.purge');
         Route::middleware('perm:shfi.delete')->delete('/api/trash/empty', [InventoryApiController::class, 'emptyTrash'])->name('api.trash.empty');
     });
+    
     Route::middleware('role:superadmin')->prefix('account')->name('account.')->group(function () {
         Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role-permissions.index');
         Route::post('/role-permissions', [RolePermissionController::class, 'store'])->name('role-permissions.store');

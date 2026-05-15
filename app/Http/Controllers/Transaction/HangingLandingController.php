@@ -134,7 +134,10 @@ class HangingLandingController extends Controller
             $monitor = $hangingForm->monitorControl;
 
             $monitor->update(['status' => 'running']);
-            $hangingForm->update(['status' => 'running']);
+            $hangingForm->update([
+                'status' => 'running',
+                'unloading_time' => now('Asia/Jakarta')->format('H:i'),
+            ]);
 
             $existsLines = HangingLine::query()->where('hanging_form_id', $hangingForm->id)->exists();
             if ($existsLines) {

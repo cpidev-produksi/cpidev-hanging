@@ -13,7 +13,7 @@ class LiveMonitorController extends Controller
     {
         $custom = [
             // 'SH01' => [17 => 46],
-            'SH02' => [30 => 13],
+            'SH02' => [30 => 16],
         ];
 
         return $custom[$location][$lineNo] ?? 50;
@@ -115,9 +115,6 @@ class LiveMonitorController extends Controller
         $isNoProcess = (!$active || !$active->hangingForm);
         $showShiftCompleteBanner = $isNoProcess && $hasAnyShiftCompleted && $shiftDoneMessage;
 
-        // ── Shift summary: jam mulai, jam selesai, mati, retur, berat retur ──
-        // Kolom: unloading_time (jam mulai), finish_time (jam selesai),
-        //        dead_count, retur_count, retur_total_kg — semua dari HangingForm
         $allHangingForms = $allTodayControls
             ->filter(fn($mc) => $mc->hangingForm !== null)
             ->map(fn($mc) => $mc->hangingForm);

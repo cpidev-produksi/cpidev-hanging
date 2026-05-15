@@ -314,10 +314,10 @@ $qcLevel = function(?string $val): int {
 };
 $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
 
-$customCaps = ['SH02' => [30 => 13]];
+$customCaps = ['SH02' => [30 => 16]];
 $location = $mc->location ?? '';
 $normalSetCount = 0;
-$customSetCounts = [13 => 0];
+$customSetCounts = [16 => 0];
 $totalKosongCalc = 0;
 $totalAyamCap = 0;
 
@@ -449,7 +449,7 @@ $isDeficit = $selisih < 0;
           <div class="hl-row">
             <span class="hl-key">Kondisional Blok</span>
             <span class="hl-val">
-              @if(($customSetCounts[13] ?? 0) > 0){{ $customSetCounts[13] }}×13 @endif
+              @if(($customSetCounts[16] ?? 0) > 0){{ $customSetCounts[16] }}×16 @endif
               = {{ number_format($customEkor) }}
             </span>
           </div>

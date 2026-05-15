@@ -30,7 +30,7 @@
 
     $customCaps = [
       // 'SH01' => [17 => 46],
-      'SH02' => [30 => 13],
+      'SH02' => [30 => 16],
     ];
     $location = $mc->location ?? '';
   @endphp
@@ -72,7 +72,7 @@
         <form method="POST" action="{{ route('hanging.start', $form) }}" style="display:inline">
           @csrf
           <button type="submit" class="sh-btn-start"
-                  onclick="return confirm('Mulai proses hanging untuk truk ini?')">
+                  onclick="setUnloadingTime(event)">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.2"><polygon points="6 3 20 12 6 21 6 3"/>
             </svg>
@@ -346,6 +346,26 @@
 </div>
 
 <script>
+function setUnloadingTime(event) {
+  if (!confirm('Mulai proses hanging untuk truk ini?')) {
+    event.preventDefault();
+    return false;
+  }
+
+  // Set unloading_time ke waktu sekarang
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const timeString = `${hours}:${minutes}`;
+
+  const unloadingTimeInput = document.getElementById('unloading_time');
+  if (unloadingTimeInput) {
+    unloadingTimeInput.value = timeString;
+  }
+
+  return true;
+}
+
 function refreshTotals() {
   let totalKosong = 0;
   let totalAyamShackle = 0;
