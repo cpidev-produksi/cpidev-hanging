@@ -3,7 +3,6 @@
 @section('content')
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
   --rk-bg:       #F4F6FB;
@@ -342,13 +341,7 @@ table.rk-table tbody tr:nth-child(n+9){ animation-delay: .28s; }
   {{-- ── HEADER ── --}}
   <div class="rk-header">
     <div>
-      <a href="{{ route('retur-mati.landing') }}" class="rk-back">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5M12 5l-7 7 7 7"/>
-        </svg>
-        Kembali
-      </a>
-      <h1 class="rk-headline">Rekap Ayam&nbsp;Mati<br>&amp; Ayam Retur</h1>
+      <h1 class="rk-headline">Rekap Ayam Mati &amp; Retur</h1>
     </div>
 
     {{-- <div class="rk-period">

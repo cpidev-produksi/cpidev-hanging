@@ -3,6 +3,8 @@
 use App\Http\Controllers\Account\RolePermissionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Form\ProductEvisController;
+use App\Http\Controllers\Form\ReportEvisController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\Inventory\InventoryApiController;
 use App\Http\Controllers\Inventory\InventoryController;
@@ -32,7 +34,6 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('monitor/{location}', [LiveMonitorController::class, 'show'])->name('monitor.show');
 Route::get('monitor/{location}/data', [LiveMonitorController::class, 'data'])->name('monitor.data');
 
-
 Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/menu', [MenuController::class, 'index'])
     ->name('menu.index');
@@ -45,6 +46,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/signature', [ProfileController::class, 'updateSignature'])->name('profile.signature');
 
     // History
     Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
@@ -96,7 +98,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // Retur & Mati (Checker Hanging OR Checker Retur)
-    Route::middleware('role:checker_hanging,checker_retur,supervisor,superadmin,manager,checker,foreman')->group(function () {
+    Route::middleware('role:checker_hanging,checker_retur,supervisor,superadmin,manager,checker,foreman,admin')->group(function () {
         Route::get('/retur-mati/rekap', [ReturMatiRecapController::class, 'index'])->name('retur-mati.rekap');
         Route::get('/retur-mati/rekap/export', [ReturMatiRecapController::class, 'export'])->name('retur-mati.rekap.export');
         // baru route yang dinamis
@@ -107,7 +109,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // QC Kondisi (Operator TS OR QC TS)
-    Route::middleware('role:operator_ts,qc_ts,supervisor,superadmin,manager,checker,foreman')->group(function () {
+    Route::middleware('role:operator_ts,qc_ts,supervisor,superadmin,manager,checker,foreman,admin')->group(function () {
         Route::get('/conditions', [ConditionController::class, 'landing'])->name('conditions.landing');
         Route::post('/conditions/open/{monitorControl}', [ConditionController::class, 'open'])->name('conditions.open');
         Route::get('/conditions/{hangingForm}', [ConditionController::class, 'edit'])->name('conditions.edit');
@@ -150,4 +152,13 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role-permissions.index');
         Route::post('/role-permissions', [RolePermissionController::class, 'store'])->name('role-permissions.store');
     });
+
+    // Master Produk Evis
+    Route::resource('product-evis', ProductEvisController::class, ['parameters' => ['product_evis' => 'productEvis']]);
+    Route::get('api/product-evis/list', [ProductEvisController::class, 'apiList']);
+
+    // Report Evis
+    Route::resource('report-evis', ReportEvisController::class, ['parameters' => ['report_evi' => 'reportEvis']]);
+    Route::post('report-evis/{reportEvis}/approve', [ReportEvisController::class, 'approve'])->name('report-evis.approve');
+    Route::get('report-evis/{reportEvis}/pdf', [ReportEvisController::class, 'exportPdf'])->name('report-evis.pdf');
 });

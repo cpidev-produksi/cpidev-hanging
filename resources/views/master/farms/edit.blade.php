@@ -232,7 +232,7 @@
                         {{ $message }}
                     </div>
                 @enderror
-                <div class="help-text">Format jarak bebas, contoh: "15 km", "10 menit", dll.</div>
+                <div class="help-text">Format angka positif, contoh: "15"</div>
             </div>
         </div>
 

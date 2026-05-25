@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
@@ -54,5 +55,28 @@ class ProfileController extends Controller
         ]);
 
         return back()->with('status', 'Password berhasil diubah.');
+    }
+    
+    public function updateSignature(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'signature' => ['required', 'image', 'mimes:png', 'max:2048'], // max 2MB
+        ], [
+            'signature.mimes' => 'Signature harus PNG.',
+        ]);
+
+        if ($user->signature_path) {
+            Storage::disk('public')->delete($user->signature_path);
+        }
+
+        $path = $request->file('signature')->store('signatures', 'public');
+
+        $user->update([
+            'signature_path' => $path,
+        ]);
+
+        return back()->with('status', 'Signature berhasil diupload.');
     }
 }

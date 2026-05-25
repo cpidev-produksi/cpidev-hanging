@@ -359,6 +359,45 @@
         </div>
     </div>
 
+    {{-- Upload Signature --}}
+    <div class="profile-card">
+        <div class="profile-card-header">
+            <div class="profile-card-icon blue">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"/>
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                </svg>
+            </div>
+            <span class="profile-card-header-title">Signature (PNG)</span>
+        </div>
+
+        <div class="profile-card-body">
+            @if($user->signature_path)
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Tanda Tangan Saat Ini</div>
+                    <img src="{{ asset('storage/'.$user->signature_path) }}"
+                        alt="Signature"
+                        style="height: 70px; width: auto; border: 1px solid var(--card-border); border-radius: 10px; padding: 8px; background: #fff;">
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('profile.signature') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="form-group" style="max-width: 420px;">
+                    <label class="form-label">Upload Tanda Tangan (PNG Recommended)</label>
+                    <input type="file" name="signature" accept="image/png" required>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+                        Disarankan background transparan.
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-save" style="margin-top: 10px;">
+                    Upload
+                </button>
+            </form>
+        </div>
+    </div>
+
 </div>
 
 <script>

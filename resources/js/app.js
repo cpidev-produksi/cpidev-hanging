@@ -1,5 +1,5 @@
 import './bootstrap';
-import './inventory';
+//import './inventory';
 
 import $ from 'jquery';
 window.$ = window.jQuery = $;

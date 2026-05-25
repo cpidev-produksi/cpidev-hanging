@@ -6,7 +6,7 @@
     <title>Charoen Pokphand Indonesia</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 
@@ -157,6 +157,88 @@
         .dropdown-item.active {
             color: var(--accent);
             background: rgba(232,93,47,0.08);
+        }
+
+        /* ===== Nested dropdown (Form > submenu) ===== */
+        .dropdown-section {
+            margin-bottom: 2px;
+        }
+        .dropdown-section-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 9px 10px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .dropdown-section-btn:hover { background: #f5f7fc; }
+        .dropdown-section-btn.active {
+            color: var(--accent);
+            background: rgba(232,93,47,0.08);
+        }
+        .dropdown-section-btn .dd-chev {
+            opacity: .55;
+            transition: transform .18s ease;
+            flex-shrink: 0;
+        }
+        .dropdown-section-btn[aria-expanded="true"] .dd-chev {
+            transform: rotate(180deg);
+        }
+        .dropdown-section-body {
+            display: none;
+            padding: 3px 4px 4px 14px;
+        }
+        .dropdown-section-body.open { display: block; }
+        .dropdown-sub-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .dropdown-sub-item:hover { background: #f5f7fc; color: var(--text-main); }
+        .dropdown-sub-item.active { color: var(--accent); background: rgba(232,93,47,0.08); }
+        .dropdown-sub-item::before {
+            content: '';
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: .45;
+            flex-shrink: 0;
+        }
+        .dropdown-section-label {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 6px 10px 2px;
+        }
+        .dropdown-divider {
+            height: 1px;
+            background: var(--card-border);
+            margin: 4px 6px;
+        }
+        /* Coming soon badge inside dropdown */
+        .dd-soon {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #f0f2f7;
+            color: var(--text-muted);
+            margin-left: auto;
         }
 
         /* User area */
@@ -427,6 +509,62 @@
             border-color: rgba(232,93,47,0.25);
             color: var(--accent);
             background: rgba(232,93,47,0.08);
+        }
+
+        /* ===== Mobile nested (Form > sub-accordion) ===== */
+        .mobile-sub-accordion {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 9px 12px;
+            margin: 3px 6px;
+            width: calc(100% - 12px);
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+        .mobile-sub-accordion:hover { background: #f0f2f7; }
+        .mobile-sub-accordion.active {
+            color: var(--accent);
+            background: rgba(232,93,47,0.07);
+            border-color: rgba(232,93,47,0.18);
+        }
+        .mobile-sub-accordion .chev {
+            opacity: .55;
+            transition: transform .18s ease;
+            font-size: 11px;
+        }
+        .mobile-sub-accordion[aria-expanded="true"] .chev {
+            transform: rotate(180deg);
+        }
+        .mobile-sub-acc-body {
+            display: none;
+            padding: 3px 0 4px 18px;
+        }
+        .mobile-sub-acc-body.open { display: block; }
+        .mobile-sub-leaf {
+            display: block;
+            padding: 8px 12px;
+            margin: 3px 6px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: #fafbff;
+            border: 1px solid rgba(228,232,240,0.7);
+        }
+        .mobile-sub-leaf:hover { background: #f5f7fc; color: var(--text-main); }
+        .mobile-sub-leaf.active {
+            color: var(--accent);
+            background: rgba(232,93,47,0.07);
+            border-color: rgba(232,93,47,0.2);
         }
 
         .mobile-divider {
@@ -808,7 +946,7 @@
             {{-- Produksi --}}
             <div class="dropdown" id="ddProduksi">
                 <button type="button"
-                        class="topnav-button {{ request()->routeIs('monitor-controls.*') || request()->routeIs('hanging.*') || request()->routeIs('hanging-forms.*') ? 'active' : '' }}"
+                        class="topnav-button {{ request()->routeIs('monitor-controls.*') || request()->routeIs('conditions.*') || request()->routeIs('retur-mati.*') || request()->routeIs('planning-lb.*') || request()->routeIs('hanging.*') || request()->routeIs('hanging-forms.*') ? 'active' : '' }}"
                         onclick="toggleDropdown('ddProduksiMenu')">
                     Produksi
                     <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" style="opacity:.7">
@@ -821,6 +959,75 @@
                     <a class="dropdown-item {{ request()->routeIs('hanging.landing') || request()->routeIs('hanging.*') || request()->routeIs('hanging-forms.*') ? 'active' : '' }}" href="{{ route('hanging.landing') }}">Form Hanging Ayam</a>
                     <a class="dropdown-item {{ request()->routeIs('retur-mati.landing') ? 'active' : '' }}" href="{{ route('retur-mati.landing') }}">Ayam Retur &amp; Mati</a>
                     <a class="dropdown-item {{ request()->routeIs('conditions.*') ? 'active' : '' }}" href="{{ route('conditions.landing') }}">QC Kondisi</a>
+                </div>
+            </div>
+
+            {{-- Form (nested dropdown) --}}
+            <div class="dropdown" id="ddForm">
+                <button type="button"
+                        class="topnav-button {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('cut-up.*') ? 'active' : '' }}"
+                        onclick="toggleDropdown('ddFormMenu')">
+                    Form
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" style="opacity:.7">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+                <div class="dropdown-menu" id="ddFormMenu" style="min-width: 230px;">
+
+                    {{-- Defeathering --}}
+                    <div class="dropdown-section">
+                        <button type="button"
+                                class="dropdown-section-btn {{ request()->routeIs('retur-mati.rekap') ? 'active' : '' }}"
+                                aria-expanded="{{ request()->routeIs('retur-mati.rekap.*') ? 'true' : 'false' }}"
+                                onclick="toggleDdSection('ddSecDefeathering', this)">
+                            Defeathering
+                            <svg class="dd-chev" width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div id="ddSecDefeathering" class="dropdown-section-body {{ request()->routeIs('defeathering.*') ? 'open' : '' }}">
+                            <a class="dropdown-sub-item {{ request()->routeIs('retur-mati.rekap.*') ? 'active' : '' }}" href="{{ route('retur-mati.rekap') }}">Rekap Ayam Retur-Mati</a>
+                        </div>
+                    </div>
+
+                    {{-- Evisceration --}}
+                    <div class="dropdown-section">
+                        <button type="button"
+                                class="dropdown-section-btn {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'active' : '' }}"
+                                aria-expanded="{{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'true' : 'false' }}"
+                                onclick="toggleDdSection('ddSecEvis', this)">
+                            Evisceration
+                            <svg class="dd-chev" width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div id="ddSecEvis" class="dropdown-section-body {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'open' : '' }}">
+                            <a class="dropdown-sub-item {{ request()->routeIs('product-evis.*') ? 'active' : '' }}" href="{{ route('product-evis.index') }}">Daftar Produk Evis</a>
+                            <a class="dropdown-sub-item {{ request()->routeIs('report-evis.*') ? 'active' : '' }}" href="{{ route('report-evis.index') }}">Daily Report Evis</a>
+                        </div>
+                    </div>
+
+                    {{-- Cut Up --}}
+                    <div class="dropdown-section">
+                        <button type="button"
+                                class="dropdown-section-btn {{ request()->routeIs('cut-up.*') ? 'active' : '' }}"
+                                aria-expanded="{{ request()->routeIs('cut-up.*') ? 'true' : 'false' }}"
+                                onclick="toggleDdSection('ddSecCutUp', this)">
+                            Cut Up
+                            <svg class="dd-chev" width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div id="ddSecCutUp" class="dropdown-section-body {{ request()->routeIs('cut-up.*') ? 'open' : '' }}">
+                            {{-- Tambahkan submenu cut up di sini nanti --}}
+                            <span class="dropdown-sub-item" style="cursor:default; opacity:.5;">Segera hadir</span>
+                        </div>
+                    </div>
+
+                    {{-- Lainnya: placeholder untuk departemen berikutnya --}}
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-section-label">Lainnya menyusul</div>
+
                 </div>
             </div>
 
@@ -965,6 +1172,55 @@
                 <a class="mobile-sub {{ request()->routeIs('conditions.*') ? 'active' : '' }}" href="{{ route('conditions.landing') }}">QC Kondisi</a>
             </div>
 
+            {{-- Form (nested accordion mobile) --}}
+            <button type="button"
+                    class="mobile-accordion {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('cut-up.*') ? 'active' : '' }}"
+                    aria-expanded="{{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('cut-up.*') ? 'true' : 'false' }}"
+                    onclick="toggleAccordion('accForm', this)">
+                Form
+                <span class="chev">▾</span>
+            </button>
+            <div id="accForm" class="mobile-acc-body {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('cut-up.*') ? 'open' : '' }}">
+
+                {{-- Defeathering sub-accordion --}}
+                <button type="button"
+                        class="mobile-sub-accordion {{ request()->routeIs('defeathering.*') ? 'active' : '' }}"
+                        aria-expanded="{{ request()->routeIs('defeathering.*') ? 'true' : 'false' }}"
+                        onclick="toggleAccordion('accFormDefeathering', this)">
+                    Defeathering
+                    <span class="chev">▾</span>
+                </button>
+                <div id="accFormDefeathering" class="mobile-sub-acc-body {{ request()->routeIs('defeathering.*') ? 'open' : '' }}">
+                    <span class="mobile-sub-leaf" style="opacity:.5; cursor:default;">Segera hadir</span>
+                </div>
+
+                {{-- Evisceration sub-accordion --}}
+                <button type="button"
+                        class="mobile-sub-accordion {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'active' : '' }}"
+                        aria-expanded="{{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'true' : 'false' }}"
+                        onclick="toggleAccordion('accFormEvis', this)">
+                    Evisceration
+                    <span class="chev">▾</span>
+                </button>
+                <div id="accFormEvis" class="mobile-sub-acc-body {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'open' : '' }}">
+                    <a class="mobile-sub-leaf {{ request()->routeIs('product-evis.*') ? 'active' : '' }}" href="{{ route('product-evis.index') }}">Daftar Produk Evis</a>
+                    <a class="mobile-sub-leaf {{ request()->routeIs('report-evis.*') ? 'active' : '' }}" href="{{ route('report-evis.index') }}">Daily Report Evis</a>
+                </div>
+
+                {{-- Cut Up sub-accordion --}}
+                <button type="button"
+                        class="mobile-sub-accordion {{ request()->routeIs('cut-up.*') ? 'active' : '' }}"
+                        aria-expanded="{{ request()->routeIs('cut-up.*') ? 'true' : 'false' }}"
+                        onclick="toggleAccordion('accFormCutUp', this)">
+                    Cut Up
+                    <span class="chev">▾</span>
+                </button>
+                <div id="accFormCutUp" class="mobile-sub-acc-body {{ request()->routeIs('cut-up.*') ? 'open' : '' }}">
+                    <span class="mobile-sub-leaf" style="opacity:.5; cursor:default;">Segera hadir</span>
+                </div>
+
+            </div>
+
             <div class="mobile-divider"></div>
 
             <a href="{{ route('monitor.show','SH01') }}" target="_blank" rel="noopener noreferrer" class="mobile-link">
@@ -1075,6 +1331,24 @@
             document.getElementById(menuId)?.classList.toggle('open');
         }
 
+        // ===== Desktop nested section toggle (Form sub-menus) =====
+        function toggleDdSection(sectionId, btn) {
+            const body = document.getElementById(sectionId);
+            if (!body) return;
+            const isOpen = body.classList.contains('open');
+            // Tutup semua section lain dalam dropdown yang sama
+            btn.closest('.dropdown-menu')?.querySelectorAll('.dropdown-section-body').forEach(el => {
+                el.classList.remove('open');
+            });
+            btn.closest('.dropdown-menu')?.querySelectorAll('.dropdown-section-btn').forEach(el => {
+                el.setAttribute('aria-expanded', 'false');
+            });
+            if (!isOpen) {
+                body.classList.add('open');
+                btn.setAttribute('aria-expanded', 'true');
+            }
+        }
+
         // ===== Mobile Drawer =====
         function toggleMobileNav() {
             const drawer = document.getElementById('mobileNav');
@@ -1113,6 +1387,10 @@
             const ddProduksi = document.getElementById('ddProduksi');
             const produksiMenu = document.getElementById('ddProduksiMenu');
             if (ddProduksi && produksiMenu && !ddProduksi.contains(e.target)) produksiMenu.classList.remove('open');
+
+            const ddForm = document.getElementById('ddForm');
+            const formMenu = document.getElementById('ddFormMenu');
+            if (ddForm && formMenu && !ddForm.contains(e.target)) formMenu.classList.remove('open');
         });
 
         // ESC -> tutup semua
@@ -1120,6 +1398,7 @@
             if (e.key === 'Escape') {
                 document.getElementById('ddMasterMenu')?.classList.remove('open');
                 document.getElementById('ddProduksiMenu')?.classList.remove('open');
+                document.getElementById('ddFormMenu')?.classList.remove('open');
                 closeMobileNav();
                 closeUserDrawer();
                 closeLogoutModal();
