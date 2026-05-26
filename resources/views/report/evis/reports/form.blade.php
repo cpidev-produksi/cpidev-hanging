@@ -183,7 +183,7 @@ let productData = [];
 let productMap = new Map();
 
 // Load product list
-fetch('/api/product-evis/list', {
+fetch('{{ url("/api/product-evis/list") }}', {
     credentials: 'include',
     headers: {
         'Accept': 'application/json',
