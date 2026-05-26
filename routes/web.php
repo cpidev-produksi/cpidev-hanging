@@ -34,6 +34,11 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('monitor/{location}', [LiveMonitorController::class, 'show'])->name('monitor.show');
 Route::get('monitor/{location}/data', [LiveMonitorController::class, 'data'])->name('monitor.data');
 
+// API endpoint (authenticated via session cookie)
+Route::middleware('auth')->group(function () {
+    Route::get('/api/product-evis/list', [ProductEvisController::class, 'apiList']);
+});
+
 Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/menu', [MenuController::class, 'index'])
     ->name('menu.index');
@@ -155,7 +160,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // Master Produk Evis
     Route::resource('product-evis', ProductEvisController::class, ['parameters' => ['product_evis' => 'productEvis']]);
-    Route::get('/api/product-evis/list', [ProductEvisController::class, 'apiList'])->withoutMiddleware(['nocache']);
 
     // Report Evis
     Route::resource('report-evis', ReportEvisController::class, ['parameters' => ['report_evi' => 'reportEvis']]);
