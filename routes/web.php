@@ -155,7 +155,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // Master Produk Evis
     Route::resource('product-evis', ProductEvisController::class, ['parameters' => ['product_evis' => 'productEvis']]);
-    Route::get('api/product-evis/list', [ProductEvisController::class, 'apiList']);
+    Route::get('/api/product-evis/list', [ProductEvisController::class, 'apiList'])->withoutMiddleware(['nocache']);
 
     // Report Evis
     Route::resource('report-evis', ReportEvisController::class, ['parameters' => ['report_evi' => 'reportEvis']]);

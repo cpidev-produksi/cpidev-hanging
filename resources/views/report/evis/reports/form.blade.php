@@ -184,15 +184,25 @@ let productMap = new Map();
 
 // Load product list
 fetch('/api/product-evis/list', {
-    credentials: 'include'
+    credentials: 'include',
+    headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    }
 })
-    .then(r => r.json())
+    .then(r => {
+        if (!r.ok) {
+            throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+        }
+        return r.json();
+    })
     .then(data => {
         productData = data;
         productMap = new Map(productData.map(p => [`${p.material_number} - ${p.name}`.trim(), String(p.id)]));
         initializeProductInputs();
     }).catch(error => {
         console.error('Error loading products:', error);
+        console.warn('Datalist may not work. Check network tab and server logs.');
     });
 
 function initializeProductInputs() {
