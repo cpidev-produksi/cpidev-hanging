@@ -57,9 +57,101 @@
             </table>
         </div>
 
-        <div style="margin-top: 20px;">
-            {{ $products->links() }}
+        {{-- Pagination --}}
+        @if($products->hasPages())
+        <div style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+
+            {{-- Info teks: Menampilkan X–Y dari Z --}}
+            <div style="font-size: 12px; color: var(--text-muted);">
+                Menampilkan
+                <span style="font-weight: 600; color: var(--text);">{{ $products->firstItem() }}</span>
+                –
+                <span style="font-weight: 600; color: var(--text);">{{ $products->lastItem() }}</span>
+                dari
+                <span style="font-weight: 600; color: var(--text);">{{ $products->total() }}</span>
+                produk
+            </div>
+
+            {{-- Tombol halaman --}}
+            <div style="display: flex; align-items: center; gap: 4px;">
+
+                {{-- Tombol Previous --}}
+                @if($products->onFirstPage())
+                    <span style="
+                        display: inline-flex; align-items: center; justify-content: center;
+                        width: 32px; height: 32px; border-radius: 7px;
+                        border: 1px solid var(--card-border);
+                        color: var(--text-muted); font-size: 13px;
+                        opacity: 0.4; cursor: not-allowed;
+                    ">&#8592;</span>
+                @else
+                    <a href="{{ $products->previousPageUrl() }}" style="
+                        display: inline-flex; align-items: center; justify-content: center;
+                        width: 32px; height: 32px; border-radius: 7px;
+                        border: 1px solid var(--card-border);
+                        color: var(--text-muted); font-size: 13px;
+                        text-decoration: none; transition: background 0.15s, border-color 0.15s;
+                    " onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''"
+                    >&#8592;</a>
+                @endif
+
+                {{-- Nomor halaman --}}
+                @foreach($products->links()->elements as $element)
+                    @if(is_string($element))
+                        {{-- Ellipsis --}}
+                        <span style="
+                            display: inline-flex; align-items: center; justify-content: center;
+                            width: 32px; height: 32px; font-size: 13px;
+                            color: var(--text-muted); letter-spacing: 1px;
+                        ">{{ $element }}</span>
+                    @elseif(is_array($element))
+                        @foreach($element as $page => $url)
+                            @if($page == $products->currentPage())
+                                <span style="
+                                    display: inline-flex; align-items: center; justify-content: center;
+                                    width: 32px; height: 32px; border-radius: 7px;
+                                    background: var(--accent); color: white;
+                                    font-size: 13px; font-weight: 600;
+                                    border: 1px solid var(--accent);
+                                ">{{ $page }}</span>
+                            @else
+                                <a href="{{ $url }}" style="
+                                    display: inline-flex; align-items: center; justify-content: center;
+                                    width: 32px; height: 32px; border-radius: 7px;
+                                    border: 1px solid var(--card-border);
+                                    color: var(--text); font-size: 13px;
+                                    text-decoration: none; transition: background 0.15s, border-color 0.15s;
+                                " onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''"
+                                >{{ $page }}</a>
+                            @endif
+                        @endforeach
+                    @endif
+                @endforeach
+
+                {{-- Tombol Next --}}
+                @if($products->hasMorePages())
+                    <a href="{{ $products->nextPageUrl() }}" style="
+                        display: inline-flex; align-items: center; justify-content: center;
+                        width: 32px; height: 32px; border-radius: 7px;
+                        border: 1px solid var(--card-border);
+                        color: var(--text-muted); font-size: 13px;
+                        text-decoration: none; transition: background 0.15s, border-color 0.15s;
+                    " onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''"
+                    >&#8594;</a>
+                @else
+                    <span style="
+                        display: inline-flex; align-items: center; justify-content: center;
+                        width: 32px; height: 32px; border-radius: 7px;
+                        border: 1px solid var(--card-border);
+                        color: var(--text-muted); font-size: 13px;
+                        opacity: 0.4; cursor: not-allowed;
+                    ">&#8594;</span>
+                @endif
+
+            </div>
         </div>
+        @endif
+
     </div>
 </div>
 
@@ -130,9 +222,6 @@ function closeProductModal() {
     document.getElementById('materialError').style.display = 'none';
     document.getElementById('nameError').style.display = 'none';
 }
-// document.getElementById('productModal').addEventListener('click', function(e) {
-//     if (e.target === this) closeProductModal();
-// });
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeProductModal();
 });
