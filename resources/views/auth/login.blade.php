@@ -589,7 +589,7 @@
 
         <div class="back-link-divider"><span>atau</span></div>
 
-        <a href="{{ route('landing') }}" class="back-link">
+        <a href="{{ route('login') }}" class="back-link">
             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
                       d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
