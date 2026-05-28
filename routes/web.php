@@ -28,8 +28,11 @@ use Illuminate\Support\Facades\Route;
 
 // Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/', function () {
-    return redirect()->route('login');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 });
+
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
