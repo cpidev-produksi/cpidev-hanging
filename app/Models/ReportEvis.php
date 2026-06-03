@@ -12,6 +12,17 @@ class ReportEvis extends Model
     protected $table = 'report_evis';
     protected $fillable = [
         'report_date',
+        'location',
+        'shift',
+        'truck_count',
+        'received_chicken',
+        'yield_percent',
+
+        'fresh_total_bag',
+        'fresh_total_kg',
+        'frozen_total_bag',
+        'frozen_total_kg',
+
         'created_by',
         'approved_by',
         'approved_at',
@@ -24,6 +35,15 @@ class ReportEvis extends Model
     protected $casts = [
         'report_date' => 'date',
         'approved_at' => 'datetime',
+
+        'truck_count' => 'integer',
+        'received_chicken' => 'integer',
+        'yield_percent' => 'decimal:2',
+
+        'fresh_total_bag' => 'decimal:2',
+        'fresh_total_kg' => 'decimal:2',
+        'frozen_total_bag' => 'decimal:2',
+        'frozen_total_kg' => 'decimal:2',
     ];
 
     public function createdBy(): BelongsTo

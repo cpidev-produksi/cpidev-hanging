@@ -4,11 +4,7 @@
     <meta charset="utf-8">
     <title>Report Evis {{ $report->report_date->format('d-m-Y') }}</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'DejaVu Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -27,33 +23,17 @@
             page-break-after: auto;
         }
 
-        .page:last-child {
-            page-break-after: avoid;
-        }
+        .page:last-child { page-break-after: avoid; }
 
-        /* HEADER */
         .header {
             margin-bottom: 14px;
             padding-bottom: 12px;
             border-bottom: 3px solid #0d3b6e;
         }
 
-        .header-inner {
-            display: table;
-            width: 100%;
-        }
-
-        .header-text {
-            display: table-cell;
-            vertical-align: middle;
-        }
-
-        .header-badge {
-            display: table-cell;
-            vertical-align: middle;
-            text-align: right;
-            white-space: nowrap;
-        }
+        .header-inner { display: table; width: 100%; }
+        .header-text { display: table-cell; vertical-align: middle; }
+        .header-badge { display: table-cell; vertical-align: middle; text-align: right; white-space: nowrap; }
 
         .header h1 {
             font-size: 15px;
@@ -63,11 +43,7 @@
             margin-bottom: 3px;
         }
 
-        .header .company {
-            font-size: 10px;
-            color: #4a6fa5;
-            font-weight: bold;
-        }
+        .header .company { font-size: 10px; color: #4a6fa5; font-weight: bold; }
 
         .header .report-date {
             display: inline-block;
@@ -79,7 +55,6 @@
             font-weight: bold;
         }
 
-        /* INFO SECTION */
         .info-section {
             display: table;
             width: 100%;
@@ -90,9 +65,7 @@
             background: white;
         }
 
-        .info-row {
-            display: table-row;
-        }
+        .info-row { display: table-row; }
 
         .info-label {
             display: table-cell;
@@ -118,37 +91,12 @@
         }
 
         .info-row:last-child .info-label,
-        .info-row:last-child .info-value {
-            border-bottom: none;
-        }
+        .info-row:last-child .info-value { border-bottom: none; }
 
-        /* Status Badge */
-        .status-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 4px;
-            font-size: 9px;
-            font-weight: bold;
-            letter-spacing: 0.06em;
-        }
-
-        .status-draft {
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #fcd34d;
-        }
-
-        .status-approved {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #6ee7b7;
-        }
-
-        /* TABLE */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         thead {
@@ -172,17 +120,9 @@
             font-size: {{ ($orientation ?? 'portrait') === 'landscape' ? '8.5px' : '10px' }};
         }
 
-        tbody tr:nth-child(even) td {
-            background: #f6f9fc;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .text-center {
-            text-align: center;
-        }
+        tbody tr:nth-child(even) td { background: #f6f9fc; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
 
         .total-row td {
             background: #1a4a7a !important;
@@ -193,11 +133,16 @@
             padding: 9px 11px;
         }
 
-        /* SIGNATURE SECTION */
-        .signature-section {
-            margin-top: 20px;
-            page-break-inside: avoid;
+        .section-title {
+            margin: 10px 0 6px;
+            font-weight: bold;
+            color: #0d3b6e;
+            font-size: 10.5px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
         }
+
+        .signature-section { margin-top: 20px; page-break-inside: avoid; }
 
         .signature-section h3 {
             font-size: 9px;
@@ -205,62 +150,19 @@
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: #111;
-            border-left: none;
-            padding-left: 0;
             margin-bottom: 10px;
         }
 
-        .signatures {
-            display: table;
-            width: 100%;
-        }
+        .signatures { display: table; width: 100%; }
+        .signature-box { display: table-cell; width: 40%; text-align: center; vertical-align: top; padding: 10px 12px; background: #ffffff; }
+        .signature-line { border-top: 1px solid #333; margin-top: 28px; padding-top: 5px; font-weight: normal; font-size: 9.5px; color: #333; }
 
-        .signature-box {
-            display: table-cell;
-            width: 40%;
-            text-align: center;
-            vertical-align: top;
-            padding: 10px 12px;
-            background: #ffffff;
-            /* border: 1px solid #d1d5db; */
-            border-radius: 0;
-        }
+        .qr-code { margin: 10px auto; text-align: center; }
+        .qr-code img { width: 80px; height: 80px; border: 0; padding: 0; background: transparent; }
+        .qr-label { font-size: 9px; color: #4a6fa5; margin-top: 6px; }
 
-        .signature-line {
-            border-top: 1px solid #333;
-            margin-top: 28px;
-            padding-top: 5px;
-            font-weight: normal;
-            font-size: 9.5px;
-            color: #333;
-        }
+        .divider { display: table-cell; width: 4%; }
 
-        .qr-code {
-            margin: 10px auto;
-            text-align: center;
-        }
-
-        .qr-code img {
-            width: 80px;
-            height: 80px;
-            border: 0;
-            padding: 0;
-            background: transparent;
-            border-radius: 0;
-        }
-
-        .qr-label {
-            font-size: 9px;
-            color: #4a6fa5;
-            margin-top: 6px;
-        }
-
-        .divider {
-            display: table-cell;
-            width: 4%;
-        }
-
-        /* FOOTER */
         .footer {
             margin-top: 14px;
             padding-top: 8px;
@@ -288,6 +190,122 @@
     </style>
 </head>
 <body>
+    @php
+        $freshItems = $report->items->where('category', 'fresh')->values();
+        $frozenItems = $report->items->where('category', 'frozen')->values();
+
+        $fmt2 = fn($v) => number_format((float)($v ?? 0), 2);
+
+        $calcUsedCols = function ($items) {
+            $used = [];
+            foreach ($items as $item) {
+                for ($c = 1; $c <= 10; $c++) {
+                    $b = $item->getAttribute("bag_$c");
+                    $k = $item->getAttribute("kg_$c");
+                    if (($b !== null && $b !== '' && (float)$b > 0) ||
+                        ($k !== null && $k !== '' && (float)$k > 0)) {
+                        $used[$c] = true;
+                    }
+                }
+            }
+            $cols = array_keys($used);
+            sort($cols);
+            return $cols;
+        };
+
+        $renderTable = function ($title, $items, $totalBag, $totalKg) use ($calcUsedCols, $fmt2) {
+            $usedCols = $calcUsedCols($items);
+            $hasDetail = count($usedCols) > 0;
+
+            echo '<div class="section-title">'.e($title).'</div>';
+
+            if ($hasDetail) {
+                echo '<table>';
+                echo '<thead>';
+                echo '<tr>';
+                echo '<th style="width: 35%;">Nama Produk</th>';
+                foreach ($usedCols as $c) {
+                    echo '<th colspan="2" style="text-align: center; font-size: 8.5px;">'.e($c).'</th>';
+                }
+                echo '<th class="text-right" style="width: 10%;">Total Bag</th>';
+                echo '<th class="text-right" style="width: 10%;">Total Kg</th>';
+                echo '</tr>';
+
+                echo '<tr style="background: #1a4a7a;">';
+                echo '<th style="font-size: 8px; color: #c8d8e8;"></th>';
+                foreach ($usedCols as $c) {
+                    echo '<th style="text-align: center; font-size: 8px; color: #c8d8e8;">Bag</th>';
+                    echo '<th style="text-align: center; font-size: 8px; color: #c8d8e8; border-right: 1px solid #2a5a8a;">Kg</th>';
+                }
+                echo '<th style="color: #c8d8e8; font-size: 8px;"></th>';
+                echo '<th style="color: #c8d8e8; font-size: 8px;"></th>';
+                echo '</tr>';
+                echo '</thead>';
+
+                echo '<tbody>';
+                if (count($items)) {
+                    foreach ($items as $item) {
+                        echo '<tr>';
+                        echo '<td style="font-size: 9.5px;">'.e($item->product?->name ?? '—').'</td>';
+
+                        foreach ($usedCols as $c) {
+                            $b = $item->getAttribute("bag_$c");
+                            $k = $item->getAttribute("kg_$c");
+                            $bStr = ($b !== null && $b !== '' && (float)$b > 0) ? number_format((float)$b, 2) : '';
+                            $kStr = ($k !== null && $k !== '' && (float)$k > 0) ? number_format((float)$k, 2) : '';
+                            echo '<td style="text-align: right; font-size: 9px;">'.e($bStr).'</td>';
+                            echo '<td style="text-align: right; font-size: 9px; border-right: 1px solid #e4edf5;">'.e($kStr).'</td>';
+                        }
+
+                        echo '<td class="text-right" style="font-size: 9.5px;">'.$fmt2($item->total_bag).'</td>';
+                        echo '<td class="text-right" style="font-size: 9.5px;">'.$fmt2($item->total_kg).'</td>';
+                        echo '</tr>';
+                    }
+                } else {
+                    echo '<tr><td colspan="'.(3 + count($usedCols) * 2).'" class="text-center" style="color:#999;">Tidak ada item</td></tr>';
+                }
+
+                echo '<tr class="total-row">';
+                echo '<td style="font-size: 9.5px;">TOTAL '.e($title).'</td>';
+                foreach ($usedCols as $c) { echo '<td></td><td></td>'; }
+                echo '<td class="text-right">'.$fmt2($totalBag).'</td>';
+                echo '<td class="text-right">'.$fmt2($totalKg).'</td>';
+                echo '</tr>';
+
+                echo '</tbody></table>';
+            } else {
+                // fallback simple table
+                echo '<table>';
+                echo '<thead><tr>';
+                echo '<th style="width: 50%;">Nama Produk</th>';
+                echo '<th class="text-right" style="width: 25%;">Total Bag</th>';
+                echo '<th class="text-right" style="width: 25%;">Total Kg</th>';
+                echo '</tr></thead>';
+
+                echo '<tbody>';
+                if (count($items)) {
+                    foreach ($items as $item) {
+                        echo '<tr>';
+                        echo '<td>'.e($item->product?->name ?? '—').'</td>';
+                        echo '<td class="text-right">'.$fmt2($item->total_bag).'</td>';
+                        echo '<td class="text-right">'.$fmt2($item->total_kg).'</td>';
+                        echo '</tr>';
+                    }
+                } else {
+                    echo '<tr><td colspan="3" class="text-center" style="color:#999;">Tidak ada item</td></tr>';
+                }
+
+                echo '<tr class="total-row">';
+                echo '<td style="font-size: 11px;">TOTAL '.e($title).'</td>';
+                echo '<td class="text-right">'.$fmt2($totalBag).'</td>';
+                echo '<td class="text-right">'.$fmt2($totalKg).'</td>';
+                echo '</tr>';
+
+                echo '</tbody></table>';
+            }
+        };
+    @endphp
+
     <div class="page">
         <!-- HEADER -->
         <div class="header">
@@ -312,6 +330,30 @@
                 <div class="info-label">Tanggal Dibuat</div>
                 <div class="info-value">{{ $report->created_at->format('d/m/Y H:i') }}</div>
             </div>
+
+            <div class="info-row">
+                <div class="info-label">Lokasi</div>
+                <div class="info-value">{{ $report->location ?? '—' }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Shift</div>
+                <div class="info-value">{{ $report->shift ?? '—' }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Jumlah Truk</div>
+                <div class="info-value">{{ (int)($report->truck_count ?? 0) }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Ayam Diterima (Ekor)</div>
+                <div class="info-value">{{ (int)($report->received_chicken ?? 0) }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Yield (%)</div>
+                <div class="info-value">
+                    {{ $report->yield_percent !== null ? number_format((float)$report->yield_percent, 2) : '—' }}
+                </div>
+            </div>
+
             @if($report->isApproved())
                 <div class="info-row">
                     <div class="info-label">Disetujui Oleh</div>
@@ -324,106 +366,20 @@
             @endif
         </div>
 
-        <!-- MAIN TABLE -->
-        @php
-            $usedCols = [];
-            foreach ($report->items as $item) {
-                for ($c = 1; $c <= 10; $c++) {
-                    $b = $item->getAttribute("bag_$c");
-                    $k = $item->getAttribute("kg_$c");
-                    if (($b !== null && $b !== '' && (float)$b > 0) ||
-                        ($k !== null && $k !== '' && (float)$k > 0)) {
-                        $usedCols[$c] = true;
-                    }
-                }
-            }
-            $usedCols = array_keys($usedCols);
-            sort($usedCols);
-            $hasDetail = count($usedCols) > 0;
-        @endphp
+        <!-- TABLES -->
+        {!! $renderTable('FRESH', $freshItems, $report->fresh_total_bag, $report->fresh_total_kg) !!}
+        {!! $renderTable('FROZEN', $frozenItems, $report->frozen_total_bag, $report->frozen_total_kg) !!}
 
-        @if($hasDetail)
+        <!-- GRAND TOTAL -->
         <table>
-            <thead>
-                <tr>
-                    <th style="width: 35%;">Nama Produk</th>
-                    @foreach($usedCols as $c)
-                        <th colspan="2" style="text-align: center; font-size: 8.5px;">{{ $c }}</th>
-                    @endforeach
-                    <th class="text-right" style="width: 10%;">Total Bag</th>
-                    <th class="text-right" style="width: 10%;">Total Kg</th>
-                </tr>
-                <tr style="background: #1a4a7a;">
-                    <th style="font-size: 8px; color: #c8d8e8;"></th>
-                    @foreach($usedCols as $c)
-                        <th style="text-align: center; font-size: 8px; color: #c8d8e8; letter-spacing: 0.05em;">Bag</th>
-                        <th style="text-align: center; font-size: 8px; color: #c8d8e8; letter-spacing: 0.05em; border-right: 1px solid #2a5a8a;">Kg</th>
-                    @endforeach
-                    <th style="color: #c8d8e8; font-size: 8px;"></th>
-                    <th style="color: #c8d8e8; font-size: 8px;"></th>
-                </tr>
-            </thead>
             <tbody>
-                @forelse($report->items as $item)
-                    <tr>
-                        <td style="font-size: 9.5px;">{{ $item->product?->name ?? '—' }}</td>
-                        @foreach($usedCols as $c)
-                            @php
-                                $b = $item->getAttribute("bag_$c");
-                                $k = $item->getAttribute("kg_$c");
-                                $bStr = ($b !== null && $b !== '' && (float)$b > 0) ? number_format((float)$b, 2) : '';
-                                $kStr = ($k !== null && $k !== '' && (float)$k > 0) ? number_format((float)$k, 2) : '';
-                            @endphp
-                            <td style="text-align: right; font-size: 9px;">{{ $bStr }}</td>
-                            <td style="text-align: right; font-size: 9px; border-right: 1px solid #e4edf5;">{{ $kStr }}</td>
-                        @endforeach
-                        <td class="text-right" style="font-size: 9.5px;">{{ number_format((float)($item->total_bag ?? 0), 2) }}</td>
-                        <td class="text-right" style="font-size: 9.5px;">{{ number_format((float)($item->total_kg ?? 0), 2) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="{{ 3 + count($usedCols) * 2 }}" class="text-center" style="color: #999;">Tidak ada item</td>
-                    </tr>
-                @endforelse
-                <tr class="total-row">
-                    <td style="font-size: 9.5px;">TOTAL KESELURUHAN</td>
-                    @foreach($usedCols as $c)
-                        <td></td><td></td>
-                    @endforeach
-                    <td class="text-right">{{ number_format($report->total_bag, 2) }}</td>
-                    <td class="text-right">{{ number_format($report->total_kg, 2) }}</td>
-                </tr>
-            </tbody>
-        </table>
-        @else
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 50%;">Nama Produk</th>
-                    <th class="text-right" style="width: 25%;">Total Bag</th>
-                    <th class="text-right" style="width: 25%;">Total Kg</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($report->items as $item)
-                    <tr>
-                        <td>{{ $item->product?->name ?? '—' }}</td>
-                        <td class="text-right">{{ number_format($item->total_bag, 2) }}</td>
-                        <td class="text-right">{{ number_format($item->total_kg, 2) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3" class="text-center" style="color: #999;">Tidak ada item</td>
-                    </tr>
-                @endforelse
                 <tr class="total-row">
                     <td style="font-size: 11px;">TOTAL KESELURUHAN</td>
-                    <td class="text-right">{{ number_format($report->total_bag, 2) }}</td>
-                    <td class="text-right">{{ number_format($report->total_kg, 2) }}</td>
+                    <td class="text-right" style="width: 25%;">{{ number_format((float)($report->total_bag ?? 0), 2) }}</td>
+                    <td class="text-right" style="width: 25%;">{{ number_format((float)($report->total_kg ?? 0), 2) }}</td>
                 </tr>
             </tbody>
         </table>
-        @endif
 
         <!-- SIGNATURE & QR CODE SECTION -->
         <div class="signature-section">
@@ -463,9 +419,7 @@
                     </div>
 
                     <div class="qr-label">
-                        @php
-                            $sigPath = $report->approved_signature_path;
-                        @endphp
+                        @php $sigPath = $report->approved_signature_path; @endphp
                         @if($report->isApproved() && $sigPath)
                             <div style="margin-top: 8px;">
                                 <img
@@ -473,12 +427,10 @@
                                     alt="Signature Approved"
                                     style="height: 45px; width: auto;"
                                 >
-
                             </div>
                             <strong>{{ $report->approvedBy->name }}</strong><br>
                             {{ $report->approved_at->format('d/m/Y H:i') }}
                         @else
-                            {{-- Draft: kosongkan info approver --}}
                             <strong>&nbsp;</strong><br>
                             &nbsp;
                         @endif

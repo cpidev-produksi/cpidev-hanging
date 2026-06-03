@@ -28,7 +28,9 @@ use Illuminate\Support\Facades\Route;
 
 // Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/', function () {
-    return auth()->check()
+    /** @var \Illuminate\Contracts\Auth\Guard $auth */
+    $auth = auth();
+    return $auth->check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
@@ -165,9 +167,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // Master Produk Evis
+    Route::get('/api/product-evis/list', [ProductEvisController::class, 'apiList']);
     Route::resource('product-evis', ProductEvisController::class, ['parameters' => ['product_evis' => 'productEvis']]);
 
     // Report Evis
+    Route::get('/api/report-evis/stats', [ReportEvisController::class, 'apiStats']);
     Route::resource('report-evis', ReportEvisController::class, ['parameters' => ['report_evi' => 'reportEvis']]);
     Route::post('report-evis/{reportEvis}/approve', [ReportEvisController::class, 'approve'])->name('report-evis.approve');
     Route::get('report-evis/{reportEvis}/pdf', [ReportEvisController::class, 'exportPdf'])->name('report-evis.pdf');

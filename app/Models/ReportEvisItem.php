@@ -11,6 +11,7 @@ class ReportEvisItem extends Model
     protected $fillable = [
         'report_evis_id',
         'product_evis_id',
+        'category',
         'total_bag',
         'total_kg'
     ];

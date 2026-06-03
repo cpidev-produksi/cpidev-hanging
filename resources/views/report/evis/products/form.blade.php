@@ -39,6 +39,20 @@
                 @enderror
             </div>
 
+            <div style="margin-bottom: 16px;">
+                <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px;">
+                    Satuan (Kg per Bag) *
+                </label>
+                <input type="number" step="0.01" min="0" name="satuan"
+                    value="{{ isset($productEvis) ? $productEvis->satuan : old('satuan') }}"
+                    placeholder="Cth: 10"
+                    required
+                    style="width: 100%; padding: 10px; border: 1px solid var(--card-border); border-radius: 8px;">
+                @error('satuan')
+                    <small style="color: var(--error);">{{ $message }}</small>
+                @enderror
+            </div>
+
             <div style="display: flex; gap: 12px;">
                 <button type="submit" class="topnav-link" style="flex: 1; background: var(--accent); color: white;">
                     {{ isset($productEvis) ? 'Perbarui' : 'Tambah' }} Produk

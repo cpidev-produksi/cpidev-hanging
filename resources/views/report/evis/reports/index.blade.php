@@ -259,32 +259,32 @@
 
                                     {{-- Delete --}}
                                     <button type="button"
-                                            title="Hapus"
-                                            onclick="openDeleteModal({{ $report->id }})"
-                                            style="
-                                                display: inline-flex;
-                                                align-items: center;
-                                                justify-content: center;
-                                                width: 32px;
-                                                height: 32px;
-                                                border-radius: 7px;
-                                                background: #FFF1F2;
-                                                color: #E11D48;
-                                                border: 1px solid #FECDD3;
-                                                cursor: pointer;
-                                                transition: background 0.15s;
-                                                font-family: inherit;
-                                            "
-                                            onmouseover="this.style.background='#FFE4E6'"
-                                            onmouseout="this.style.background='#FFF1F2'"
-                                        >
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                                                <polyline points="3 6 5 6 21 6"/>
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                                <path d="M10 11v6M14 11v6"/>
-                                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                                            </svg>
-                                        </button>
+                                        title="Hapus"
+                                        onclick="openDeleteModal({{ $report->id }})"
+                                        style="
+                                            display: inline-flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            width: 32px;
+                                            height: 32px;
+                                            border-radius: 7px;
+                                            background: #FFF1F2;
+                                            color: #E11D48;
+                                            border: 1px solid #FECDD3;
+                                            cursor: pointer;
+                                            transition: background 0.15s;
+                                            font-family: inherit;
+                                        "
+                                        onmouseover="this.style.background='#FFE4E6'"
+                                        onmouseout="this.style.background='#FFF1F2'"
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                            <path d="M10 11v6M14 11v6"/>
+                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
