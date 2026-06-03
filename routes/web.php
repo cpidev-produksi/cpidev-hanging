@@ -172,7 +172,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // Report Evis
     Route::get('/api/report-evis/stats', [ReportEvisController::class, 'apiStats']);
-    Route::resource('report-evis', ReportEvisController::class, ['parameters' => ['report-evis' => 'reportEvis']]);
     Route::post('report-evis/{reportEvis}/approve', [ReportEvisController::class, 'approve'])->name('report-evis.approve');
     Route::get('report-evis/{reportEvis}/pdf', [ReportEvisController::class, 'exportPdf'])->name('report-evis.pdf');
+    Route::resource('report-evis', ReportEvisController::class, ['parameters' => ['report-evis' => 'reportEvis']]);
 });
