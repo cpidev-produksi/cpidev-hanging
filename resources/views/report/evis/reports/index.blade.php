@@ -352,7 +352,8 @@
 
 <script>
 function openApproveModal(reportId) {
-    document.getElementById('approveForm').action = `/report-evis/${reportId}/approve`;
+    const baseUrl = "{{ url('report-evis') }}";
+    document.getElementById('approveForm').action = baseUrl + '/' + reportId + '/approve';
     document.getElementById('approveModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -365,7 +366,8 @@ document.getElementById('approveModal').addEventListener('click', function(e) {
 });
 
 function openDeleteModal(reportId) {
-    document.getElementById('deleteForm').action = `/report-evis/${reportId}`;
+    const baseUrl = "{{ url('report-evis') }}";
+    document.getElementById('deleteForm').action = baseUrl + '/' + reportId;
     document.getElementById('deleteModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
