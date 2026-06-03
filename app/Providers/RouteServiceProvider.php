@@ -33,7 +33,7 @@ class RouteServiceProvider extends ServiceProvider
 
     protected function configureRouteModelBindings(): void
     {
-        Route::model('product_evi', ProductEvis::class);
-        Route::model('report_evi', ReportEvis::class);
+        Route::model('productEvis', ProductEvis::class);
+        Route::model('reportEvis', ReportEvis::class);
     }
 }
