@@ -425,15 +425,16 @@
                                 <img
                                     src="{{ public_path('storage/'.$sigPath) }}"
                                     alt="Signature Approved"
-                                    style="height: 45px; width: auto;"
-                                >
+                                    style="height: 45px; width: auto;">
                             </div>
-                            <strong>{{ $report->approvedBy->name }}</strong><br>
-                            {{ $report->approved_at->format('d/m/Y H:i') }}
                         @else
                             <strong>&nbsp;</strong><br>
                             &nbsp;
                         @endif
+                    </div>
+                    <div class="qr-label">
+                        <strong>{{ $report->approvedBy->name }}</strong><br>
+                        {{ $report->approved_at->format('d/m/Y H:i') }}
                     </div>
 
                     <div class="signature-line">
