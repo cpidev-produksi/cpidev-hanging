@@ -670,10 +670,11 @@
                                         <span class="total-kg">{{ $item?->total_kg }}</span>
                                     </td>
                                     <td class="td-total">
-                                        <span class="total-yield">{{ $item?->yield_percent }}</span>
-                                    <td class="td-total">
                                         <span class="item-yield">{{ $item?->yield_percent ? number_format($item->yield_percent, 2) : '' }}</span>
                                         <input type="hidden" name="fresh_items[{{ $idx }}][yield_percent]" class="yield-input" value="{{ $item?->yield_percent }}">
+                                    </td>
+                                    <td class="td-action">
+                                        <button type="button" onclick="removeRow('fresh', {{ $idx }})" class="btn-remove" title="Hapus">&#x2715;</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -882,6 +883,21 @@
 </div>
 
 <script>
+// ── Enter key: confirm current field (blur) instead of submitting form ──
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    const tag = document.activeElement?.tagName;
+    // Allow Enter on textarea or buttons that are not type="submit"
+    if (tag === 'TEXTAREA') return;
+    if (tag === 'BUTTON' && document.activeElement.type !== 'submit') return;
+    // Block Enter from submitting
+    e.preventDefault();
+    // Confirm/blur the focused element if it's an input or select
+    if (tag === 'INPUT' || tag === 'SELECT') {
+        document.activeElement.blur();
+    }
+}, true);
+
 let productData = [];
 let productMap  = new Map();
 let productById = new Map();
@@ -1098,6 +1114,10 @@ function addRow(scope) {
     html += `
             <td class="td-total"><span class="total-bag"></span></td>
             <td class="td-total"><span class="total-kg"></span></td>
+            <td class="td-total">
+                <span class="item-yield"></span>
+                <input type="hidden" name="${scope}_items[${newIndex}][yield_percent]" class="yield-input" value="">
+            </td>
             <td class="td-action">
                 <button type="button" onclick="removeRow('${scope}', ${newIndex})" class="btn-remove" title="Hapus">&#x2715;</button>
             </td>
