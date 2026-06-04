@@ -17,6 +17,7 @@ class ReportEvis extends Model
         'truck_count',
         'received_chicken',
         'yield_percent',
+        'netto_weight',
 
         'fresh_total_bag',
         'fresh_total_kg',
@@ -39,6 +40,7 @@ class ReportEvis extends Model
         'truck_count' => 'integer',
         'received_chicken' => 'integer',
         'yield_percent' => 'decimal:2',
+        'netto_weight' => 'decimal:2',
 
         'fresh_total_bag' => 'decimal:2',
         'fresh_total_kg' => 'decimal:2',

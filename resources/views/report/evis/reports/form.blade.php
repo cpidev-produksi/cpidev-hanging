@@ -578,6 +578,16 @@
                     placeholder="Cth: 72.50">
                 @error('yield_percent')<div class="field-error">{{ $message }}</div>@enderror
             </div>
+
+            <div class="field-group">
+                <label>Netto Weight (kg) *</label>
+                <input type="number" step="0.01" min="0" id="nettoWeight" name="netto_weight"
+                    value="{{ old('netto_weight', $reportEvis->netto_weight ?? '') }}"
+                    placeholder="Contoh: 5000.00"
+                    required>
+                <div class="hint">Total netto weight dalam kilogram</div>
+                @error('netto_weight')<div class="field-error">{{ $message }}</div>@enderror
+            </div>
         </div>
 
         @php

@@ -81,6 +81,7 @@ class ReportEvisController extends Controller
             'truck_count' => 'required|integer|min:0',
             'received_chicken' => 'required|integer|min:0',
             'yield_percent' => 'nullable|numeric|min:0|max:100',
+            'netto_weight' => 'nullable|numeric|min:0',
 
             'fresh_items' => 'required|array',
             'fresh_items.*.product_evis_id' => 'required|exists:product_evis,id',
@@ -102,6 +103,7 @@ class ReportEvisController extends Controller
             'truck_count' => $validated['truck_count'],
             'received_chicken' => $validated['received_chicken'],
             'yield_percent' => $validated['yield_percent'] ?? null,
+            'netto_weight' => $validated['netto_weight'] ?? null,
             'created_by' => $user?->id,
             'status' => 'draft',
             'created_at' => $now,
@@ -119,43 +121,6 @@ class ReportEvisController extends Controller
             'frozen_total_bag' => $frozenTotals['bag'],
             'frozen_total_kg' => $frozenTotals['kg'],
         ]);
-
-        // Simpan items
-        // foreach ($validated['fresh_items'] as $item) {
-        //     $productId = (string) $item['product_evis_id'];
-
-        //     if (!array_key_exists($productId, $satuanCache)) {
-        //         $satuanCache[$productId] = (float) (ProductEvis::query()->whereKey($productId)->value('satuan') ?? 0);
-        //     }
-        //     $satuan = (float) $satuanCache[$productId];
-
-        //     $reportItem = new ReportEvisItem([
-        //         'product_evis_id' => $item['product_evis_id'],
-        //     ]);
-
-        //     // Set bag & kg untuk 10 kolom
-        //     for ($i = 1; $i <= 10; $i++) {
-        //         $bag = $this->normalizeNumeric($item["bag_$i"] ?? null);
-        //         $kg  = $this->normalizeNumeric($item["kg_$i"] ?? null);
-
-        //         // default bag null -> 0 (mengikuti behavior existing store sebelumnya)
-        //         $bagToSave = $bag ?? 0;
-
-        //         // kalau kg kosong, auto hitung dari bag*satuan
-        //         if ($kg === null) {
-        //             $kgToSave = ($satuan > 0) ? ($bagToSave * $satuan) : 0;
-        //         } else {
-        //             // kalau user isi kg, hormati input user
-        //             $kgToSave = $kg;
-        //         }
-
-        //         $reportItem->setAttribute("bag_$i", $bagToSave);
-        //         $reportItem->setAttribute("kg_$i", $kgToSave);
-        //     }
-
-        //     $reportItem->calculateTotals();
-        //     $report->items()->save($reportItem);
-        // }
 
         $this->updateReportTotals($report);
 
@@ -196,6 +161,7 @@ class ReportEvisController extends Controller
             'truck_count' => 'required|integer|min:0',
             'received_chicken' => 'required|integer|min:0',
             'yield_percent' => 'nullable|numeric|min:0|max:100',
+            'netto_weight' => 'nullable|numeric|min:0',
 
             'fresh_items' => 'required|array',
             'fresh_items.*.product_evis_id' => 'required|exists:product_evis,id',
@@ -215,6 +181,7 @@ class ReportEvisController extends Controller
             'truck_count' => $validated['truck_count'],
             'received_chicken' => $validated['received_chicken'],
             'yield_percent' => $validated['yield_percent'] ?? null,
+            'netto_weight' => $validated['netto_weight'] ?? null,
         ]);
 
         // Hapus items lama

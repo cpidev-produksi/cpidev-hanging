@@ -353,6 +353,12 @@
                     {{ $report->yield_percent !== null ? number_format((float)$report->yield_percent, 2) : '—' }}
                 </div>
             </div>
+            <div class="info-row">
+                <div class="info-label">Netto Weight (kg)</div>
+                <div class="info-value">
+                    {{ number_format((float)$report->netto_weight, 2) }}
+                </div>
+            </div>
 
             @if($report->isApproved())
                 <div class="info-row">

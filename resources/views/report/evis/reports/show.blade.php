@@ -63,6 +63,11 @@
                 </div>
             </div>
 
+            <div style="padding: 14px 16px; background: #fafbff; border: 1px solid var(--card-border); border-radius: 10px;">
+                <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 5px;">Netto Weight (kg)</div>
+                <div style="font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums;">{{ number_format((float)($report->netto_weight ?? 0), 2) }}</div>
+            </div>
+
             @if($report->isApproved())
                 <div style="padding: 14px 16px; background: #fafbff; border: 1px solid var(--card-border); border-radius: 10px;">
                     <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 5px;">Disetujui Oleh</div>
