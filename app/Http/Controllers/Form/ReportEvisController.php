@@ -241,6 +241,13 @@ class ReportEvisController extends Controller
             }
 
             $reportItem->calculateTotals();
+
+            $yieldPercent = $item['yield_percent'] ?? null;
+            if ($yieldPercent === null && $report->netto_weight && $report->netto_weight > 0) {
+                $yieldPercent = $reportItem->calculateYieldPercent($report->netto_weight);
+            }
+            $reportItem->yield_percent = $yieldPercent;
+            
             $report->items()->save($reportItem);
 
             $totalBag += (float)($reportItem->total_bag ?? 0);

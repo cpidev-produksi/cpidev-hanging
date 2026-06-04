@@ -229,6 +229,7 @@
                 }
                 echo '<th class="text-right" style="width: 10%;">Total Bag</th>';
                 echo '<th class="text-right" style="width: 10%;">Total Kg</th>';
+                echo '<th class="text-right" style="width: 8%;">Yield (%)</th>';
                 echo '</tr>';
 
                 echo '<tr style="background: #1a4a7a;">';
@@ -237,6 +238,7 @@
                     echo '<th style="text-align: center; font-size: 8px; color: #c8d8e8;">Bag</th>';
                     echo '<th style="text-align: center; font-size: 8px; color: #c8d8e8; border-right: 1px solid #2a5a8a;">Kg</th>';
                 }
+                echo '<th style="color: #c8d8e8; font-size: 8px;"></th>';
                 echo '<th style="color: #c8d8e8; font-size: 8px;"></th>';
                 echo '<th style="color: #c8d8e8; font-size: 8px;"></th>';
                 echo '</tr>';
@@ -259,6 +261,7 @@
 
                         echo '<td class="text-right" style="font-size: 9.5px;">'.$fmt2($item->total_bag).'</td>';
                         echo '<td class="text-right" style="font-size: 9.5px;">'.$fmt2($item->total_kg).'</td>';
+                        echo '<td class="text-right" style="font-size: 9.5px;">'.($item->yield_percent ? number_format($item->yield_percent, 2).'%' : '—').'</td>';
                         echo '</tr>';
                     }
                 } else {
@@ -270,6 +273,7 @@
                 foreach ($usedCols as $c) { echo '<td></td><td></td>'; }
                 echo '<td class="text-right">'.$fmt2($totalBag).'</td>';
                 echo '<td class="text-right">'.$fmt2($totalKg).'</td>';
+                 echo '<td class="text-right"></td>';
                 echo '</tr>';
 
                 echo '</tbody></table>';
@@ -280,6 +284,7 @@
                 echo '<th style="width: 50%;">Nama Produk</th>';
                 echo '<th class="text-right" style="width: 25%;">Total Bag</th>';
                 echo '<th class="text-right" style="width: 25%;">Total Kg</th>';
+                echo '<th class="text-right" style="width: 15%;">Yield (%)</th>';
                 echo '</tr></thead>';
 
                 echo '<tbody>';
@@ -289,16 +294,18 @@
                         echo '<td>'.e($item->product?->name ?? '—').'</td>';
                         echo '<td class="text-right">'.$fmt2($item->total_bag).'</td>';
                         echo '<td class="text-right">'.$fmt2($item->total_kg).'</td>';
+                        echo '<td class="text-right">'.($item->yield_percent ? number_format($item->yield_percent, 2).'%' : '—').'</td>';
                         echo '</tr>';
                     }
                 } else {
-                    echo '<tr><td colspan="3" class="text-center" style="color:#999;">Tidak ada item</td></tr>';
+                    echo '<tr><td colspan="4" class="text-center" style="color:#999;">Tidak ada item</td></tr>';
                 }
 
                 echo '<tr class="total-row">';
                 echo '<td style="font-size: 11px;">TOTAL '.e($title).'</td>';
                 echo '<td class="text-right">'.$fmt2($totalBag).'</td>';
                 echo '<td class="text-right">'.$fmt2($totalKg).'</td>';
+                echo '<td class="text-right"></td>';
                 echo '</tr>';
 
                 echo '</tbody></table>';

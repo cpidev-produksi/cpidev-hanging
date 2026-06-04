@@ -137,6 +137,7 @@
 
                         <th style="text-align: right; min-width: 110px;">Total Bag</th>
                         <th style="text-align: right; min-width: 110px;">Total Kg</th>
+                        <th style="text-align: right; min-width: 100px;">Yield</th>
                     </tr>
                     <tr style="background: #f5f7fc;">
                         <th></th>
@@ -145,6 +146,7 @@
                             <th style="text-align: right; padding: 6px; font-size: 11px;">Bag</th>
                             <th style="text-align: right; padding: 6px; font-size: 11px;">Kg</th>
                         @endfor
+                        <th></th>
                         <th></th>
                         <th></th>
                     </tr>
@@ -175,6 +177,9 @@
                             </td>
                             <td style="text-align: right; font-variant-numeric: tabular-nums;">
                                 {{ number_format((float)($item->total_kg ?? 0), 2) }}
+                            </td>
+                            <td style="text-align: right; font-variant-numeric: tabular-nums;">
+                                {{ $item->yield_percent ? number_format($item->yield_percent, 2) : '—' }}
                             </td>
                         </tr>
                     @empty
@@ -211,6 +216,7 @@
 
                         <th style="text-align: right; min-width: 110px;">Total Bag</th>
                         <th style="text-align: right; min-width: 110px;">Total Kg</th>
+                        <th style="text-align: right; min-width: 100px;">Yield</th>
                     </tr>
                     <tr style="background: #f5f7fc;">
                         <th></th>
@@ -219,6 +225,7 @@
                             <th style="text-align: right; padding: 6px; font-size: 11px;">Bag</th>
                             <th style="text-align: right; padding: 6px; font-size: 11px;">Kg</th>
                         @endfor
+                        <th></th>
                         <th></th>
                         <th></th>
                     </tr>
@@ -250,10 +257,13 @@
                             <td style="text-align: right; font-variant-numeric: tabular-nums;">
                                 {{ number_format((float)($item->total_kg ?? 0), 2) }}
                             </td>
+                            <td style="text-align: right; font-variant-numeric: tabular-nums;">
+                                {{ $item->yield_percent ? number_format($item->yield_percent, 2) : '—' }}
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ 2 + (10*2) + 2 }}" style="text-align:center; color: var(--text-muted); padding: 16px;">
+                            <td colspan="{{ 2 + (10*2) + 3 }}" style="text-align:center; color: var(--text-muted); padding: 16px;">
                                 Tidak ada item Frozen.
                             </td>
                         </tr>
@@ -262,9 +272,10 @@
 
                 <tfoot>
                     <tr style="font-weight: 700; background: #f5f7fc;">
-                        <td colspan="{{ 2 + (10*2) }}">TOTAL FROZEN</td>
+                        <td colspan="{{ 2 + (10*2) + 1 }}">TOTAL FROZEN</td>
                         <td style="text-align: right;">{{ $fmt($report->frozen_total_bag) }}</td>
                         <td style="text-align: right;">{{ $fmt($report->frozen_total_kg) }}</td>
+                        <td style="text-align: right;">{{ $fmt($report->frozen_total_yield) }}</td>
                     </tr>
                 </tfoot>
             </table>

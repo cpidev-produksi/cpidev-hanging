@@ -624,6 +624,7 @@
                             @endfor
                             <th style="text-align:center;">Total Bag</th>
                             <th style="text-align:center;">Total Kg</th>
+                            <th style="text-align:center;">Yield</th>
                             <th></th>
                         </tr>
                         <tr>
@@ -632,7 +633,7 @@
                                 <th>Bag</th>
                                 <th>Kg</th>
                             @endfor
-                            <th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th>
                         </tr>
                     </thead>
                     <tbody id="freshItemsContainer">
@@ -668,8 +669,11 @@
                                     <td class="td-total">
                                         <span class="total-kg">{{ $item?->total_kg }}</span>
                                     </td>
-                                    <td class="td-action">
-                                        <button type="button" onclick="removeRow('fresh', {{ $idx }})" class="btn-remove" title="Hapus">&#x2715;</button>
+                                    <td class="td-total">
+                                        <span class="total-yield">{{ $item?->yield_percent }}</span>
+                                    <td class="td-total">
+                                        <span class="item-yield">{{ $item?->yield_percent ? number_format($item->yield_percent, 2) : '' }}</span>
+                                        <input type="hidden" name="fresh_items[{{ $idx }}][yield_percent]" class="yield-input" value="{{ $item?->yield_percent }}">
                                     </td>
                                 </tr>
                             @endforeach
@@ -695,6 +699,10 @@
                                 @endfor
                                 <td class="td-total"><span class="total-bag"></span></td>
                                 <td class="td-total"><span class="total-kg"></span></td>
+                                <td class="td-total">
+                                    <span class="item-yield"></span>
+                                    <input type="hidden" name="fresh_items[0][yield_percent]" class="yield-input" value="">
+                                </td>
                                 <td class="td-action">
                                     <button type="button" onclick="removeRow('fresh', 0)" class="btn-remove" title="Hapus">&#x2715;</button>
                                 </td>
@@ -747,6 +755,7 @@
                             @endfor
                             <th style="text-align:center;">Total Bag</th>
                             <th style="text-align:center;">Total Kg</th>
+                            <th style="text-align:center;">Yield</th>
                             <th></th>
                         </tr>
                         <tr>
@@ -755,7 +764,7 @@
                                 <th>Bag</th>
                                 <th>Kg</th>
                             @endfor
-                            <th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th>
                         </tr>
                     </thead>
                     <tbody id="frozenItemsContainer">
@@ -787,6 +796,10 @@
                                     @endfor
                                     <td class="td-total"><span class="total-bag">{{ $item?->total_bag }}</span></td>
                                     <td class="td-total"><span class="total-kg">{{ $item?->total_kg }}</span></td>
+                                    <td class="td-total">
+                                        <span class="item-yield">{{ $item?->yield_percent ? number_format($item->yield_percent, 2) : '' }}</span>
+                                        <input type="hidden" name="frozen_items[{{ $idx }}][yield_percent]" class="yield-input" value="{{ $item?->yield_percent }}">
+                                    </td>
                                     <td class="td-action">
                                         <button type="button" onclick="removeRow('frozen', {{ $idx }})" class="btn-remove" title="Hapus">&#x2715;</button>
                                     </td>
@@ -814,6 +827,10 @@
                                 @endfor
                                 <td class="td-total"><span class="total-bag"></span></td>
                                 <td class="td-total"><span class="total-kg"></span></td>
+                                <td class="td-total">
+                                    <span class="item-yield"></span>
+                                    <input type="hidden" name="frozen_items[0][yield_percent]" class="yield-input" value="">
+                                </td>
                                 <td class="td-action">
                                     <button type="button" onclick="removeRow('frozen', 0)" class="btn-remove" title="Hapus">&#x2715;</button>
                                 </td>
@@ -877,6 +894,85 @@ let rowCount = {
 let statsTouched = { truck: false, received: false };
 document.getElementById('truckCount')?.addEventListener('input', () => statsTouched.truck = true);
 document.getElementById('receivedChicken')?.addEventListener('input', () => statsTouched.received = true);
+
+let nettoWeight = parseFloat(document.getElementById('nettoWeight')?.value) || 0;
+document.getElementById('nettoWeight')?.addEventListener('input', function() {
+    nettoWeight = parseFloat(this.value) || 0;
+    calculateAllItemYields();
+});
+
+// Function to calculate yield for a single item
+function calculateItemYield(scope, index) {
+    const row = document.querySelector(`tr.item-row[data-scope="${scope}"][data-row="${index}"]`);
+    if (!row) return;
+    
+    const totalKgSpan = row.querySelector('.total-kg');
+    const yieldSpan = row.querySelector('.item-yield');
+    const yieldInput = row.querySelector('.yield-input');
+    
+    if (!totalKgSpan || !yieldSpan || !yieldInput) return;
+    
+    const totalKg = parseFloat(totalKgSpan.textContent) || 0;
+    
+    let yieldPercent = null;
+    if (nettoWeight > 0 && totalKg > 0) {
+        yieldPercent = (totalKg / nettoWeight) * 100;
+        yieldPercent = yieldPercent.toFixed(2);
+        yieldSpan.textContent = yieldPercent;
+        yieldInput.value = yieldPercent;
+    } else {
+        yieldSpan.textContent = '';
+        yieldInput.value = '';
+    }
+}
+
+// Calculate all item yields
+function calculateAllItemYields() {
+    // Update fresh items
+    document.querySelectorAll('#freshItemsContainer tr.item-row').forEach(row => {
+        const scope = row.dataset.scope;
+        const index = row.dataset.row;
+        if (scope === 'fresh') {
+            calculateItemYield('fresh', index);
+        }
+    });
+    
+    // Update frozen items
+    document.querySelectorAll('#frozenItemsContainer tr.item-row').forEach(row => {
+        const scope = row.dataset.scope;
+        const index = row.dataset.row;
+        if (scope === 'frozen') {
+            calculateItemYield('frozen', index);
+        }
+    });
+}
+
+// Update the calculateScopeTotals function
+const originalCalculateScopeTotals = calculateScopeTotals;
+calculateScopeTotals = function(scope) {
+    let bag = 0, kg = 0;
+    document.querySelectorAll(`tr.item-row[data-scope="${scope}"]`).forEach(row => {
+        const idx = row.dataset.row;
+        let rowBag = 0, rowKg = 0;
+        for (let i = 1; i <= 10; i++) {
+            rowBag += parseFloat(row.querySelector(`input[name="${scope}_items[${idx}][bag_${i}]"]`)?.value || 0);
+            rowKg  += parseFloat(row.querySelector(`input[name="${scope}_items[${idx}][kg_${i}]"]`)?.value  || 0);
+        }
+        row.querySelector('.total-bag').textContent = rowBag > 0 ? rowBag.toFixed(2) : '';
+        row.querySelector('.total-kg').textContent  = rowKg  > 0 ? rowKg.toFixed(2)  : '';
+        bag += rowBag; kg += rowKg;
+    });
+    return { bag, kg };
+};
+
+// Update the calculateAllTotals function
+const originalCalculateAllTotals = calculateAllTotals;
+calculateAllTotals = function() {
+    originalCalculateAllTotals();
+    calculateAllItemYields(); // Recalculate yields after totals update
+};
+
+
 
 // Update row-count badges
 function updateBadge(scope) {
@@ -1013,6 +1109,7 @@ function addRow(scope) {
     setupProductInput(newInput);
     attachBagKgListeners(scope, newIndex);
     updateBadge(scope);
+    calculateItemYield(scope, newIndex);
 
     // scroll product input into view
     newInput?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

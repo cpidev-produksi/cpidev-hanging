@@ -13,12 +13,14 @@ class ReportEvisItem extends Model
         'product_evis_id',
         'category',
         'total_bag',
-        'total_kg'
+        'total_kg',
+        'yield_percent'
     ];
 
     protected $casts = [
         'total_bag' => 'decimal:2',
         'total_kg' => 'decimal:2',
+        'yield_percent' => 'decimal:2',
     ];
 
     public function report(): BelongsTo
@@ -59,5 +61,21 @@ class ReportEvisItem extends Model
         }
         $this->total_bag = $totalBag;
         $this->total_kg = $totalKg;
+    }
+
+    public function calculateYieldPercent(?float $nettoWeight): ?float
+    {
+        if (!$nettoWeight || $nettoWeight <= 0 || !$this->total_kg || $this->total_kg <= 0) {
+            return null;
+        }
+        
+        $yield = ($this->total_kg / $nettoWeight) * 100;
+        return round($yield, 2);
+    }
+
+    public function updateYieldPercent(ReportEvis $report): void
+    {
+        $this->yield_percent = $this->calculateYieldPercent($report->netto_weight);
+        $this->saveQuietly();
     }
 }
