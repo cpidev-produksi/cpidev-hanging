@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'jetson_counter' => [
+        'url' => env('JETSON_COUNTER_URL'),
+    ],
+
 ];

@@ -241,7 +241,22 @@
             color: #1E293B;
         }
 
-        /* CAROUSEL — 2 slide saja (1: farm + size, 2: ekspedisi + sopir) */
+        /* HERO JETSON — kartu live count kamera AI, sejajar dengan .hero-grid */
+        .jetson-hero-grid {
+            background: linear-gradient(125deg, #eff6ff 0%, #e0f2fe 100%);
+            border: 1px solid rgba(59,130,246,0.2);
+        }
+        .jetson-hero-grid .hero-number {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .jetson-hero-grid .hero-label {
+            color: var(--accent-blue);
+        }
+
+        /* CAROUSEL — 2 slide saja (1: farm + size, 2: ekspedisi) */
         .carousel-module {
             background: white;
             border-radius: 1.5rem;
@@ -781,7 +796,28 @@
             </div>
         </div>
 
-        <!-- CAROUSEL hanya 2 slide (FARM+SIZE digabung, EKSPEDISI+SOPIR) -->
+        <!-- HERO JETSON : LIVE COUNT KAMERA AI (sejajar dengan hero-grid utama) -->
+        <div class="hero-grid jetson-hero-grid" id="jetsonHeroGrid">
+            <div class="hero-left">
+                <div class="hero-label">🎥 LIVE COUNT JETSON KAMERA AI</div>
+                <div class="hero-number" id="jetsonCurrentBatchCount">0</div>
+                <div class="hero-meta">
+                    <span class="live-badge" style="background:#EFF6FF; color:#1D4ED8;">⚡ Real-count by Jetson Edge Counter Camera</span>
+                </div>
+            </div>
+            <div class="hero-stats-right">
+                <div class="stat-card">
+                    <div class="stat-label">📊 TOTAL HARI INI</div>
+                    <div class="stat-value" id="jetsonTodayTotalCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">🔁 TOTAL BATCH HARI INI</div>
+                    <div class="stat-value" id="jetsonTodayTotalBatches">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAROUSEL hanya 2 slide (FARM+SIZE digabung, EKSPEDISI) -->
         <div class="carousel-module">
             <div class="carousel-header">
                 <span>📋 INFORMASI</span>
@@ -804,7 +840,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- SLIDE 1 : EKSPEDISI + SOPIR -->
+                <!-- SLIDE 1 : EKSPEDISI -->
                 <div class="slide" data-slide="1">
                     <div class="slide-item">
                         <div class="slide-icon">🚛</div>
@@ -1028,7 +1064,7 @@
         else document.exitFullscreen();
     });
 
-    // carousel 2 slide (farm+size, expedisi+sopir)
+    // carousel 2 slide (farm+size, expedisi)
     // CAROUSEL - Versi SMOOTH tanpa merusak data
     let activeSlide = 0;
     let carouselInterval;
@@ -1094,13 +1130,17 @@
 
     // DOM elements
     const heroAyamSpan = document.getElementById('heroAyamTotal');
+    const jetsonCard = document.getElementById('jetsonCard');
+    //const statJetsonAyamSpan = document.getElementById('statJetsonAyam');
+    const jetsonCurrentBatchCountSpan = document.getElementById('jetsonCurrentBatchCount');
+    const jetsonTodayTotalCountSpan = document.getElementById('jetsonTodayTotalCount');
+    const jetsonTodayTotalBatchesSpan = document.getElementById('jetsonTodayTotalBatches');
     const statEkorSpan = document.getElementById('statTotalEkor');
     const statTruckNoSpan = document.getElementById('statTruckNo');
     const reportCodeSpan = document.getElementById('reportCodeDisplay');
     const carouselFarm = document.getElementById('carouselFarm');
     const carouselSize = document.getElementById('carouselSize');
     const carouselExpedisi = document.getElementById('carouselExpedisi');
-    const carouselDriver = document.getElementById('carouselDriver');
     const todayAyamSpan = document.getElementById('todayAyamCount');
     const planningAyamSpan = document.getElementById('planningAyamTotal');
     const todayTruckSpan = document.getElementById('todayTruckCount');
@@ -1148,6 +1188,14 @@
             const res = await fetch(`{{ route('monitor.data', $location) }}`, { headers: { 'Accept': 'application/json' } });
             if(!res.ok) throw new Error();
             const data = await res.json();
+
+            //const statJetsonAyamSpan = document.getElementById('statJetsonAyam');
+            //statJetsonAyamSpan.innerText = fmt(data.total_ayam_jetson || 0);
+            const jetsonCurrentBatchCountSpan = document.getElementById('jetsonCurrentBatchCount');
+            jetsonCurrentBatchCountSpan.innerText = fmt(data.jetson_current_batch_count || 0);
+            jetsonTodayTotalCountSpan.innerText = fmt(data.jetson_today_total_count || 0);
+            jetsonTodayTotalBatchesSpan.innerText = fmt(data.jetson_today_total_batches || 0);
+            
             const now = new Date();
             lastUpdateSpan.innerText = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
@@ -1298,18 +1346,14 @@
             carouselSize.innerText = sizeValue;
             // ukuran teks size diperbesar via css, class sudah besar
             
-            // Ekspedisi + Sopir
+            // Ekspedisi
             const expedition = data.expedition_name || '—';
-            let driverInfo = data.driver_name || '—';
-            if (data.driver_phone) driverInfo += `  ·  ${data.driver_phone}`;
             carouselExpedisi.innerText = expedition;
-            carouselDriver.innerText = driverInfo;
             
             // tooltips untuk info tambahan
             carouselFarm.setAttribute('title', farmName);
             carouselSize.setAttribute('title', sizeValue);
             carouselExpedisi.setAttribute('title', expedition);
-            carouselDriver.setAttribute('title', driverInfo);
         } catch(e) { console.warn(e); }
     }
 

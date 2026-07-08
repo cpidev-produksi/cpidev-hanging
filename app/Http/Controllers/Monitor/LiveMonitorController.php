@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\MonitorControl;
 use App\Models\PlanningLb;
 use App\Models\ShiftCompletion;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class LiveMonitorController extends Controller
 {
@@ -19,6 +22,43 @@ class LiveMonitorController extends Controller
         return $custom[$location][$lineNo] ?? 50;
     }
 
+    protected function getJetsonStats(string $location): array
+    {
+        $empty = [
+            'today_ayam' => null,
+            'current_batch_count' => null,
+            'today_total_count' => null,
+            'today_total_batches' => null,
+        ];
+
+        if ($location !== 'SH02') {
+            return $empty;
+        }
+
+        return Cache::remember("jetson-stats-{$location}", 2, function () use ($empty) {
+            $base = config('services.jetson_counter.url');
+
+            try {
+                $summary = Http::timeout(2)->get("{$base}/api/summary")->throw()->json();
+                $closedToday  = (int) data_get($summary, 'today.total_count', 0);
+                $todayBatches = (int) data_get($summary, 'today.total_batches', 0);
+
+                $current = Http::timeout(2)->get("{$base}/api/current-batch")->throw()->json();
+                $liveCount = ($current['success'] ?? false) ? (int) ($current['count'] ?? 0) : 0;
+
+                return [
+                    'today_ayam' => $closedToday + $liveCount,
+                    'current_batch_count' => $liveCount,
+                    'today_total_count' => $closedToday,
+                    'today_total_batches' => $todayBatches,
+                ];
+            } catch (\Throwable $e) {
+                Log::warning("Jetson counter unreachable: {$e->getMessage()}");
+                return $empty;
+            }
+        });
+    }
+
     public function show(string $location)
     {
         abort_unless(in_array($location, ['SH01','SH02']), 404);
@@ -28,6 +68,8 @@ class LiveMonitorController extends Controller
     public function data(string $location)
     {
         abort_unless(in_array($location, ['SH01','SH02']), 404);
+        $jetsonStats = $this->getJetsonStats($location);
+        $jetsonAyam = $jetsonStats['today_ayam'];
 
         $active = MonitorControl::query()
             ->where('location', $location)
@@ -63,7 +105,6 @@ class LiveMonitorController extends Controller
         $todayPlanning = PlanningLb::query()
             ->where('location', $location)
             ->whereDate('process_date', $today)
-            // ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
             ->first();
 
         $totalPlanningAyam = $todayPlanning ? (int) $todayPlanning->total_plan_chicken : 0;
@@ -72,7 +113,6 @@ class LiveMonitorController extends Controller
         $todayRegisteredTruckCount = MonitorControl::query()
             ->where('location', $location)
             ->whereDate('process_date', $today)
-            // ->whereDate('process_date', now('Asia/Jakarta')->toDateString())
             ->count();
 
         $targetReached = ($totalPlanningTruk > 0) && ($todayRegisteredTruckCount >= $totalPlanningTruk);
@@ -142,6 +182,10 @@ class LiveMonitorController extends Controller
         if (!$active || !$active->hangingForm) {
             return response()->json([
                 'active' => false,
+                'total_ayam_jetson' => $jetsonAyam,
+                'jetson_current_batch_count' => $jetsonStats['current_batch_count'],
+                'jetson_today_total_count' => $jetsonStats['today_total_count'],
+                'jetson_today_total_batches' => $jetsonStats['today_total_batches'],
                 'location' => $location,
                 'today_total_ayam' => $todayAyam,
                 'today_truck_count' => $todayTruckCount,
@@ -207,7 +251,10 @@ class LiveMonitorController extends Controller
             // footer counters (hari ini)
             'today_total_ayam' => $todayAyam,
             'today_truck_count' => $todayTruckCount,
-            
+            'total_ayam_jetson' => $jetsonAyam,
+            'jetson_current_batch_count' => $jetsonStats['current_batch_count'],
+            'jetson_today_total_count' => $jetsonStats['today_total_count'],
+            'jetson_today_total_batches' => $jetsonStats['today_total_batches'],
             // total planning
             'total_planning_ayam' => $totalPlanningAyam,
             'total_planning_truk' => $totalPlanningTruk,

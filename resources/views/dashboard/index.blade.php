@@ -135,6 +135,7 @@
     .kpi-card-accent.blue   { background: linear-gradient(90deg, #2563eb, #60a5fa); }
     .kpi-card-accent.amber  { background: linear-gradient(90deg, #d97706, #fbbf24); }
     .kpi-card-accent.violet { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+    .kpi-card-accent.cyan   { background: linear-gradient(90deg, #0891b2, #22d3ee); }
 
     .kpi-top {
         display: flex;
@@ -185,6 +186,80 @@
     .kpi-icon.blue   { background: var(--c-blue-bg);   color: var(--c-blue); }
     .kpi-icon.amber  { background: var(--c-amber-bg);  color: var(--c-amber); }
     .kpi-icon.violet { background: var(--c-violet-bg); color: var(--c-violet); }
+    .kpi-icon.cyan   { background: var(--c-cyan-bg);   color: var(--c-cyan); }
+
+    .jetson-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 1100px) { .jetson-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .jetson-grid { grid-template-columns: 1fr; } }
+
+    .jetson-section-head {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .jetson-source-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--c-border);
+        background: #fff;
+        color: var(--c-text);
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .jetson-source-link:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+        border-color: #bfdbfe;
+    }
+    .jetson-source-link span {
+        color: var(--c-muted);
+        font-weight: 700;
+    }
+
+    .jetson-kpi-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f5f7fb;
+        border: 1px solid var(--c-border);
+        border-radius: 100px;
+        padding: 4px 10px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--c-muted);
+        margin-bottom: 10px;
+    }
+    .jetson-kpi-note.live {
+        background: var(--c-green-bg);
+        border-color: #bbf7d0;
+        color: var(--c-green);
+    }
+    .jetson-kpi-meta {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--c-muted);
+        margin-top: 4px;
+        line-height: 1.35;
+    }
+    .jetson-kpi-meta strong {
+        color: var(--c-text);
+        font-weight: 800;
+    }
 
     /* Progress track */
     .kpi-progress-wrap {
@@ -883,6 +958,84 @@
 
     </div>
 
+    {{-- ── Jetson Summary ── --}}
+    <div class="jetson-section-head">
+        <p class="section-label">Ringkasan Jetson Counter SH-02</p>
+    </div>
+    @php
+        $jetson = $jetson ?? [
+            'current_batch_count' => null,
+            'today_total_count' => null,
+            'yesterday_total_count' => null,
+            'today_total_batches' => null,
+            'yesterday_total_batches' => null,
+            'total_days' => null,
+            'batch_number' => null,
+            'last_detection_time' => null,
+        ];
+    @endphp
+    <div class="jetson-grid">
+        <div class="kpi-card">
+            <div class="kpi-card-accent cyan"></div>
+            <div class="jetson-kpi-note live">● LIVE</div>
+            <div class="kpi-top">
+                <div>
+                    <div class="kpi-label">Current Batch Count</div>
+                    <div class="kpi-value">{{ number_format((int) ($jetson['current_batch_count'] ?? 0), 0, ',', '.') }}</div>
+                    <div class="jetson-kpi-meta">
+                        Batch #{{ $jetson['batch_number'] ?? '—' }}
+                        @if(!empty($jetson['last_detection_time']))
+                            · {{ \Carbon\Carbon::parse($jetson['last_detection_time'])->format('H:i:s') }}
+                        @endif
+                    </div>
+                </div>
+                <div class="kpi-icon cyan">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-card-accent green"></div>
+            <div class="jetson-kpi-note">Today</div>
+            <div class="kpi-top">
+                <div>
+                    <div class="kpi-label">Total Count Today</div>
+                    <div class="kpi-value">{{ number_format((int) ($jetson['today_total_count'] ?? 0), 0, ',', '.') }}</div>
+                    <div class="jetson-kpi-meta">{{ number_format((int) ($jetson['today_total_batches'] ?? 0), 0, ',', '.') }} batches</div>
+                </div>
+                <div class="kpi-icon green">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-card-accent amber"></div>
+            <div class="jetson-kpi-note">Yesterday</div>
+            <div class="kpi-top">
+                <div>
+                    <div class="kpi-label">Total Count Yesterday</div>
+                    <div class="kpi-value">{{ number_format((int) ($jetson['yesterday_total_count'] ?? 0), 0, ',', '.') }}</div>
+                    <div class="jetson-kpi-meta">{{ number_format((int) ($jetson['yesterday_total_batches'] ?? 0), 0, ',', '.') }} batches</div>
+                </div>
+                <div class="kpi-icon amber">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v6h6M21 17v-6h-6"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7a9 9 0 10-3.4 6.9L21 11"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <a class="jetson-source-link" href="https://salatiga-jetson.apc.zenai.id/" target="_blank" rel="noopener noreferrer">
+            <span>Open source:</span> salatiga-jetson.apc.zenai.id
+        </a>
+    </div>
+
     {{-- ── Chart: Ayam Diterima vs Planning 7 Hari ── --}}
     <p class="section-label">Tren Pencapaian · 7 Hari Terakhir</p>
     <div class="chart-panel">
@@ -1208,6 +1361,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const autoRefreshMs = 60000;
 
     // ── Animate progress bars ──
     const animate = (selector) => {
@@ -1220,6 +1374,10 @@ document.addEventListener('DOMContentLoaded', function () {
     animate('.kpi-bar');
     animate('.loc-truk-bar');
     animate('.loc-ayam-bar');
+
+    setTimeout(() => {
+        window.location.reload();
+    }, autoRefreshMs);
 
     // ── Count-up animation ──
     document.querySelectorAll('.kpi-value, .loc-truk-counted, .loc-ayam-value').forEach(el => {

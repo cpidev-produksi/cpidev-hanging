@@ -8,15 +8,67 @@ use App\Models\MonitorControl;
 use App\Models\PlanningLb;
 use App\Models\PlateNumber;
 use App\Models\ShiftCompletion;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class DashboardController extends Controller
 {
+    protected function getJetsonSummary(): array
+    {
+        $empty = [
+            'current_batch_count' => null,
+            'today_total_count' => null,
+            'yesterday_total_count' => null,
+            'yesterday_total_batches' => null,
+            'average_per_day' => null,
+            'today_total_batches' => null,
+            'total_days' => null,
+            'grand_total' => null,
+            'batch_number' => null,
+            'last_detection_time' => null,
+        ];
+
+        return Cache::remember('dashboard-jetson-summary', 2, function () use ($empty) {
+            $base = config('services.jetson_counter.url');
+
+            if (!$base) {
+                return $empty;
+            }
+
+            try {
+                $summary = Http::timeout(2)->get("{$base}/api/summary")->throw()->json();
+                $current = Http::timeout(2)->get("{$base}/api/current-batch")->throw()->json();
+                $grandTotal = (int) data_get($summary, 'all_time.grand_total', 0);
+                $totalDays = (int) data_get($summary, 'all_time.total_days', 0);
+                $computedAverage = $totalDays > 0 ? ($grandTotal / $totalDays) : (float) data_get($summary, 'average_per_day', 0);
+
+                return [
+                    'current_batch_count' => ($current['success'] ?? false) ? (int) ($current['count'] ?? 0) : 0,
+                    'today_total_count' => (int) data_get($summary, 'today.total_count', 0),
+                    'yesterday_total_count' => (int) data_get($summary, 'yesterday.total_count', 0),
+                    'yesterday_total_batches' => (int) data_get($summary, 'yesterday.total_batches', 0),
+                    'average_per_day' => $computedAverage,
+                    'today_total_batches' => (int) data_get($summary, 'today.total_batches', 0),
+                    'total_days' => $totalDays,
+                    'grand_total' => $grandTotal,
+                    'batch_number' => ($current['success'] ?? false) ? ($current['batch_number'] ?? null) : null,
+                    'last_detection_time' => ($current['success'] ?? false) ? ($current['last_detection_time'] ?? null) : null,
+                ];
+            } catch (\Throwable $e) {
+                Log::warning("Jetson summary unreachable: {$e->getMessage()}");
+                return $empty;
+            }
+        });
+    }
+
     public function index(Request $request)
     {
         $today = date('Y-m-d');
         $locations = ['SH01', 'SH02'];
+        $jetson = $this->getJetsonSummary();
 
         // =========================
         // Filter Rekapan (single / last7 / range)
@@ -261,6 +313,7 @@ class DashboardController extends Controller
             'master'     => $master,
             'statsByLoc' => $statsByLoc,
             'grand'      => $grand,
+            'jetson'     => $jetson,
             'chartData'  => $chartData,
 
             // NEW
