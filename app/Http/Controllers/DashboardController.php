@@ -327,6 +327,58 @@ class DashboardController extends Controller
         ]);
     }
 
+    /**
+     * Ambil daftar batch (closed) Jetson untuk satu tanggal, di-cache singkat.
+     * Return: [batch_number => count]
+     */
+    protected function getJetsonDayBatches(string $date): array
+    {
+        $base = config('services.jetson_counter.url');
+        if (!$base) {
+            return [];
+        }
+
+        return Cache::remember("jetson-day-detail-{$date}", 30, function () use ($base, $date) {
+            try {
+                $detail = Http::timeout(3)->get("{$base}/api/day-detail/{$date}")->throw()->json();
+
+                $batches = [];
+                foreach (($detail['batches'] ?? []) as $b) {
+                    $no = (int) ($b['batch_number'] ?? 0);
+                    if ($no > 0) {
+                        $batches[$no] = (int) ($b['count'] ?? 0);
+                    }
+                }
+
+                return $batches;
+            } catch (\Throwable $e) {
+                Log::warning("Jetson day-detail unreachable ({$date}): {$e->getMessage()}");
+                return [];
+            }
+        });
+    }
+
+    /**
+     * Ambil batch yang sedang berjalan (live, belum closed) di Jetson, kalau ada.
+     */
+    protected function getJetsonCurrentBatchRaw(): ?array
+    {
+        $base = config('services.jetson_counter.url');
+        if (!$base) {
+            return null;
+        }
+
+        return Cache::remember('jetson-current-batch-raw', 2, function () use ($base) {
+            try {
+                $current = Http::timeout(2)->get("{$base}/api/current-batch")->throw()->json();
+                return ($current['success'] ?? false) ? $current : null;
+            } catch (\Throwable $e) {
+                Log::warning("Jetson current-batch unreachable: {$e->getMessage()}");
+                return null;
+            }
+        });
+    }
+
     public function rekap(Request $request)
     {
         $today = date('Y-m-d');
@@ -370,6 +422,7 @@ class DashboardController extends Controller
 
         $rows = [];
         $no = 1;
+        $jetsonBatchesByDate = []; // cache lokal per request, per tanggal
 
         foreach ($mcs as $mc) {
             $hangingForm = $mc->hangingForm;
@@ -406,6 +459,30 @@ class DashboardController extends Controller
                     : date('H:i', strtotime($hangingForm->finish_time));
             }
 
+            // ✅ PEMBANDING JETSON: hanya berlaku untuk lokasi SH02, cocokkan
+            // truck_no (manual) dengan batch_number (Jetson) di tanggal yang sama.
+            $jetsonCount = null;
+            $tanggalRow = optional($mc->process_date)->format('Y-m-d');
+
+            if ($mc->location === 'SH02' && $tanggalRow) {
+                if (!array_key_exists($tanggalRow, $jetsonBatchesByDate)) {
+                    $jetsonBatchesByDate[$tanggalRow] = $this->getJetsonDayBatches($tanggalRow);
+                }
+
+                $jetsonCount = $jetsonBatchesByDate[$tanggalRow][(int) $mc->truck_no] ?? null;
+
+                // fallback: kalau truk ini adalah batch yang SEDANG berjalan hari ini
+                // (belum closed, jadi belum masuk day-detail), pakai current-batch (live).
+                if ($jetsonCount === null && $tanggalRow === $today) {
+                    $current = $this->getJetsonCurrentBatchRaw();
+                    if ($current && (int) ($current['batch_number'] ?? -1) === (int) $mc->truck_no) {
+                        $jetsonCount = (int) ($current['count'] ?? 0);
+                    }
+                }
+            }
+
+            $jetsonSelisih = ($jetsonCount !== null) ? ($ayamDiterima - $jetsonCount) : null;
+
             $rows[] = [
                 'no'            => $no++,
                 'no_polisi'     => $mc->plateNumber?->plate_number ?? null,
@@ -418,9 +495,10 @@ class DashboardController extends Controller
                 'ayam_retur'    => $ayamRetur,
                 'ayam_diterima' => $ayamDiterima,
                 // untuk export lengkap (dipakai rekap_export_pdf)
-                'tanggal'       => optional($mc->process_date)->format('Y-m-d'),
+                'tanggal'       => $tanggalRow,
                 'shift'         => strtoupper((string)($mc->shift ?? '')),
                 'lokasi'        => $mc->location,
+                'truck_no'      => $mc->truck_no,
                 'seal_no'       => $mc->seal_no,
                 'expedition'    => $mc->expedition?->name,
                 'farm'          => $mc->farm?->name,
@@ -430,6 +508,10 @@ class DashboardController extends Controller
                 'target_ayam'   => $targetAyam,                     // DTA
                 'hasil_shackle' => $ayamDiterima,                   // Ayam diterima versi show
                 'selisih'       => (int)($ayamDiterima - $targetAyam),
+
+                // ✅ Pembanding Jetson (khusus SH02)
+                'jetson_count'   => $jetsonCount,
+                'jetson_selisih' => $jetsonSelisih,
 
                 // QC (biar sama dengan summary)
                 'qc_keranjang'  => $hangingForm->basket_condition ?? '—',
@@ -598,7 +680,7 @@ class DashboardController extends Controller
         // hasil shackle: cap custom mengikuti getMaxCapacity()
         $hasilShackle = 0;
         $totalKosongCalc = 0;
-        $normalSetCount = 0;
+        $fullBlockCount = 0; // blok dgn empty = 0, tidak peduli kapasitasnya
 
         $location = (string) ($mc->location ?? '');
 
@@ -615,8 +697,8 @@ class DashboardController extends Controller
                     $totalKosongCalc += $empty;
                     $hasilShackle += ($cap - $empty);
 
-                    if ($cap === 50 && $empty === 0) {
-                        $normalSetCount++;
+                    if ($empty === 0) {
+                        $fullBlockCount++;
                     }
                 }
             }
@@ -642,8 +724,26 @@ class DashboardController extends Controller
         $platform = $form->truck_platform_condition ?? null;
         $feather = $form->feather_condition ?? null;
 
+        // ✅ Pembanding Jetson (khusus SH02): cocokkan truck_no <-> batch_number
+        $jetsonCount = null;
+        $tanggal = $mc->process_date?->format('Y-m-d');
+
+        if ($location === 'SH02' && $tanggal) {
+            $batches = $this->getJetsonDayBatches($tanggal);
+            $jetsonCount = $batches[(int) $mc->truck_no] ?? null;
+
+            if ($jetsonCount === null && $tanggal === date('Y-m-d')) {
+                $current = $this->getJetsonCurrentBatchRaw();
+                if ($current && (int) ($current['batch_number'] ?? -1) === (int) $mc->truck_no) {
+                    $jetsonCount = (int) ($current['count'] ?? 0);
+                }
+            }
+        }
+
+        $jetsonSelisih = ($jetsonCount !== null) ? ($hasilShackle - $jetsonCount) : null;
+
         return [
-            'tanggal' => $mc->process_date?->format('Y-m-d'),
+            'tanggal' => $tanggal,
             'shift' => $mc->shift,
             'lokasi' => $mc->location,
             'report_code' => $mc->report_code,
@@ -672,116 +772,20 @@ class DashboardController extends Controller
             'target_ayam' => $targetAyam,
             'hasil_shackle' => $hasilShackle,
             'shackle_kosong' => $totalKosongCalc,
-            'blok_penuh_50' => $normalSetCount,
+            'blok_penuh' => $fullBlockCount,
 
             'selisih' => $selisih,
             'status' => $status,
+
+            // ✅ Pembanding Jetson (null kalau bukan SH02 / tidak tersedia)
+            'jetson_count' => $jetsonCount,
+            'jetson_selisih' => $jetsonSelisih,
 
             'qc_keranjang' => $basket,
             'qc_platform' => $platform,
             'qc_bulu' => $feather,
         ];
     }
-
-    // public function rekapExportExcel(Request $request)
-    // {
-    //     $today = date('Y-m-d');
-    //     [$mode, $date, $from, $to] = $this->normalizeRekapRange($request, $today);
-
-    //     $mcs = MonitorControl::query()
-    //         ->whereBetween('process_date', [$from, $to])
-    //         // "yang sudah diinput" minimal punya hangingForm
-    //         ->whereHas('hangingForm')
-    //         ->with([
-    //             'farm',
-    //             'expedition',
-    //             'plateNumber',
-    //             'hangingForm.lines.sets',
-    //         ])
-    //         ->orderBy('process_date')
-    //         ->orderBy('location')
-    //         ->orderBy('truck_no')
-    //         ->get();
-
-    //     $filename = "monitor-summary-list-{$from}-{$to}.xls";
-
-    //     $headers = [
-    //         'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
-    //         'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-    //         'Cache-Control' => 'max-age=0',
-    //     ];
-
-    //     $callback = function () use ($mcs) {
-    //         $out = fopen('php://output', 'w');
-    //         fwrite($out, "\xEF\xBB\xBF"); // BOM
-
-    //         $no = 1;
-
-    //         $cols = [
-    //             'No',
-    //             'Tanggal', 'Shift', 'Lokasi', 'Report Code',
-    //             'Truk #', 'No Polisi',
-    //             'Ekspedisi', 'Farm',
-    //             'Size', 'No Segel',
-    //             'Jam Datang', 'Jam Bongkar', 'Jam Selesai',
-    //             'Total Ekor', 'Total Kilo', 'ABW',
-    //             'Ayam Mati', 'Ayam Retur', 'Retur Kg',
-    //             'Target Ayam', 'Hasil Shackle', 'Shackle Kosong', 'Blok Penuh(50)',
-    //             'Selisih', 'Status',
-    //             'QC Keranjang', 'QC Platform', 'QC Bulu',
-    //         ];
-
-    //         // header row TSV
-    //         fwrite($out, implode("\t", $cols) . "\r\n");
-
-    //         $clean = function ($v) {
-    //             $v = (string)($v ?? '');
-    //             return str_replace(["\t", "\r", "\n"], ' ', $v);
-    //         };
-
-    //         foreach ($mcs as $mc) {
-    //             $row = $this->buildMonitorSummaryRow($mc);
-
-    //             $line = [
-    //                 $no++,
-    //                 $clean($row['tanggal']),
-    //                 $clean($row['shift']),
-    //                 $clean($row['lokasi']),
-    //                 $clean($row['report_code']),
-    //                 $clean($row['truck_no']),
-    //                 $clean($row['no_polisi']),
-    //                 $clean($row['expedition']),
-    //                 $clean($row['farm']),
-    //                 $clean($row['size']),
-    //                 $clean($row['seal_no']),
-    //                 $clean($row['jam_datang']),
-    //                 $clean($row['jam_bongkar']),
-    //                 $clean($row['jam_selesai']),
-    //                 (int)$row['total_ekor'],
-    //                 $clean($row['total_kilo']),
-    //                 $clean($row['abw']),
-    //                 (int)$row['ayam_mati'],
-    //                 (int)$row['ayam_retur'],
-    //                 $clean($row['retur_kg']),
-    //                 (int)$row['target_ayam'],
-    //                 (int)$row['hasil_shackle'],
-    //                 (int)$row['shackle_kosong'],
-    //                 (int)$row['blok_penuh_50'],
-    //                 (int)$row['selisih'],
-    //                 $clean($row['status']),
-    //                 $clean($row['qc_keranjang']),
-    //                 $clean($row['qc_platform']),
-    //                 $clean($row['qc_bulu']),
-    //             ];
-
-    //             fwrite($out, implode("\t", $line) . "\r\n");
-    //         }
-
-    //         fclose($out);
-    //     };
-
-    //     return response()->stream($callback, 200, $headers);
-    // }
 
     public function rekapExportPdf(Request $request)
     {

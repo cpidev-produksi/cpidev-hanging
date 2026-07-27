@@ -576,6 +576,8 @@
                             <th class="num">Ayam Mati</th>
                             <th class="num">Ayam Retur</th>
                             <th class="num">Ayam Diterima</th>
+                            <th class="num">Jetson (SH02)</th>
+                            <th class="num">Selisih Jetson</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -591,10 +593,29 @@
                                 <td class="num"><span class="rk-num num-mati">{{ number_format((int)($r['ayam_mati'] ?? 0)) }}</span></td>
                                 <td class="num"><span class="rk-num num-retur">{{ number_format((int)($r['ayam_retur'] ?? 0)) }}</span></td>
                                 <td class="num"><span class="num-diterima">{{ number_format((int)($r['ayam_diterima'] ?? 0)) }}</span></td>
+                                <td class="num">
+                                    @if(($r['lokasi'] ?? null) !== 'SH02')
+                                        <span class="rk-num" style="color:var(--muted)">—</span>
+                                    @elseif(is_null($r['jetson_count'] ?? null))
+                                        <span class="rk-num" style="color:var(--muted)" title="Batch Jetson tidak ditemukan / tidak tersedia">n/a</span>
+                                    @else
+                                        <span class="rk-num">{{ number_format($r['jetson_count']) }}</span>
+                                    @endif
+                                </td>
+                                <td class="num">
+                                    @if(($r['lokasi'] ?? null) !== 'SH02' || is_null($r['jetson_selisih'] ?? null))
+                                        <span class="rk-num" style="color:var(--muted)">—</span>
+                                    @else
+                                        @php($sel = $r['jetson_selisih'])
+                                        <span class="rk-num" style="{{ $sel === 0 ? 'color:var(--green)' : ($sel > 0 ? 'color:var(--gold)' : 'color:var(--red)') }}">
+                                            {{ $sel > 0 ? '+' : '' }}{{ number_format($sel) }}
+                                        </span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10">
+                                <td colspan="12">
                                     <div class="rk-empty">
                                         <div class="rk-empty-icon">📭</div>
                                         Tidak ada data.

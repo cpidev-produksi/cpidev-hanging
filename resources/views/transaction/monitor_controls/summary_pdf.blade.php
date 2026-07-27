@@ -316,10 +316,12 @@ $segColors = ['seg-g', 'seg-y', 'seg-o', 'seg-r'];
 
 $customCaps = ['SH02' => [30 => 16]];
 $location = $mc->location ?? '';
-$normalSetCount = 0;
-$customSetCounts = [16 => 0];
 $totalKosongCalc = 0;
 $totalAyamCap = 0;
+
+// Breakdown per kapasitas (cap), bukan per "penuh/tidak penuh", supaya
+// blok cap-50 yang terisi sebagian tidak pernah hilang dari rincian.
+$capGroups = [];
 
 foreach ($form->lines as $line) {
     $cap = $customCaps[$location][$line->line_no] ?? 50;
@@ -329,20 +331,16 @@ foreach ($form->lines as $line) {
         $empty = min($empty, $cap);
         $totalKosongCalc += $empty;
         $totalAyamCap += ($cap - $empty);
-        
-        // 🔥 HANYA blok kapasitas 50 DAN empty = 0
-        if ($cap === 50 && $empty === 0) {
-            $normalSetCount++;
+
+        if (!isset($capGroups[$cap])) {
+            $capGroups[$cap] = ['count' => 0, 'empty' => 0, 'ayam' => 0];
         }
-        if ($cap !== 50) {
-            $customSetCounts[$cap] = ($customSetCounts[$cap] ?? 0) + 1;
-        }
+        $capGroups[$cap]['count']++;
+        $capGroups[$cap]['empty'] += $empty;
+        $capGroups[$cap]['ayam']  += ($cap - $empty);
     }
 }
-
-$normalEkor  = $normalSetCount * 50;
-$customEkor  = 0;
-foreach ($customSetCounts as $cap => $count) { $customEkor += ($count * $cap); }
+ksort($capGroups);
 
 $dead   = (int)($form->dead_count ?? 0);
 $retur  = (int)($form->retur_count ?? 0);
@@ -442,17 +440,12 @@ $isDeficit = $selisih < 0;
             <span class="hl-key">Total Ekor</span>
             <span class="hl-val">{{ number_format($totalEkorMC) }}</span>
           </div>
+          @foreach($capGroups as $cap => $g)
           <div class="hl-row">
-            <span class="hl-key">Blok Terisi Normal</span>
-            <span class="hl-val">{{ $normalSetCount }} × 50 = {{ number_format($normalEkor) }}</span>
+            <span class="hl-key">{{ $cap === 50 ? 'Blok Cap 50' : 'Blok Kondisional (Cap '.$cap.')' }} ({{ $g['count'] }} blok{{ $g['empty'] > 0 ? ', kosong '.$g['empty'] : ', penuh' }})</span>
+            <span class="hl-val">{{ $g['count'] }} × {{ $cap }} @if($g['empty'] > 0) − {{ $g['empty'] }} @endif = {{ number_format($g['ayam']) }}</span>
           </div>
-          <div class="hl-row">
-            <span class="hl-key">Kondisional Blok</span>
-            <span class="hl-val">
-              @if(($customSetCounts[16] ?? 0) > 0){{ $customSetCounts[16] }}×16 @endif
-              = {{ number_format($customEkor) }}
-            </span>
-          </div>
+          @endforeach
           <div class="hl-row">
             <span class="hl-key">Shackle Kosong</span>
             <span class="hl-val" style="color:#6b7280">{{ number_format($totalKosongCalc) }}</span>

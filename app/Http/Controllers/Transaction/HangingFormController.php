@@ -52,7 +52,11 @@ class HangingFormController extends Controller
                 $totalKosong += $empty;
                 $totalAyamShackle += ($cap - $empty);
 
-                if ($cap === 50 && $empty === 0) {
+                // Blok dianggap "penuh" selama kosong = 0, tidak peduli kapasitasnya
+                // (50 atau custom). Sebelumnya blok custom yang penuh tidak terhitung
+                // di sini, sementara blok cap-50 yang terisi sebagian tidak pernah
+                // muncul di kategori manapun.
+                if ($empty === 0) {
                     $fullBlockCount++;
                 }
             }
