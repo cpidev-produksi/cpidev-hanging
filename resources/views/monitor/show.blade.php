@@ -173,28 +173,6 @@
             color: #64748B;
         }
 
-        .data-fresh {
-            border-radius: 4px;
-            padding: 0px 4px;
-            /* Normal state - data is live */
-        }
-    
-        .data-cached {
-            border-radius: 4px;
-            padding: 0px 4px;
-            background-color: rgba(249, 115, 22, 0.1);  /* Soft orange = warning */
-            border-left: 3px solid var(--accent-orange);
-            font-weight: 500;
-            /* Visual indicator = data tidak fresh */
-        }
-    
-        .data-cached::after {
-            content: " [cached]";
-            font-size: 0.7em;
-            color: var(--accent-orange);
-            font-weight: 600;
-        }
-
         /* HERO — total ayam */
         .hero-grid {
             background: linear-gradient(125deg, #fffede 0%, #dbffe1 100%);
