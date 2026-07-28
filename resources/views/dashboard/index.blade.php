@@ -249,6 +249,24 @@
         border-color: #bbf7d0;
         color: var(--c-green);
     }
+    .jetson-kpi-note.stale {
+        background: var(--c-amber-bg);
+        border-color: #fde68a;
+        color: var(--c-amber);
+    }
+    .jetson-stale-banner {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--c-amber-bg);
+        border: 1px solid #fde68a;
+        color: #92400e;
+        border-radius: 12px;
+        padding: 8px 14px;
+        font-size: 12px;
+        font-weight: 700;
+    }
     .jetson-kpi-meta {
         font-size: 12px;
         font-weight: 700;
@@ -966,18 +984,27 @@
         $jetson = $jetson ?? [
             'current_batch_count' => null,
             'today_total_count' => null,
+            'today_ayam' => null,
             'yesterday_total_count' => null,
             'today_total_batches' => null,
             'yesterday_total_batches' => null,
             'total_days' => null,
             'batch_number' => null,
             'last_detection_time' => null,
+            'is_fresh' => false,
         ];
+        $jetsonIsFresh = $jetson['is_fresh'] ?? false;
+        // Total hari ini yang TIDAK PERNAH reset (closed batches + batch yang sedang berjalan).
+        // 'today_ayam' dihitung di backend; fallback dijaga di sini kalau field lama belum ada.
+        $jetsonTodayAyam = $jetson['today_ayam']
+            ?? ((int) ($jetson['today_total_count'] ?? 0) + (int) ($jetson['current_batch_count'] ?? 0));
     @endphp
     <div class="jetson-grid">
         <div class="kpi-card">
             <div class="kpi-card-accent cyan"></div>
-            <div class="jetson-kpi-note live">● LIVE</div>
+            <div class="jetson-kpi-note {{ $jetsonIsFresh ? 'live' : 'stale' }}">
+                {{ $jetsonIsFresh ? '● LIVE' : '◐ COUNTING' }}
+            </div>
             <div class="kpi-top">
                 <div>
                     <div class="kpi-label">Current Batch Count</div>
@@ -987,6 +1014,7 @@
                         @if(!empty($jetson['last_detection_time']))
                             · {{ \Carbon\Carbon::parse($jetson['last_detection_time'])->format('H:i:s') }}
                         @endif
+                        <br>Reset ke 0 tiap batch baru mulai
                     </div>
                 </div>
                 <div class="kpi-icon cyan">
@@ -999,12 +1027,14 @@
 
         <div class="kpi-card">
             <div class="kpi-card-accent green"></div>
-            <div class="jetson-kpi-note">Today</div>
+            <div class="jetson-kpi-note {{ $jetsonIsFresh ? '' : 'stale' }}">{{ $jetsonIsFresh ? 'Today' : '◐ TODAY' }}</div>
             <div class="kpi-top">
                 <div>
-                    <div class="kpi-label">Total Count Today</div>
-                    <div class="kpi-value">{{ number_format((int) ($jetson['today_total_count'] ?? 0), 0, ',', '.') }}</div>
-                    <div class="jetson-kpi-meta">{{ number_format((int) ($jetson['today_total_batches'] ?? 0), 0, ',', '.') }} batches</div>
+                    <div class="kpi-label">Total Ayam Hari Ini</div>
+                    <div class="kpi-value">{{ number_format($jetsonTodayAyam, 0, ',', '.') }}</div>
+                    <div class="jetson-kpi-meta">
+                        {{ number_format((int) ($jetson['today_total_batches'] ?? 0), 0, ',', '.') }} batches selesai
+                    </div>
                 </div>
                 <div class="kpi-icon green">
                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1033,6 +1063,9 @@
         </div>
         <a class="jetson-source-link" href="https://salatiga-jetson.apc.zenai.id/" target="_blank" rel="noopener noreferrer">
             <span>Open source:</span> salatiga-jetson.apc.zenai.id
+        </a>
+        <a class="jetson-source-link" href="https://salatiga-jetson.apc.zenai.id/" target="_blank" rel="noopener noreferrer">
+            <span>Open source:</span> salatiga-nano.apc.zenai.id
         </a>
     </div>
 
