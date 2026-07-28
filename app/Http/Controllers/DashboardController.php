@@ -327,9 +327,9 @@ class DashboardController extends Controller
         ]);
     }
 
+
     /**
-     * Ambil daftar batch (closed) Jetson untuk satu tanggal, di-cache singkat.
-     * Return: [batch_number => count]
+     * @return array<int, array{batch_number:int, count:int}>
      */
     protected function getJetsonDayBatches(string $date): array
     {
@@ -342,15 +342,30 @@ class DashboardController extends Controller
             try {
                 $detail = Http::timeout(3)->get("{$base}/api/day-detail/{$date}")->throw()->json();
 
-                $batches = [];
-                foreach (($detail['batches'] ?? []) as $b) {
-                    $no = (int) ($b['batch_number'] ?? 0);
-                    if ($no > 0) {
-                        $batches[$no] = (int) ($b['count'] ?? 0);
+                $batches = collect($detail['batches'] ?? [])
+                    ->map(fn ($b) => [
+                        'batch_number' => (int) ($b['batch_number'] ?? 0),
+                        'count'        => (int) ($b['count'] ?? 0),
+                    ])
+                    ->filter(fn ($b) => $b['batch_number'] > 0)
+                    ->sortBy('batch_number')
+                    ->values();
+
+                if ($date === date('Y-m-d')) {
+                    $current = $this->getJetsonCurrentBatchRaw();
+                    if ($current) {
+                        $currentBatchNo = (int) ($current['batch_number'] ?? 0);
+                        $alreadyClosed = $batches->contains(fn ($b) => $b['batch_number'] === $currentBatchNo);
+                        if ($currentBatchNo > 0 && !$alreadyClosed) {
+                            $batches->push([
+                                'batch_number' => $currentBatchNo,
+                                'count'        => (int) ($current['count'] ?? 0),
+                            ]);
+                        }
                     }
                 }
 
-                return $batches;
+                return $batches->values()->all();
             } catch (\Throwable $e) {
                 Log::warning("Jetson day-detail unreachable ({$date}): {$e->getMessage()}");
                 return [];
@@ -422,7 +437,26 @@ class DashboardController extends Controller
 
         $rows = [];
         $no = 1;
-        $jetsonBatchesByDate = []; // cache lokal per request, per tanggal
+
+        // PEMBANDING JETSON (khusus SH02): cocokkan berdasarkan URUTAN truk per tgl
+        $jetsonMatchByMcId = [];
+        $sh02GroupedByDate = $mcs->where('location', 'SH02')
+            ->groupBy(fn ($m) => optional($m->process_date)->format('Y-m-d'));
+
+        foreach ($sh02GroupedByDate as $tanggalGroup => $trucksOfDay) {
+            if (!$tanggalGroup) {
+                continue;
+            }
+
+            $orderedTrucks  = $trucksOfDay->sortBy('truck_no')->values();
+            $orderedBatches = $this->getJetsonDayBatches($tanggalGroup);
+
+            foreach ($orderedTrucks as $i => $mcOfDay) {
+                if (isset($orderedBatches[$i])) {
+                    $jetsonMatchByMcId[$mcOfDay->id] = $orderedBatches[$i];
+                }
+            }
+        }
 
         foreach ($mcs as $mc) {
             $hangingForm = $mc->hangingForm;
@@ -459,26 +493,14 @@ class DashboardController extends Controller
                     : date('H:i', strtotime($hangingForm->finish_time));
             }
 
-            // ✅ PEMBANDING JETSON: hanya berlaku untuk lokasi SH02, cocokkan
-            // truck_no (manual) dengan batch_number (Jetson) di tanggal yang sama.
+            // ✅ PEMBANDING JETSON: hasil pencocokan per-urutan dari pre-pass di atas.
             $jetsonCount = null;
+            $jetsonBatchNumber = null;
             $tanggalRow = optional($mc->process_date)->format('Y-m-d');
 
-            if ($mc->location === 'SH02' && $tanggalRow) {
-                if (!array_key_exists($tanggalRow, $jetsonBatchesByDate)) {
-                    $jetsonBatchesByDate[$tanggalRow] = $this->getJetsonDayBatches($tanggalRow);
-                }
-
-                $jetsonCount = $jetsonBatchesByDate[$tanggalRow][(int) $mc->truck_no] ?? null;
-
-                // fallback: kalau truk ini adalah batch yang SEDANG berjalan hari ini
-                // (belum closed, jadi belum masuk day-detail), pakai current-batch (live).
-                if ($jetsonCount === null && $tanggalRow === $today) {
-                    $current = $this->getJetsonCurrentBatchRaw();
-                    if ($current && (int) ($current['batch_number'] ?? -1) === (int) $mc->truck_no) {
-                        $jetsonCount = (int) ($current['count'] ?? 0);
-                    }
-                }
+            if ($mc->location === 'SH02' && isset($jetsonMatchByMcId[$mc->id])) {
+                $jetsonBatchNumber = $jetsonMatchByMcId[$mc->id]['batch_number'];
+                $jetsonCount       = $jetsonMatchByMcId[$mc->id]['count'];
             }
 
             $jetsonSelisih = ($jetsonCount !== null) ? ($ayamDiterima - $jetsonCount) : null;
@@ -510,6 +532,7 @@ class DashboardController extends Controller
                 'selisih'       => (int)($ayamDiterima - $targetAyam),
 
                 // ✅ Pembanding Jetson (khusus SH02)
+                'jetson_batch_number' => $jetsonBatchNumber,
                 'jetson_count'   => $jetsonCount,
                 'jetson_selisih' => $jetsonSelisih,
 
@@ -665,7 +688,7 @@ class DashboardController extends Controller
         return [$mode, $date, $from, $to];
     }
 
-    private function buildMonitorSummaryRow(MonitorControl $mc): array
+    private function buildMonitorSummaryRow(MonitorControl $mc, ?array $jetsonMatch = null): array
     {
         $form = $mc->hangingForm;
 
@@ -724,20 +747,14 @@ class DashboardController extends Controller
         $platform = $form->truck_platform_condition ?? null;
         $feather = $form->feather_condition ?? null;
 
-        // ✅ Pembanding Jetson (khusus SH02): cocokkan truck_no <-> batch_number
+        // Pembanding Jetson (khusus SH02): hasil pencocokan berdasarkan urutan
         $jetsonCount = null;
+        $jetsonBatchNumber = null;
         $tanggal = $mc->process_date?->format('Y-m-d');
 
-        if ($location === 'SH02' && $tanggal) {
-            $batches = $this->getJetsonDayBatches($tanggal);
-            $jetsonCount = $batches[(int) $mc->truck_no] ?? null;
-
-            if ($jetsonCount === null && $tanggal === date('Y-m-d')) {
-                $current = $this->getJetsonCurrentBatchRaw();
-                if ($current && (int) ($current['batch_number'] ?? -1) === (int) $mc->truck_no) {
-                    $jetsonCount = (int) ($current['count'] ?? 0);
-                }
-            }
+        if ($location === 'SH02' && $jetsonMatch) {
+            $jetsonBatchNumber = $jetsonMatch['batch_number'];
+            $jetsonCount       = $jetsonMatch['count'];
         }
 
         $jetsonSelisih = ($jetsonCount !== null) ? ($hasilShackle - $jetsonCount) : null;
@@ -777,7 +794,8 @@ class DashboardController extends Controller
             'selisih' => $selisih,
             'status' => $status,
 
-            // ✅ Pembanding Jetson (null kalau bukan SH02 / tidak tersedia)
+            // Pembanding Jetson (null kalau bukan SH02 / tidak tersedia)
+            'jetson_batch_number' => $jetsonBatchNumber,
             'jetson_count' => $jetsonCount,
             'jetson_selisih' => $jetsonSelisih,
 
@@ -806,10 +824,29 @@ class DashboardController extends Controller
             ->orderBy('truck_no')
             ->get();
 
+        $jetsonMatchByMcId = [];
+        $sh02GroupedByDate = $mcs->where('location', 'SH02')
+            ->groupBy(fn ($m) => $m->process_date?->format('Y-m-d'));
+
+        foreach ($sh02GroupedByDate as $tanggalGroup => $trucksOfDay) {
+            if (!$tanggalGroup) {
+                continue;
+            }
+
+            $orderedTrucks  = $trucksOfDay->sortBy('truck_no')->values();
+            $orderedBatches = $this->getJetsonDayBatches($tanggalGroup);
+
+            foreach ($orderedTrucks as $i => $mcOfDay) {
+                if (isset($orderedBatches[$i])) {
+                    $jetsonMatchByMcId[$mcOfDay->id] = $orderedBatches[$i];
+                }
+            }
+        }
+
         $rows = [];
         $no = 1;
         foreach ($mcs as $mc) {
-            $r = $this->buildMonitorSummaryRow($mc);
+            $r = $this->buildMonitorSummaryRow($mc, $jetsonMatchByMcId[$mc->id] ?? null);
             $r['no'] = $no++;
             $rows[] = $r;
         }

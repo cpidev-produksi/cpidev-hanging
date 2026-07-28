@@ -173,6 +173,28 @@
             color: #64748B;
         }
 
+        .data-fresh {
+            border-radius: 4px;
+            padding: 0px 4px;
+            /* Normal state - data is live */
+        }
+    
+        .data-cached {
+            border-radius: 4px;
+            padding: 0px 4px;
+            background-color: rgba(249, 115, 22, 0.1);  /* Soft orange = warning */
+            border-left: 3px solid var(--accent-orange);
+            font-weight: 500;
+            /* Visual indicator = data tidak fresh */
+        }
+    
+        .data-cached::after {
+            content: " [cached]";
+            font-size: 0.7em;
+            color: var(--accent-orange);
+            font-weight: 600;
+        }
+
         /* HERO — total ayam */
         .hero-grid {
             background: linear-gradient(125deg, #fffede 0%, #dbffe1 100%);
@@ -254,6 +276,27 @@
         }
         .jetson-hero-grid .hero-label {
             color: var(--accent-blue);
+        }
+
+        .jetson-indicator-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 6px;
+        }
+    
+        .jetson-indicator-icon.fresh {
+            color: var(--accent-green);
+        }
+    
+        .jetson-indicator-icon.cached {
+            color: var(--accent-orange);
+            animation: blink 1.5s infinite;
+        }
+    
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.6; }
         }
 
         /* CAROUSEL — 2 slide saja (1: farm + size, 2: ekspedisi) */
@@ -1189,12 +1232,39 @@
             if(!res.ok) throw new Error();
             const data = await res.json();
 
-            //const statJetsonAyamSpan = document.getElementById('statJetsonAyam');
-            //statJetsonAyamSpan.innerText = fmt(data.total_ayam_jetson || 0);
             const jetsonCurrentBatchCountSpan = document.getElementById('jetsonCurrentBatchCount');
+            const jetsonTodayTotalCountSpan = document.getElementById('jetsonTodayTotalCount');
+            const jetsonTodayTotalBatchesSpan = document.getElementById('jetsonTodayTotalBatches');
+            const jetsonIsFresh = data.jetson_is_fresh !== false;  // default true jika tidak ada
+
             jetsonCurrentBatchCountSpan.innerText = fmt(data.jetson_current_batch_count || 0);
             jetsonTodayTotalCountSpan.innerText = fmt(data.jetson_today_total_count || 0);
             jetsonTodayTotalBatchesSpan.innerText = fmt(data.jetson_today_total_batches || 0);
+
+            if (jetsonIsFresh) {
+                // Data fresh dari API
+                jetsonCurrentBatchCountSpan.classList.remove('data-cached');
+                jetsonCurrentBatchCountSpan.classList.add('data-fresh');
+                jetsonCurrentBatchCountSpan.title = 'Data live dari Jetson AI';
+            } else {
+                // Data dari fallback cache
+                jetsonCurrentBatchCountSpan.classList.remove('data-fresh');
+                jetsonCurrentBatchCountSpan.classList.add('data-cached');
+                jetsonCurrentBatchCountSpan.title = 'Data ini adalah cache (Jetson API tidak accessible)';
+                jetsonCurrentBatchCountSpan.innerText = fmt(data.jetson_current_batch_count || 0) + ' ⚠️';
+            }
+
+            const jetsonElements = [jetsonTodayTotalCountSpan, jetsonTodayTotalBatchesSpan];
+            jetsonElements.forEach(el => {
+                if (jetsonIsFresh) {
+                    el.classList.remove('data-cached');
+                    el.classList.add('data-fresh');
+                } else {
+                    el.classList.remove('data-fresh');
+                    el.classList.add('data-cached');
+                    el.style.opacity = '0.7';  // Slight fade untuk indicate cached
+                }
+            });
             
             const now = new Date();
             lastUpdateSpan.innerText = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;

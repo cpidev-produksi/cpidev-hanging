@@ -568,6 +568,7 @@
                         <tr>
                             <th style="width:60px">No</th>
                             <th>No Polisi</th>
+                            <th>No Truk</th>
                             <th>Jam Bongkar</th>
                             <th>Jam Selesai</th>
                             <th>Nama Farm</th>
@@ -576,7 +577,7 @@
                             <th class="num">Ayam Mati</th>
                             <th class="num">Ayam Retur</th>
                             <th class="num">Ayam Diterima</th>
-                            <th class="num">Jetson (SH02)</th>
+                            <th class="num">Batch Jetson</th>
                             <th class="num">Selisih Jetson</th>
                         </tr>
                     </thead>
@@ -585,6 +586,7 @@
                             <tr>
                                 <td><span class="rk-no">{{ $r['no'] }}</span></td>
                                 <td><span class="rk-polisi">{{ $r['no_polisi'] ?? '—' }}</span></td>
+                                <td><span class="rk-num">{{ $r['truck_no'] ?? '—' }}</span></td>
                                 <td><span class="rk-time">{{ $r['jam_bongkar'] ?? '—' }}</span></td>
                                 <td><span class="rk-time">{{ $r['jam_selesai'] ?? '—' }}</span></td>
                                 <td style="color:var(--text)">{{ $r['nama_farm'] ?? '—' }}</td>
@@ -596,10 +598,10 @@
                                 <td class="num">
                                     @if(($r['lokasi'] ?? null) !== 'SH02')
                                         <span class="rk-num" style="color:var(--muted)">—</span>
-                                    @elseif(is_null($r['jetson_count'] ?? null))
+                                    @elseif(is_null($r['jetson_batch_number'] ?? null))
                                         <span class="rk-num" style="color:var(--muted)" title="Batch Jetson tidak ditemukan / tidak tersedia">n/a</span>
                                     @else
-                                        <span class="rk-num">{{ number_format($r['jetson_count']) }}</span>
+                                        <span class="rk-num" title="Jumlah dari batch ini: {{ number_format($r['jetson_count']) }}">#{{ $r['jetson_batch_number'] }} ({{ number_format($r['jetson_count']) }})</span>
                                     @endif
                                 </td>
                                 <td class="num">
@@ -615,7 +617,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="12">
+                                <td colspan="13">
                                     <div class="rk-empty">
                                         <div class="rk-empty-icon">📭</div>
                                         Tidak ada data.
