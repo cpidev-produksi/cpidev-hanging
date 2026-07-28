@@ -1158,6 +1158,69 @@
     // Flag: animasi shift-selesai hanya sekali per sesi
     let shiftDoneAnimated = false;
 
+    // ── Animasi step-increment untuk Jetson Current Batch Count ──
+    // (meniru perilaku "naik 1 per 1" di web sumber Jetson)
+    let jetsonDisplayedCount = null;
+    let jetsonAnimTarget = null;
+    let jetsonAnimTimer = null;
+
+    function setJetsonCountDisplay(n) {
+        jetsonDisplayedCount = n;
+        jetsonCurrentBatchCountSpan.innerText = fmt(n);
+    }
+
+    function snapJetsonCount(n) {
+        if (jetsonAnimTimer !== null) {
+            clearInterval(jetsonAnimTimer);
+            jetsonAnimTimer = null;
+        }
+        jetsonAnimTarget = n;
+        setJetsonCountDisplay(n);
+    }
+
+    function stepJetsonCountToward(target) {
+        jetsonAnimTarget = target;
+        if (jetsonDisplayedCount === null) {
+            setJetsonCountDisplay(target);
+            return;
+        }
+        if (target <= jetsonDisplayedCount) {
+            snapJetsonCount(target);
+            return;
+        }
+        if (jetsonAnimTimer !== null) {
+            clearInterval(jetsonAnimTimer);
+            jetsonAnimTimer = null;
+        }
+        // makin besar selisihnya, makin cepat step-nya, supaya tidak lama nyusul
+        const delta = Math.max(1, target - jetsonDisplayedCount);
+        const stepMs = Math.max(40, Math.min(150, Math.floor(1800 / delta)));
+        jetsonAnimTimer = setInterval(() => {
+            if (jetsonDisplayedCount === null || jetsonDisplayedCount >= jetsonAnimTarget) {
+                clearInterval(jetsonAnimTimer);
+                jetsonAnimTimer = null;
+                setJetsonCountDisplay(jetsonAnimTarget);
+                return;
+            }
+            setJetsonCountDisplay(jetsonDisplayedCount + 1);
+        }, stepMs);
+    }
+
+    // Update tampilan Jetson current-batch dengan animasi naik 1-per-1,
+    // dan snap langsung kalau batch baru mulai (angka turun) atau data belum pernah tampil.
+    function updateJetsonCurrentBatch(rawCount) {
+        const target = Number(rawCount) || 0;
+        const currentTarget = jetsonAnimTarget ?? jetsonDisplayedCount;
+
+        if (jetsonDisplayedCount === null || target < currentTarget) {
+            // Batch baru dimulai (reset) atau load pertama kali → langsung snap
+            snapJetsonCount(target);
+        } else if (target > currentTarget) {
+            stepJetsonCountToward(target);
+        }
+        // kalau target sama dengan currentTarget, tidak perlu apa-apa (biarkan animasi jalan/selesai)
+    }
+
     function setActiveUI(active) {
         if (active) {
             emptyOverlay.classList.add('hidden');
@@ -1194,9 +1257,9 @@
             const jetsonTodayTotalBatchesSpan = document.getElementById('jetsonTodayTotalBatches');
             const jetsonIsFresh = data.jetson_is_fresh !== false;  // default true jika tidak ada
 
-            jetsonCurrentBatchCountSpan.innerText = fmt(data.jetson_current_batch_count || 0);
             jetsonTodayTotalCountSpan.innerText = fmt(data.jetson_today_total_count || 0);
             jetsonTodayTotalBatchesSpan.innerText = fmt(data.jetson_today_total_batches || 0);
+            updateJetsonCurrentBatch(data.jetson_current_batch_count || 0);
 
             if (jetsonIsFresh) {
                 // Data fresh dari API
