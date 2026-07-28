@@ -1208,7 +1208,6 @@
                 jetsonCurrentBatchCountSpan.classList.remove('data-fresh');
                 jetsonCurrentBatchCountSpan.classList.add('data-cached');
                 jetsonCurrentBatchCountSpan.title = 'Data ini adalah cache (Jetson API tidak accessible)';
-                jetsonCurrentBatchCountSpan.innerText = fmt(data.jetson_current_batch_count || 0) + ' ⚠️';
             }
 
             const jetsonElements = [jetsonTodayTotalCountSpan, jetsonTodayTotalBatchesSpan];
