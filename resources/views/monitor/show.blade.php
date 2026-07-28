@@ -256,27 +256,6 @@
             color: var(--accent-blue);
         }
 
-        .jetson-indicator-icon {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin-left: 6px;
-        }
-    
-        .jetson-indicator-icon.fresh {
-            color: var(--accent-green);
-        }
-    
-        .jetson-indicator-icon.cached {
-            color: var(--accent-orange);
-            animation: blink 1.5s infinite;
-        }
-    
-        @keyframes blink {
-            0%, 50%, 100% { opacity: 1; }
-            25%, 75% { opacity: 0.6; }
-        }
-
         /* CAROUSEL — 2 slide saja (1: farm + size, 2: ekspedisi) */
         .carousel-module {
             background: white;
