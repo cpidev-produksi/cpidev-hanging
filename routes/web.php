@@ -16,6 +16,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Monitor\LiveMonitorController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Transaction\ConditionController;
+use App\Http\Controllers\Transaction\DailyUniformityController;
 use App\Http\Controllers\Transaction\HangingFormController;
 use App\Http\Controllers\Transaction\HangingLandingController;
 use App\Http\Controllers\Transaction\MonitorControlController;
@@ -60,6 +61,21 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profile/signature', [ProfileController::class, 'updateSignature'])->name('profile.signature');
+
+    Route::prefix('daily-uniformities')->name('daily-uniformities.')->group(function () {
+        Route::get('/', [DailyUniformityController::class, 'index'])->name('index');
+        Route::get('/create', [DailyUniformityController::class, 'create'])->name('create');
+        Route::post('/', [DailyUniformityController::class, 'store'])->name('store');
+
+        Route::get('/export/pdf', [DailyUniformityController::class, 'exportPdf'])->name('export-pdf');
+        Route::get('/{dailyUniformity}', [DailyUniformityController::class, 'show'])->name('show');
+        Route::get('/{dailyUniformity}/edit', [DailyUniformityController::class, 'edit'])->name('edit');
+        Route::put('/{dailyUniformity}', [DailyUniformityController::class, 'update'])->name('update');
+        Route::delete('/{dailyUniformity}', [DailyUniformityController::class, 'destroy'])->name('destroy');
+
+        Route::post('/{dailyUniformity}/weights', [DailyUniformityController::class, 'storeWeight'])->name('weights.store');
+        Route::delete('/{dailyUniformity}/weights/{weight}', [DailyUniformityController::class, 'destroyWeight'])->name('weights.destroy');
+    });
 
     // History
     Route::get('/history', [HistoryController::class, 'index'])->name('history.index');

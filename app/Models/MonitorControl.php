@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\DailyUniformity;
 use Illuminate\Database\Eloquent\Model;
 
 class MonitorControl extends Model
@@ -56,6 +57,37 @@ class MonitorControl extends Model
     public function plateNumber() { return $this->belongsTo(PlateNumber::class); }
 
     public function hangingForm() { return $this->hasOne(HangingForm::class); }
+    public function dailyUniformity() { return $this->hasOne(DailyUniformity::class); }
+
+    public function getAyamDiterimaAttribute(): int
+    {
+        $this->loadMissing(['hangingForm.lines.sets']);
+
+        $form = $this->hangingForm;
+        if (!$form) {
+            return 0;
+        }
+
+        $customCaps = ['SH02' => [30 => 16]];
+        $location = $this->location ?? '';
+        $totalAyam = 0;
+
+        foreach ($form->lines as $line) {
+            $cap = $customCaps[$location][$line->line_no] ?? 50;
+
+            foreach ($line->sets as $set) {
+                if ($set->empty_count === null) {
+                    continue;
+                }
+
+                $empty = min((int) $set->empty_count, $cap);
+                $totalAyam += ($cap - $empty);
+            }
+        }
+
+        return (int) $totalAyam;
+    }
+
     protected $appends = ['calculated_abw'];
 
     public function getCalculatedAbwAttribute()
