@@ -797,7 +797,7 @@
         </div>
 
         <!-- HERO JETSON : LIVE COUNT KAMERA AI (sejajar dengan hero-grid utama) -->
-        <div class="hero-grid jetson-hero-grid" id="jetsonHeroGrid">
+        {{-- <div class="hero-grid jetson-hero-grid" id="jetsonHeroGrid">
             <div class="hero-left">
                 <div class="hero-label">🎥 LIVE COUNT JETSON KAMERA AI</div>
                 <div class="hero-number" id="jetsonCurrentBatchCount">0</div>
@@ -815,7 +815,7 @@
                     <div class="stat-value" id="jetsonTodayTotalBatches">0</div>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <!-- CAROUSEL hanya 2 slide (FARM+SIZE digabung, EKSPEDISI) -->
         <div class="carousel-module">

@@ -373,7 +373,7 @@
                 {{-- Group row --}}
                 <tr>
                     <th class="th-group group-end" colspan="11">INFORMASI TRUK</th>
-                    <th class="th-group group-end" colspan="8">DATA AYAM</th>
+                    <th class="th-group group-end" colspan="5">DATA AYAM</th>
                     <th class="th-group" colspan="3">QUALITY CONTROL</th>
                 </tr>
                 {{-- Column headers --}}
@@ -393,10 +393,10 @@
                     <th class="th-col">Mati</th>
                     <th class="th-col">Retur</th>
                     <th class="th-col">Ret Kg</th>
-                    <th class="th-col">Selisih</th>
+                    {{-- <th class="th-col">Selisih</th> --}}
                     <th class="th-col">Diterima</th>
-                    <th class="th-col">Jetson</th>
-                    <th class="th-col group-end">Selisih<br>Jetson</th>
+                    {{-- <th class="th-col">Jetson</th>
+                    <th class="th-col group-end">Selisih<br>Jetson</th> --}}
                     <th class="th-col">QC<br>Keranjang</th>
                     <th class="th-col">QC<br>Platform</th>
                     <th class="th-col">QC Bulu</th>
@@ -428,11 +428,11 @@
                         </td>
                         <td class="num">{{ number_format((int)$r['ayam_retur']) }}</td>
                         <td class="num">{{ number_format((float)$r['retur_kg'], 2) }}</td>
-                        <td class="num {{ $selisihClass }}">
+                        {{-- <td class="num {{ $selisihClass }}">
                             {{ $selisih > 0 ? '+' : '' }}{{ number_format($selisih) }}
-                        </td>
+                        </td> --}}
                         <td class="num">{{ number_format((int)($r['hasil_shackle'] ?? 0)) }}</td>
-                        <td class="num">
+                        {{-- <td class="num">
                             @if(!$isSH02)
                                 <span class="na">&mdash;</span>
                             @elseif(is_null($r['jetson_count'] ?? null))
@@ -450,7 +450,7 @@
                                     {{ $jsel > 0 ? '+' : '' }}{{ number_format($jsel) }}
                                 </span>
                             @endif
-                        </td>
+                        </td> --}}
 
                         <td class="qc">{{ $r['qc_keranjang'] }}</td>
                         <td class="qc">{{ $r['qc_platform'] }}</td>

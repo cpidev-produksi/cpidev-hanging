@@ -577,8 +577,8 @@
                             <th class="num">Ayam Mati</th>
                             <th class="num">Ayam Retur</th>
                             <th class="num">Ayam Diterima</th>
-                            <th class="num">Batch Jetson</th>
-                            <th class="num">Selisih Jetson</th>
+                            {{-- <th class="num">Batch Jetson</th>
+                            <th class="num">Selisih Jetson</th> --}}
                         </tr>
                     </thead>
                     <tbody>
@@ -595,7 +595,7 @@
                                 <td class="num"><span class="rk-num num-mati">{{ number_format((int)($r['ayam_mati'] ?? 0)) }}</span></td>
                                 <td class="num"><span class="rk-num num-retur">{{ number_format((int)($r['ayam_retur'] ?? 0)) }}</span></td>
                                 <td class="num"><span class="num-diterima">{{ number_format((int)($r['ayam_diterima'] ?? 0)) }}</span></td>
-                                <td class="num">
+                                {{-- <td class="num">
                                     @if(($r['lokasi'] ?? null) !== 'SH02')
                                         <span class="rk-num" style="color:var(--muted)">—</span>
                                     @elseif(is_null($r['jetson_batch_number'] ?? null))
@@ -613,7 +613,7 @@
                                             {{ $sel > 0 ? '+' : '' }}{{ number_format($sel) }}
                                         </span>
                                     @endif
-                                </td>
+                                </td> --}}
                             </tr>
                         @empty
                             <tr>

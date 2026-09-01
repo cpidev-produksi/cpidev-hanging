@@ -977,7 +977,7 @@
     </div>
 
     {{-- ── Jetson Summary ── --}}
-    <div class="jetson-section-head">
+    {{-- <div class="jetson-section-head">
         <p class="section-label">Ringkasan Jetson Counter SH-02</p>
     </div>
     @php
@@ -1067,7 +1067,7 @@
         <a class="jetson-source-link" href="https://salatiga-jetson.apc.zenai.id/" target="_blank" rel="noopener noreferrer">
             <span>Open source:</span> salatiga-nano.apc.zenai.id
         </a>
-    </div>
+    </div> --}}
 
     {{-- ── Chart: Ayam Diterima vs Planning 7 Hari ── --}}
     <p class="section-label">Tren Pencapaian · 7 Hari Terakhir</p>
