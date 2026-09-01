@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account\RolePermissionController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DailyYieldController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Form\ProductEvisController;
 use App\Http\Controllers\Form\ReportEvisController;
@@ -51,6 +52,20 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/menu', [MenuController::class, 'index'])
     ->name('menu.index');
+
+    // ================= Daily Monitoring Yield =================
+    Route::prefix('daily-yields')->name('daily-yields.')->group(function () {
+        Route::get('/', [DailyYieldController::class, 'index'])->name('index');
+        Route::get('/template/download', [DailyYieldController::class, 'downloadTemplate'])->name('template.download');
+    });
+    
+    // Upload data baru -> dibatasi role (samakan dengan pola planning-lb)
+    Route::middleware('role:admin,supervisor,superadmin,manager')
+        ->prefix('daily-yields')
+        ->name('daily-yields.')
+        ->group(function () {
+            Route::post('/', [DailyYieldController::class, 'store'])->name('store');
+        });
 
     Route::get('/api/dashboard/today-stats', [DashboardController::class, 'todayStats'])->name('api.dashboard.today-stats');
     //Route::get('/dashboard/rekap/export/excel', [DashboardController::class, 'rekapExportExcel'])->name('dashboard.rekap.export.excel');

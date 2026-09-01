@@ -962,7 +962,7 @@
                 </div>
             </div>
 
-            {{-- Form (nested dropdown) --}}
+            {{-- Form --}}
             <div class="dropdown" id="ddForm">
                 <button type="button"
                         class="topnav-button {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('cut-up.*') ? 'active' : '' }}"
@@ -1019,12 +1019,12 @@
                             </svg>
                         </button>
                         <div id="ddSecCutUp" class="dropdown-section-body {{ request()->routeIs('cut-up.*') ? 'open' : '' }}">
-                            {{-- Tambahkan submenu cut up di sini nanti --}}
+                            {{-- submenu cut up nanti --}}
                             <span class="dropdown-sub-item" style="cursor:default; opacity:.5;">Segera hadir</span>
                         </div>
                     </div>
 
-                    {{-- Lainnya: placeholder untuk departemen berikutnya --}}
+                    {{-- placeholder untuk departemen berikutnya --}}
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-section-label">Lainnya menyusul</div>
 

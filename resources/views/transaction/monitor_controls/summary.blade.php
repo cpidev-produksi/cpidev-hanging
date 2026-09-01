@@ -25,7 +25,7 @@ $condLabel = function(?string $val): string {
     };
 };
 
-$customCaps = ['SH02' => [30 => 16]];
+$customCaps = ['SH02' => [30 => 17]];
 $location = $mc->location ?? '';
 $totalKosongCalc = 0;
 $totalAyamCap = 0;

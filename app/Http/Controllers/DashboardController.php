@@ -617,7 +617,7 @@ class DashboardController extends Controller
     protected function getMaxCapacity(string $location, int $lineNo): int
     {
         $custom = [
-            'SH02' => [30 => 16],
+            'SH02' => [30 => 17],
         ];
 
         return $custom[$location][$lineNo] ?? 50;

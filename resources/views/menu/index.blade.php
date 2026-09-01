@@ -707,6 +707,47 @@
         </div>
       </a>
 
+      {{-- Yield --}}
+      <a href="{{ route('daily-yields.index') }}" class="hp-card blue">
+        <div class="hp-card-bar" style="background: linear-gradient(90deg, #edb43a, #fae68b);"></div>
+
+        <div class="hp-card-top">
+          <div class="hp-card-icon" style="background: linear-gradient(135deg,#ede9fe,#ddd6fe);">
+            <svg viewBox="0 0 24 24" stroke="#7c3aed">
+              <path d="M3 3v18h18"/>
+              <path d="M18 17V9"/>
+              <path d="M13 17V5"/>
+              <path d="M8 17v-3"/>
+            </svg>
+          </div>
+          <div class="hp-badge" style="background:#f5f3ff; color:#edb43a;">
+            Yield
+          </div>
+        </div>
+
+        <div class="hp-card-body">
+          <div class="hp-card-name">Monitoring Yield</div>
+          <div class="hp-card-desc">
+            Summary Yield H0 - H4.
+          </div>
+        </div>
+
+        <div class="hp-card-footer">
+          <div class="hp-card-tags">
+            <span class="hp-tag">Yield</span>
+            <span class="hp-tag">Monitoring</span>
+            <span class="hp-tag">Report</span>
+          </div>
+          <div class="hp-card-cta" style="color:#edb43a;">
+            Buka
+            <svg viewBox="0 0 24 24" stroke="#edb43a">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </div>
+      </a>
+
       {{-- File Inventory --}}
       <a href="{{ route('inventory.index') }}" class="hp-card green">
         <div class="hp-card-bar" style="background: linear-gradient(90deg, #0d9488, #34d399);"></div>
@@ -854,7 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 500);
 });
 
-// Tambahkan CSS transition untuk smooth update
+// CSS transition untuk smooth update
 const style = document.createElement('style');
 style.textContent = `
     #ayamCount, #trukCount {

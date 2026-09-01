@@ -16,7 +16,7 @@ class LiveMonitorController extends Controller
     {
         $custom = [
             // 'SH01' => [17 => 46],
-            'SH02' => [30 => 16],
+            'SH02' => [30 => 17],
         ];
 
         return $custom[$location][$lineNo] ?? 50;
