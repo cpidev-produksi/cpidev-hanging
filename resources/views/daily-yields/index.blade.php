@@ -271,15 +271,20 @@
     </div>
 
     {{-- Detail plant (muncul setelah klik bar) --}}
-    <div class="panel" id="detailSection" style="display:none;">
+    <div class="panel" id="detailSection">
         <div class="panel-header">
-            <span class="panel-title">Detail Plant: <span id="detailPlantName">-</span></span>
+            <div class="dmy-panel-title-col">
+                <span class="panel-title">Detail Plant: <span id="detailPlantName">-</span></span>
+                <span class="dmy-panel-desc">Klik salah satu bar pada grafik untuk detail satu plant. Tanpa klik, tabel menampilkan seluruh plant sesuai filter checkbox di atas.</span>
+            </div>
+            <button type="button" id="btnShowAllDetail" class="dmy-btn-link" style="display:none;">Tampilkan Semua Plant</button>
         </div>
         <div class="panel-body" style="padding:0;">
             <div class="dmy-table-scroll">
                 <table class="table dmy-detail-table" id="detailTable">
                     <thead>
                         <tr>
+                            <th rowspan="2">Plant</th>
                             <th colspan="2">H0</th>
                             <th colspan="2">H1 (GRILLER)</th>
                             <th colspan="2">H2 (PARTING)</th>
@@ -552,15 +557,19 @@
         'yield_fg', 'total_fg_bp', 'sumpo', 'lost',
     ];
 
-    function showDetail(plantName) {
-        const row = plantsData.find(p => p.plant === plantName);
-        if (!row) return;
+    // State: plant yang sedang dipilih lewat klik bar. null = mode default
+    // (tampilkan semua plant sesuai filter checkbox, tanpa perlu klik apapun).
+    let selectedPlant = null;
 
-        document.getElementById('detailPlantName').textContent = plantName;
-        const tbody = document.querySelector('#detailTable tbody');
-        tbody.innerHTML = '';
-
+    function buildDetailRow(row) {
         const tr = document.createElement('tr');
+
+        // Kolom Plant di depan, supaya baris bisa dibedakan saat lebih dari satu plant tampil.
+        const plantTd = document.createElement('td');
+        plantTd.textContent = row.plant;
+        plantTd.style.fontWeight = '700';
+        tr.appendChild(plantTd);
+
         DETAIL_COLUMNS.forEach((key) => {
             const val = row[key];
             const isEmpty = (val === 0 || val === null || val === undefined);
@@ -573,27 +582,80 @@
             }
             tr.appendChild(td);
         });
-        tbody.appendChild(tr);
 
-        // Keterangan di luar tabel
+        return tr;
+    }
+
+    function renderDetailTable() {
+        const tbody = document.querySelector('#detailTable tbody');
+        const titleEl = document.getElementById('detailPlantName');
         const lastUpdateEl = document.getElementById('detailLastUpdate');
-        lastUpdateEl.innerHTML = 'Last Update: <strong>' + (row.tanggal_update_terakhir ?? '-') + '</strong>';
+        const btnShowAll = document.getElementById('btnShowAllDetail');
+        tbody.innerHTML = '';
 
-        document.getElementById('detailSection').style.display = '';
+        let rows;
+        if (selectedPlant) {
+            // Mode klik: hanya satu plant yang dipilih dari grafik.
+            const row = plantsData.find(p => p.plant === selectedPlant);
+            rows = row ? [row] : [];
+            titleEl.textContent = selectedPlant;
+        } else {
+            // Mode default: semua plant sesuai checkbox filter yang aktif.
+            rows = getVisiblePlants();
+            titleEl.textContent = rows.length ? `Semua Plant (${rows.length})` : '-';
+        }
+
+        if (btnShowAll) btnShowAll.style.display = selectedPlant ? '' : 'none';
+
+        if (rows.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = DETAIL_COLUMNS.length + 1;
+            td.style.textAlign = 'center';
+            td.style.color = 'var(--text-muted)';
+            td.style.padding = '16px';
+            td.textContent = 'Tidak ada plant untuk ditampilkan.';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            lastUpdateEl.innerHTML = '';
+            return;
+        }
+
+        rows.forEach(row => tbody.appendChild(buildDetailRow(row)));
+
+        // Keterangan "Last Update" hanya relevan saat satu plant sedang ditampilkan.
+        lastUpdateEl.innerHTML = (rows.length === 1)
+            ? 'Last Update: <strong>' + (rows[0].tanggal_update_terakhir ?? '-') + '</strong>'
+            : '';
+    }
+
+    function showDetail(plantName) {
+        selectedPlant = plantName;
+        renderDetailTable();
         document.getElementById('detailSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    document.querySelectorAll('.plant-filter').forEach(cb => cb.addEventListener('change', renderChart));
+    function onFilterChange() {
+        renderChart();
+        renderDetailTable();
+    }
+
+    document.getElementById('btnShowAllDetail')?.addEventListener('click', () => {
+        selectedPlant = null;
+        renderDetailTable();
+    });
+
+    document.querySelectorAll('.plant-filter').forEach(cb => cb.addEventListener('change', onFilterChange));
     document.getElementById('btnCheckAll')?.addEventListener('click', () => {
         document.querySelectorAll('.plant-filter').forEach(cb => (cb.checked = true));
-        renderChart();
+        onFilterChange();
     });
     document.getElementById('btnUncheckAll')?.addEventListener('click', () => {
         document.querySelectorAll('.plant-filter').forEach(cb => (cb.checked = false));
-        renderChart();
+        onFilterChange();
     });
 
-    renderChart();
+    onFilterChange();
 })();
 </script>
 @endpush
