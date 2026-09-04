@@ -30,6 +30,13 @@
 
   .du-hint { font-size:12px; color:#94a3b8; margin-top:6px; }
 
+  .du-filter { display:flex; align-items:end; gap:10px; margin-bottom:18px; }
+  .du-filter-field { flex:1; }
+  .du-filter-field label { display:block; font-size:12px; font-weight:700; color:#334155; text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+  .du-filter-field input { width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:11px 14px; font-family:inherit; font-size:14px; color:#0f172a; background:#fff; }
+  .du-filter-btn { padding:11px 18px; border:0; border-radius:12px; background:#0f172a; color:#fff; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+  .du-filter-btn:hover { background:#1e293b; }
+
   /* ===== Scroll to top ===== */
   .du-scrolltop {
     position:fixed; right:24px; bottom:24px; width:46px; height:46px; border-radius:50%;
@@ -48,22 +55,32 @@
 
     <a href="{{ route('daily-uniformities.index') }}" class="du-back">&larr; Kembali ke Daftar</a>
     <div class="du-title">Buat Laporan Daily Uniformity</div>
-    <div class="du-sub">Pilih No. SPPA yang sudah terdaftar di Kontrol Monitor, data terkait akan terisi otomatis.</div>
+    <div class="du-sub">Filter tanggal process terlebih dahulu, lalu pilih No. SPPA yang sudah terdaftar di Kontrol Monitor.</div>
+
+    <form method="GET" action="{{ route('daily-uniformities.create') }}" class="du-filter">
+      <div class="du-filter-field">
+        <label for="process_date">Tanggal Operasional</label>
+        <input type="date" id="process_date" name="process_date" value="{{ $processDate }}" required>
+      </div>
+      <button type="submit" class="du-filter-btn">Tampilkan</button>
+    </form>
 
     <div class="du-card">
       <form action="{{ route('daily-uniformities.store') }}" method="POST">
         @csrf
+        <input type="hidden" name="process_date" value="{{ $processDate }}">
 
         <div class="du-field">
-          <label for="monitor_control_id">No. SPPA</label>
+          <label for="monitor_control_id">Truk</label>
           <select id="monitor_control_id" name="monitor_control_id" onchange="duFillFromMc(this)" required>
-            <option value="">-- Pilih No. SPPA --</option>
+            <option value="">-- Pilih salah satu --</option>
             @foreach ($monitorControls as $mc)
               <option
                 value="{{ $mc->id }}"
                 data-date="{{ optional($mc->process_date)->format('d-m-Y') }}"
                 data-shift="{{ ucfirst($mc->shift) }}"
                 data-sppa="{{ $mc->sppa_no }}"
+                data-location="{{ $mc->location ?? '-' }}"
                 data-farm="{{ $mc->farm->name ?? '-' }}"
                 data-plate="{{ $mc->plateNumber->plate_number ?? '-' }}"
                 data-ekspedisi="{{ $mc->expedition->name ?? '-' }}"
@@ -72,7 +89,7 @@
                 data-size="{{ $mc->size }}"
                 {{ old('monitor_control_id') == $mc->id ? 'selected' : '' }}
               >
-                {{ $mc->sppa_no }} — {{ $mc->report_code }} ({{ optional($mc->process_date)->format('d/m/Y') }} · {{ ucfirst($mc->shift) }})
+                {{ $mc->plateNumber->plate_number ?? '-' }} - {{ $mc->location ?? '-' }} - {{ ucfirst($mc->shift) }} - {{ optional($mc->process_date)->format('d/m/Y') }}
               </option>
             @endforeach
           </select>

@@ -356,9 +356,11 @@
 
     tbody tr {
         transition: background .12s;
+        cursor: pointer;
     }
 
     tbody tr:hover { background: #f0f6ff; }
+    tbody tr:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
 
     td.num { text-align: right; }
 
@@ -437,6 +439,37 @@
     }
 
     .rk-empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+    .rk-modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 22, 35, .5); }
+    .rk-modal.is-open { display: flex; }
+    .rk-modal-dialog { width: min(820px, 100%); max-height: min(760px, 92vh); overflow-y: auto; border-radius: var(--radius); background: var(--surface); box-shadow: 0 24px 70px rgba(15, 22, 35, .25); }
+    .rk-modal-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; padding: 22px 24px; border-bottom: 1px solid var(--border); }
+    .rk-modal-title { margin: 0; font-size: 20px; font-weight: 800; }
+    .rk-modal-sub { margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .rk-modal-close { width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text); font-size: 20px; line-height: 1; cursor: pointer; }
+    .rk-modal-body { padding: 22px 24px 26px; }
+    .rk-detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .rk-detail-item { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface2); }
+    .rk-detail-label { display: block; margin-bottom: 5px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .rk-detail-value { font-size: 14px; font-weight: 800; }
+    .rk-modal-section { margin-top: 22px; }
+    .rk-modal-section h3 { margin: 0 0 12px; font-size: 13px; }
+    .rk-uniformity-empty { padding: 20px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); text-align: center; font-size: 12px; font-weight: 600; }
+    .rk-uniformity-bars { display: grid; gap: 9px; }
+    .rk-uniformity-row { display: grid; grid-template-columns: 120px 1fr 110px; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; }
+    .rk-bar-track { height: 9px; overflow: hidden; border-radius: 10px; background: #edf1f7; }
+    .rk-bar-fill { height: 100%; border-radius: inherit; }
+    .rk-bar-below { background: var(--red); }
+    .rk-bar-in { background: var(--green); }
+    .rk-bar-above { background: var(--gold); }
+    .rk-weight-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .rk-weight { padding: 5px 8px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border); font-size: 11px; font-weight: 700; }
+    @media (max-width: 640px) {
+        .rk-detail-grid { grid-template-columns: repeat(2, 1fr); }
+        .rk-modal-head, .rk-modal-body { padding-left: 16px; padding-right: 16px; }
+        .rk-uniformity-row { grid-template-columns: 90px 1fr; }
+        .rk-uniformity-row strong { grid-column: 2; text-align: right; }
+    }
 
     /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -582,8 +615,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse(($rows ?? []) as $r)
-                            <tr>
+                        @forelse(($rows ?? []) as $rowIndex => $r)
+                            <tr class="rk-data-row" data-row-index="{{ $rowIndex }}" tabindex="0" role="button" aria-label="Lihat detail truk {{ $r['truck_no'] ?? $r['no'] }}">
                                 <td><span class="rk-no">{{ $r['no'] }}</span></td>
                                 <td><span class="rk-polisi">{{ $r['no_polisi'] ?? '—' }}</span></td>
                                 <td><span class="rk-num">{{ $r['truck_no'] ?? '—' }}</span></td>
@@ -630,10 +663,110 @@
             </div>
         </div>
     </div>
+
+    <div class="rk-modal" id="rekapModal" role="dialog" aria-modal="true" aria-labelledby="rekapModalTitle">
+        <div class="rk-modal-dialog">
+            <div class="rk-modal-head">
+                <div>
+                    <h2 class="rk-modal-title" id="rekapModalTitle">Detail Truk</h2>
+                    <div class="rk-modal-sub" id="rekapModalSub"></div>
+                </div>
+                <button class="rk-modal-close" type="button" id="rekapModalClose" aria-label="Tutup modal">&times;</button>
+            </div>
+            <div class="rk-modal-body" id="rekapModalBody"></div>
+        </div>
+    </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const rows = @json(array_values($rows ?? []));
+    const modal = document.getElementById('rekapModal');
+    const modalBody = document.getElementById('rekapModalBody');
+    const modalTitle = document.getElementById('rekapModalTitle');
+    const modalSub = document.getElementById('rekapModalSub');
+    const modalClose = document.getElementById('rekapModalClose');
+
+    const escapeHtml = (value) => String(value ?? '-').replace(/[&<>'"]/g, (char) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
+    }[char]));
+    const formatNumber = (value, decimals = 0) => value === null || value === undefined || value === ''
+        ? '-'
+        : Number(value).toLocaleString('id-ID', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    const detail = (label, value) => `<div class="rk-detail-item"><span class="rk-detail-label">${escapeHtml(label)}</span><span class="rk-detail-value">${escapeHtml(value)}</span></div>`;
+
+    function openModal(row) {
+        const uniformity = row.uniformity;
+        const summary = uniformity && uniformity.summary;
+        modalTitle.textContent = `Detail Truk ${row.truck_no || row.no || ''}`;
+        modalSub.textContent = `${row.nama_farm || '-'} · ${row.no_polisi || '-'} · ${row.tanggal || '-'}`;
+
+        let content = `<div class="rk-detail-grid">
+            ${detail('No. Polisi', row.no_polisi)}
+            ${detail('No. Truk', row.truck_no)}
+            ${detail('Jam Bongkar', row.jam_bongkar)}
+            ${detail('Jam Selesai', row.jam_selesai)}
+            ${detail('Nama Farm', row.nama_farm)}
+            ${detail('Lokasi', row.lokasi)}
+            ${detail('Size', row.size)}
+            ${detail('Ekor Plan', formatNumber(row.total_ekor))}
+            ${detail('Ayam Mati', formatNumber(row.ayam_mati))}
+            ${detail('Ayam Retur', formatNumber(row.ayam_retur))}
+            ${detail('Ayam Diterima', formatNumber(row.ayam_diterima))}
+            ${detail('Selisih Target', formatNumber(row.selisih))}
+        </div>`;
+
+        if (!uniformity) {
+            content += `<div class="rk-modal-section"><div class="rk-uniformity-empty">Belum ada laporan uniformity untuk truk ini.</div></div>`;
+        } else {
+            const categories = [
+                ['Undersize', summary.below, 'rk-bar-below'],
+                ['In Range', summary.in_range, 'rk-bar-in'],
+                ['Oversize', summary.above, 'rk-bar-above']
+            ];
+            const bars = categories.map(([label, item, color]) => `<div class="rk-uniformity-row">
+                <span>${label}</span><div class="rk-bar-track"><div class="rk-bar-fill ${color}" style="width:${Number(item.pct) || 0}%"></div></div>
+                <strong>${formatNumber(item.count)} ekor · ${escapeHtml(item.pct)}%</strong>
+            </div>`).join('');
+            const weights = (uniformity.weights || []).map((weight) => `<span class="rk-weight">#${escapeHtml(weight.sequence)} · ${formatNumber(weight.weight_kg, 3)} kg</span>`).join('');
+            content += `<div class="rk-modal-section"><h3>Ringkasan Uniformity</h3>
+                <div class="rk-detail-grid">
+                    ${detail('Jumlah Sampling', `${formatNumber(summary.count)} ekor`)}
+                    ${detail('Total Berat', `${formatNumber(summary.total, 3)} kg`)}
+                    ${detail('Berat Terkecil', formatNumber(summary.min, 3))}
+                    ${detail('Berat Terbesar', formatNumber(summary.max, 3))}
+                    ${detail('Rata-rata Berat', formatNumber(summary.avg, 3))}
+                    ${detail('Range Size', `${summary.range_low ?? '-'} - ${summary.range_high ?? '-'}`)}
+                    ${detail('Rata-rata RPA', uniformity.avg_rpa)}
+                    ${detail('Berat RPA', uniformity.berat_rpa)}
+                </div>
+            </div><div class="rk-modal-section"><h3>Sebaran Terhadap Range</h3><div class="rk-uniformity-bars">${bars}</div></div>
+            <div class="rk-modal-section"><h3>Berat Sampling</h3><div class="rk-weight-list">${weights || '<span class="rk-uniformity-empty">Belum ada data berat sampling.</span>'}</div></div>`;
+        }
+
+        modalBody.innerHTML = content;
+        modal.classList.add('is-open');
+        modalClose.focus();
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+    }
+
+    document.querySelectorAll('.rk-data-row').forEach((row) => {
+        const show = () => openModal(rows[Number(row.dataset.rowIndex)]);
+        row.addEventListener('click', show);
+        row.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                show();
+            }
+        });
+    });
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
+
     const modeSel    = document.getElementById('mode');
     const fSingle    = document.getElementById('field_single');
     const fFrom      = document.getElementById('field_from');

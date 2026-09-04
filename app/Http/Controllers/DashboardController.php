@@ -429,7 +429,7 @@ class DashboardController extends Controller
         $mcs = MonitorControl::query()
             ->whereBetween('process_date', [$from, $to])
             ->whereHas('hangingForm.lines.sets', fn ($q) => $q->whereNotNull('empty_count'))
-            ->with(['farm', 'plateNumber', 'hangingForm']) // Pastikan hangingForm di-load
+            ->with(['farm', 'plateNumber', 'hangingForm', 'dailyUniformity.weights']) // Pastikan detail rekap di-load
             ->orderBy('process_date')
             ->orderBy('location')
             ->orderBy('truck_no')
@@ -505,6 +505,9 @@ class DashboardController extends Controller
 
             $jetsonSelisih = ($jetsonCount !== null) ? ($ayamDiterima - $jetsonCount) : null;
 
+            $uniformity = $mc->dailyUniformity;
+            $uniformitySummary = $uniformity?->summary();
+
             $rows[] = [
                 'no'            => $no++,
                 'no_polisi'     => $mc->plateNumber?->plate_number ?? null,
@@ -540,6 +543,17 @@ class DashboardController extends Controller
                 'qc_keranjang'  => $hangingForm->basket_condition ?? '—',
                 'qc_platform'   => $hangingForm->truck_platform_condition ?? '—',
                 'qc_bulu'       => $hangingForm->feather_condition ?? '—',
+                'uniformity'    => $uniformity ? [
+                    'shift' => $uniformity->shift,
+                    'location' => $uniformity->location,
+                    'avg_rpa' => $uniformity->avg_rpa,
+                    'berat_rpa' => $uniformity->berat_rpa,
+                    'summary' => $uniformitySummary,
+                    'weights' => $uniformity->weights->map(fn ($weight) => [
+                        'sequence' => $weight->sequence,
+                        'weight_kg' => (float) $weight->weight_kg,
+                    ])->values()->all(),
+                ] : null,
             ];
         }
 

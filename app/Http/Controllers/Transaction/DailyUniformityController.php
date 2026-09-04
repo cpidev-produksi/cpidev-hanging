@@ -39,18 +39,23 @@ class DailyUniformityController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        $processDate = $request->query('process_date')
+            ?: $request->old('process_date')
+            ?: now()->toDateString();
+
         $monitorControls = MonitorControl::query()
             ->whereNotNull('sppa_no')
             ->where('sppa_no', '!=', '')
+            ->whereDate('process_date', $processDate)
             ->whereDoesntHave('dailyUniformity')
             ->with(['farm', 'expedition', 'plateNumber'])
-            ->orderByDesc('process_date')
             ->orderBy('truck_no')
+            ->orderByDesc('process_date')
             ->get();
 
-        return view('transaction.daily_uniformities.create', compact('monitorControls'));
+        return view('transaction.daily_uniformities.create', compact('monitorControls', 'processDate'));
     }
 
     public function store(Request $request)

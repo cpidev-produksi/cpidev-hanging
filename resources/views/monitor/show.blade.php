@@ -241,21 +241,6 @@
             color: #1E293B;
         }
 
-        /* HERO JETSON — kartu live count kamera AI, sejajar dengan .hero-grid */
-        .jetson-hero-grid {
-            background: linear-gradient(125deg, #eff6ff 0%, #e0f2fe 100%);
-            border: 1px solid rgba(59,130,246,0.2);
-        }
-        .jetson-hero-grid .hero-number {
-            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-        }
-        .jetson-hero-grid .hero-label {
-            color: var(--accent-blue);
-        }
-
         /* CAROUSEL — 2 slide saja (1: farm + size, 2: ekspedisi) */
         .carousel-module {
             background: white;
@@ -796,27 +781,6 @@
             </div>
         </div>
 
-        <!-- HERO JETSON : LIVE COUNT KAMERA AI (sejajar dengan hero-grid utama) -->
-        {{-- <div class="hero-grid jetson-hero-grid" id="jetsonHeroGrid">
-            <div class="hero-left">
-                <div class="hero-label">🎥 LIVE COUNT JETSON KAMERA AI</div>
-                <div class="hero-number" id="jetsonCurrentBatchCount">0</div>
-                <div class="hero-meta">
-                    <span class="live-badge" style="background:#EFF6FF; color:#1D4ED8;">⚡ Real-count by Jetson Edge Counter Camera</span>
-                </div>
-            </div>
-            <div class="hero-stats-right">
-                <div class="stat-card">
-                    <div class="stat-label">📊 TOTAL HARI INI</div>
-                    <div class="stat-value" id="jetsonTodayTotalCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">🔁 TOTAL BATCH HARI INI</div>
-                    <div class="stat-value" id="jetsonTodayTotalBatches">0</div>
-                </div>
-            </div>
-        </div> --}}
-
         <!-- CAROUSEL hanya 2 slide (FARM+SIZE digabung, EKSPEDISI) -->
         <div class="carousel-module">
             <div class="carousel-header">
@@ -1130,11 +1094,6 @@
 
     // DOM elements
     const heroAyamSpan = document.getElementById('heroAyamTotal');
-    const jetsonCard = document.getElementById('jetsonCard');
-    //const statJetsonAyamSpan = document.getElementById('statJetsonAyam');
-    const jetsonCurrentBatchCountSpan = document.getElementById('jetsonCurrentBatchCount');
-    const jetsonTodayTotalCountSpan = document.getElementById('jetsonTodayTotalCount');
-    const jetsonTodayTotalBatchesSpan = document.getElementById('jetsonTodayTotalBatches');
     const statEkorSpan = document.getElementById('statTotalEkor');
     const statTruckNoSpan = document.getElementById('statTruckNo');
     const reportCodeSpan = document.getElementById('reportCodeDisplay');
@@ -1157,69 +1116,6 @@
 
     // Flag: animasi shift-selesai hanya sekali per sesi
     let shiftDoneAnimated = false;
-
-    // ── Animasi step-increment untuk Jetson Current Batch Count ──
-    // (meniru perilaku "naik 1 per 1" di web sumber Jetson)
-    let jetsonDisplayedCount = null;
-    let jetsonAnimTarget = null;
-    let jetsonAnimTimer = null;
-
-    function setJetsonCountDisplay(n) {
-        jetsonDisplayedCount = n;
-        jetsonCurrentBatchCountSpan.innerText = fmt(n);
-    }
-
-    function snapJetsonCount(n) {
-        if (jetsonAnimTimer !== null) {
-            clearInterval(jetsonAnimTimer);
-            jetsonAnimTimer = null;
-        }
-        jetsonAnimTarget = n;
-        setJetsonCountDisplay(n);
-    }
-
-    function stepJetsonCountToward(target) {
-        jetsonAnimTarget = target;
-        if (jetsonDisplayedCount === null) {
-            setJetsonCountDisplay(target);
-            return;
-        }
-        if (target <= jetsonDisplayedCount) {
-            snapJetsonCount(target);
-            return;
-        }
-        if (jetsonAnimTimer !== null) {
-            clearInterval(jetsonAnimTimer);
-            jetsonAnimTimer = null;
-        }
-        // makin besar selisihnya, makin cepat step-nya, supaya tidak lama nyusul
-        const delta = Math.max(1, target - jetsonDisplayedCount);
-        const stepMs = Math.max(40, Math.min(150, Math.floor(1800 / delta)));
-        jetsonAnimTimer = setInterval(() => {
-            if (jetsonDisplayedCount === null || jetsonDisplayedCount >= jetsonAnimTarget) {
-                clearInterval(jetsonAnimTimer);
-                jetsonAnimTimer = null;
-                setJetsonCountDisplay(jetsonAnimTarget);
-                return;
-            }
-            setJetsonCountDisplay(jetsonDisplayedCount + 1);
-        }, stepMs);
-    }
-
-    // Update tampilan Jetson current-batch dengan animasi naik 1-per-1,
-    // dan snap langsung kalau batch baru mulai (angka turun) atau data belum pernah tampil.
-    function updateJetsonCurrentBatch(rawCount) {
-        const target = Number(rawCount) || 0;
-        const currentTarget = jetsonAnimTarget ?? jetsonDisplayedCount;
-
-        if (jetsonDisplayedCount === null || target < currentTarget) {
-            // Batch baru dimulai (reset) atau load pertama kali → langsung snap
-            snapJetsonCount(target);
-        } else if (target > currentTarget) {
-            stepJetsonCountToward(target);
-        }
-        // kalau target sama dengan currentTarget, tidak perlu apa-apa (biarkan animasi jalan/selesai)
-    }
 
     function setActiveUI(active) {
         if (active) {
@@ -1252,39 +1148,6 @@
             if(!res.ok) throw new Error();
             const data = await res.json();
 
-            const jetsonCurrentBatchCountSpan = document.getElementById('jetsonCurrentBatchCount');
-            const jetsonTodayTotalCountSpan = document.getElementById('jetsonTodayTotalCount');
-            const jetsonTodayTotalBatchesSpan = document.getElementById('jetsonTodayTotalBatches');
-            const jetsonIsFresh = data.jetson_is_fresh !== false;  // default true jika tidak ada
-
-            jetsonTodayTotalCountSpan.innerText = fmt(data.jetson_today_total_count || 0);
-            jetsonTodayTotalBatchesSpan.innerText = fmt(data.jetson_today_total_batches || 0);
-            updateJetsonCurrentBatch(data.jetson_current_batch_count || 0);
-
-            if (jetsonIsFresh) {
-                // Data fresh dari API
-                jetsonCurrentBatchCountSpan.classList.remove('data-cached');
-                jetsonCurrentBatchCountSpan.classList.add('data-fresh');
-                jetsonCurrentBatchCountSpan.title = 'Data live dari Jetson AI';
-            } else {
-                // Data dari fallback cache
-                jetsonCurrentBatchCountSpan.classList.remove('data-fresh');
-                jetsonCurrentBatchCountSpan.classList.add('data-cached');
-                jetsonCurrentBatchCountSpan.title = 'Data ini adalah cache (Jetson API tidak accessible)';
-            }
-
-            const jetsonElements = [jetsonTodayTotalCountSpan, jetsonTodayTotalBatchesSpan];
-            jetsonElements.forEach(el => {
-                if (jetsonIsFresh) {
-                    el.classList.remove('data-cached');
-                    el.classList.add('data-fresh');
-                } else {
-                    el.classList.remove('data-fresh');
-                    el.classList.add('data-cached');
-                    el.style.opacity = '0.7';  // Slight fade untuk indicate cached
-                }
-            });
-            
             const now = new Date();
             lastUpdateSpan.innerText = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
