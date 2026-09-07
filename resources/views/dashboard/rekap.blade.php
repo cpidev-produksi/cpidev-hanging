@@ -440,35 +440,76 @@
 
     .rk-empty-icon { font-size: 32px; margin-bottom: 10px; }
 
-    .rk-modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 22, 35, .5); }
+    .rk-modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 22, 35, .6); backdrop-filter: blur(2px); }
     .rk-modal.is-open { display: flex; }
-    .rk-modal-dialog { width: min(820px, 100%); max-height: min(760px, 92vh); overflow-y: auto; border-radius: var(--radius); background: var(--surface); box-shadow: 0 24px 70px rgba(15, 22, 35, .25); }
-    .rk-modal-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; padding: 22px 24px; border-bottom: 1px solid var(--border); }
-    .rk-modal-title { margin: 0; font-size: 20px; font-weight: 800; }
-    .rk-modal-sub { margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 600; }
-    .rk-modal-close { width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text); font-size: 20px; line-height: 1; cursor: pointer; }
-    .rk-modal-body { padding: 22px 24px 26px; }
-    .rk-detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .rk-detail-item { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface2); }
-    .rk-detail-label { display: block; margin-bottom: 5px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-    .rk-detail-value { font-size: 14px; font-weight: 800; }
+    .rk-modal-dialog { width: min(560px, 100%); max-height: min(720px, 90vh); overflow-y: auto; overflow-x: hidden; border-radius: var(--radius); background: var(--surface); box-shadow: 0 24px 70px rgba(15, 22, 35, .28); position: relative; }
+    .rk-modal-accent { height: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+    /* ── Header modal ── */
+    .rk-modal-head { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; padding: 20px 22px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 2; }
+    .rk-modal-head-main { display: flex; gap: 13px; align-items: flex-start; min-width: 0; }
+    .rk-modal-icon { flex: none; width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; font-size: 21px; }
+    .rk-modal-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
+    .rk-modal-title { margin: 0; font-size: 21px; font-weight: 900; letter-spacing: -.4px; color: var(--text); line-height: 1.15; }
+    .rk-modal-sub { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .rk-modal-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 7px; background: var(--surface2); border: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .rk-modal-close { flex: none; width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text); font-size: 18px; line-height: 1; cursor: pointer; transition: all .15s ease; }
+    .rk-modal-close:hover { border-color: var(--accent); color: var(--accent); }
+    .rk-modal-body { padding: 20px 22px 24px; }
+
     .rk-modal-section { margin-top: 22px; }
-    .rk-modal-section h3 { margin: 0 0 12px; font-size: 13px; }
+    .rk-modal-section:first-child { margin-top: 0; }
+    .rk-modal-section h3 { margin: 0 0 11px; font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; }
+    .rk-count-badge { margin-left: 7px; padding: 1px 8px; border-radius: 20px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 9px; font-weight: 700; text-transform: none; letter-spacing: 0; }
+
+    /* Strip angka ringkas */
+    .rk-stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .rk-stat { padding: 12px 6px; border-radius: var(--radius-sm); background: var(--surface2); text-align: center; }
+    .rk-stat-num { display: block; font-size: 17px; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .rk-stat-label { display: block; margin-top: 3px; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+    .rk-stat-pct { display: block; margin-top: 2px; font-size: 9.5px; font-weight: 700; color: var(--muted); }
+    .rk-stat.plan .rk-stat-num { color: var(--accent); }
+    .rk-stat.mati .rk-stat-num { color: var(--red); }
+    .rk-stat.retur .rk-stat-num { color: var(--gold); }
+    .rk-stat.diterima .rk-stat-num { color: var(--accent2); }
+
+    /* Grid info (waktu, lokasi, size, ringkasan uniformity) */
+    .rk-info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .rk-info-tile { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border); min-width: 0; }
+    .rk-info-tile .tile-ico { flex: none; font-size: 17px; }
+    .rk-info-tile .tile-label { display: block; font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+    .rk-info-tile .tile-value { display: block; font-size: 12.5px; font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+
     .rk-uniformity-empty { padding: 20px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); text-align: center; font-size: 12px; font-weight: 600; }
-    .rk-uniformity-bars { display: grid; gap: 9px; }
-    .rk-uniformity-row { display: grid; grid-template-columns: 120px 1fr 110px; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; }
-    .rk-bar-track { height: 9px; overflow: hidden; border-radius: 10px; background: #edf1f7; }
-    .rk-bar-fill { height: 100%; border-radius: inherit; }
-    .rk-bar-below { background: var(--red); }
-    .rk-bar-in { background: var(--green); }
-    .rk-bar-above { background: var(--gold); }
-    .rk-weight-list { display: flex; flex-wrap: wrap; gap: 7px; }
-    .rk-weight { padding: 5px 8px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border); font-size: 11px; font-weight: 700; }
+    .rk-empty-icon-sm { font-size: 26px; margin-bottom: 8px; }
+
+    /* Sebaran (stacked bar + legend) */
+    .rk-stacked-bar { display: flex; height: 14px; border-radius: 8px; overflow: hidden; background: #edf1f7; margin-bottom: 12px; }
+    .rk-stacked-bar .seg { height: 100%; }
+    .rk-stacked-bar .seg-below { background: var(--red); }
+    .rk-stacked-bar .seg-in { background: var(--green); }
+    .rk-stacked-bar .seg-above { background: var(--gold); }
+    .rk-uniformity-legend { display: flex; flex-direction: column; gap: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--text); }
+    .legend-item strong { margin-left: auto; font-size: 11.5px; font-weight: 700; color: var(--muted); }
+    .legend-item .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+    .dot-below { background: var(--red); }
+    .dot-in { background: var(--green); }
+    .dot-above { background: var(--gold); }
+
+    /* Berat sampling */
+    .rk-weight-box { max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); padding: 10px; }
+    .rk-weight-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+    .rk-weight { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 4px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font-size: 10.5px; font-weight: 700; color: var(--text); }
+    .rk-weight .seq { font-size: 9px; font-weight: 700; color: var(--muted); }
+
     @media (max-width: 640px) {
-        .rk-detail-grid { grid-template-columns: repeat(2, 1fr); }
         .rk-modal-head, .rk-modal-body { padding-left: 16px; padding-right: 16px; }
-        .rk-uniformity-row { grid-template-columns: 90px 1fr; }
-        .rk-uniformity-row strong { grid-column: 2; text-align: right; }
+    }
+
+    @media (max-width: 420px) {
+        .rk-stat-strip { grid-template-columns: repeat(2, 1fr); }
+        .rk-info-grid { grid-template-columns: 1fr; }
     }
 
     /* ── Scrollbar ── */
@@ -666,10 +707,15 @@
 
     <div class="rk-modal" id="rekapModal" role="dialog" aria-modal="true" aria-labelledby="rekapModalTitle">
         <div class="rk-modal-dialog">
+            <div class="rk-modal-accent"></div>
             <div class="rk-modal-head">
-                <div>
-                    <h2 class="rk-modal-title" id="rekapModalTitle">Detail Truk</h2>
-                    <div class="rk-modal-sub" id="rekapModalSub"></div>
+                <div class="rk-modal-head-main">
+                    <div class="rk-modal-icon">🚛</div>
+                    <div style="min-width:0">
+                        <div class="rk-modal-eyebrow" id="rekapModalEyebrow">Detail Truk</div>
+                        <h2 class="rk-modal-title" id="rekapModalTitle">—</h2>
+                        <div class="rk-modal-sub" id="rekapModalSub"></div>
+                    </div>
                 </div>
                 <button class="rk-modal-close" type="button" id="rekapModalClose" aria-label="Tutup modal">&times;</button>
             </div>
@@ -683,6 +729,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const rows = @json(array_values($rows ?? []));
     const modal = document.getElementById('rekapModal');
     const modalBody = document.getElementById('rekapModalBody');
+    const modalEyebrow = document.getElementById('rekapModalEyebrow');
     const modalTitle = document.getElementById('rekapModalTitle');
     const modalSub = document.getElementById('rekapModalSub');
     const modalClose = document.getElementById('rekapModalClose');
@@ -693,55 +740,113 @@ document.addEventListener('DOMContentLoaded', function () {
     const formatNumber = (value, decimals = 0) => value === null || value === undefined || value === ''
         ? '-'
         : Number(value).toLocaleString('id-ID', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-    const detail = (label, value) => `<div class="rk-detail-item"><span class="rk-detail-label">${escapeHtml(label)}</span><span class="rk-detail-value">${escapeHtml(value)}</span></div>`;
 
     function openModal(row) {
         const uniformity = row.uniformity;
         const summary = uniformity && uniformity.summary;
-        modalTitle.textContent = `Detail Truk ${row.truck_no || row.no || ''}`;
-        modalSub.textContent = `${row.nama_farm || '-'} · ${row.no_polisi || '-'} · ${row.tanggal || '-'}`;
 
-        let content = `<div class="rk-detail-grid">
-            ${detail('No. Polisi', row.no_polisi)}
-            ${detail('No. Truk', row.truck_no)}
-            ${detail('Jam Bongkar', row.jam_bongkar)}
-            ${detail('Jam Selesai', row.jam_selesai)}
-            ${detail('Nama Farm', row.nama_farm)}
-            ${detail('Lokasi', row.lokasi)}
-            ${detail('Size', row.size)}
-            ${detail('Ekor Plan', formatNumber(row.total_ekor))}
-            ${detail('Ayam Mati', formatNumber(row.ayam_mati))}
-            ${detail('Ayam Retur', formatNumber(row.ayam_retur))}
-            ${detail('Ayam Diterima', formatNumber(row.ayam_diterima))}
-            ${detail('Selisih Target', formatNumber(row.selisih))}
-        </div>`;
+        const plan = Number(row.total_ekor) || 0;
+        const diterima = Number(row.ayam_diterima) || 0;
+        const mati = Number(row.ayam_mati) || 0;
+        const retur = Number(row.ayam_retur) || 0;
+        const pctOf = (val) => plan > 0 ? `${((val / plan) * 100).toFixed(1)}%` : '-';
+
+        modalEyebrow.textContent = `Detail Truk · #${row.truck_no || row.no || '-'}`;
+        modalTitle.textContent = row.no_polisi || '—';
+        modalSub.innerHTML = `
+            <span class="rk-modal-chip">🏭 ${escapeHtml(row.nama_farm)}</span>
+            <span class="rk-modal-chip">📅 ${escapeHtml(row.tanggal)}</span>
+            ${row.size ? `<span class="rk-modal-chip">📦 Size ${escapeHtml(row.size)}</span>` : ''}
+        `;
+
+        let content = `
+            <div class="rk-modal-section">
+                <h3>🧮 Ringkasan Muatan</h3>
+                <div class="rk-stat-strip">
+                    <div class="rk-stat plan">
+                        <span class="rk-stat-num">${formatNumber(plan)}</span>
+                        <span class="rk-stat-label">Plan</span>
+                    </div>
+                    <div class="rk-stat diterima">
+                        <span class="rk-stat-num">${formatNumber(diterima)}</span>
+                        <span class="rk-stat-label">Diterima</span>
+                        <span class="rk-stat-pct">${pctOf(diterima)}</span>
+                    </div>
+                    <div class="rk-stat mati">
+                        <span class="rk-stat-num">${formatNumber(mati)}</span>
+                        <span class="rk-stat-label">Mati</span>
+                        <span class="rk-stat-pct">${pctOf(mati)}</span>
+                    </div>
+                    <div class="rk-stat retur">
+                        <span class="rk-stat-num">${formatNumber(retur)}</span>
+                        <span class="rk-stat-label">Retur</span>
+                        <span class="rk-stat-pct">${pctOf(retur)}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="rk-modal-section">
+                <h3>🕓 Informasi Perjalanan</h3>
+                <div class="rk-info-grid">
+                    <div class="rk-info-tile"><span class="tile-ico">⏱️</span><div><span class="tile-label">Jam Bongkar</span><strong class="tile-value">${escapeHtml(row.jam_bongkar)}</strong></div></div>
+                    <div class="rk-info-tile"><span class="tile-ico">✅</span><div><span class="tile-label">Jam Selesai</span><strong class="tile-value">${escapeHtml(row.jam_selesai)}</strong></div></div>
+                    <div class="rk-info-tile"><span class="tile-ico">📍</span><div><span class="tile-label">Lokasi</span><strong class="tile-value">${escapeHtml(row.lokasi)}</strong></div></div>
+                    <div class="rk-info-tile"><span class="tile-ico">📦</span><div><span class="tile-label">Size</span><strong class="tile-value">${escapeHtml(row.size)}</strong></div></div>
+                </div>
+            </div>
+        `;
 
         if (!uniformity) {
-            content += `<div class="rk-modal-section"><div class="rk-uniformity-empty">Belum ada laporan uniformity untuk truk ini.</div></div>`;
-        } else {
-            const categories = [
-                ['Undersize', summary.below, 'rk-bar-below'],
-                ['In Range', summary.in_range, 'rk-bar-in'],
-                ['Oversize', summary.above, 'rk-bar-above']
-            ];
-            const bars = categories.map(([label, item, color]) => `<div class="rk-uniformity-row">
-                <span>${label}</span><div class="rk-bar-track"><div class="rk-bar-fill ${color}" style="width:${Number(item.pct) || 0}%"></div></div>
-                <strong>${formatNumber(item.count)} ekor · ${escapeHtml(item.pct)}%</strong>
-            </div>`).join('');
-            const weights = (uniformity.weights || []).map((weight) => `<span class="rk-weight">#${escapeHtml(weight.sequence)} · ${formatNumber(weight.weight_kg, 3)} kg</span>`).join('');
-            content += `<div class="rk-modal-section"><h3>Ringkasan Uniformity</h3>
-                <div class="rk-detail-grid">
-                    ${detail('Jumlah Sampling', `${formatNumber(summary.count)} ekor`)}
-                    ${detail('Total Berat', `${formatNumber(summary.total, 3)} kg`)}
-                    ${detail('Berat Terkecil', formatNumber(summary.min, 3))}
-                    ${detail('Berat Terbesar', formatNumber(summary.max, 3))}
-                    ${detail('Rata-rata Berat', formatNumber(summary.avg, 3))}
-                    ${detail('Range Size', `${summary.range_low ?? '-'} - ${summary.range_high ?? '-'}`)}
-                    ${detail('Rata-rata RPA', uniformity.avg_rpa)}
-                    ${detail('Berat RPA', uniformity.berat_rpa)}
+            content += `
+                <div class="rk-modal-section">
+                    <h3>🔬 Uniformity</h3>
+                    <div class="rk-uniformity-empty">
+                        <div class="rk-empty-icon-sm">📊</div>
+                        Belum ada laporan uniformity untuk truk ini.
+                    </div>
                 </div>
-            </div><div class="rk-modal-section"><h3>Sebaran Terhadap Range</h3><div class="rk-uniformity-bars">${bars}</div></div>
-            <div class="rk-modal-section"><h3>Berat Sampling</h3><div class="rk-weight-list">${weights || '<span class="rk-uniformity-empty">Belum ada data berat sampling.</span>'}</div></div>`;
+            `;
+        } else {
+            const below = Number(summary.below.pct) || 0;
+            const inRange = Number(summary.in_range.pct) || 0;
+            const above = Number(summary.above.pct) || 0;
+            const weightsArr = uniformity.weights || [];
+            const weights = weightsArr.map((weight) => `
+                <div class="rk-weight">
+                    <span class="seq">#${escapeHtml(weight.sequence)}</span>
+                    <span>${formatNumber(weight.weight_kg, 3)} kg</span>
+                </div>
+            `).join('');
+
+            content += `
+                <div class="rk-modal-section">
+                    <h3>🔬 Ringkasan Uniformity</h3>
+                    <div class="rk-info-grid">
+                        <div class="rk-info-tile"><span class="tile-ico">🧪</span><div><span class="tile-label">Jumlah Sampling</span><strong class="tile-value">${formatNumber(summary.count)} ekor</strong></div></div>
+                        <div class="rk-info-tile"><span class="tile-ico">⚖️</span><div><span class="tile-label">Rata-rata Berat</span><strong class="tile-value">${formatNumber(summary.avg, 3)} kg</strong></div></div>
+                        <div class="rk-info-tile"><span class="tile-ico">📏</span><div><span class="tile-label">Range Size</span><strong class="tile-value">${summary.range_low ?? '-'} - ${summary.range_high ?? '-'}</strong></div></div>
+                        <div class="rk-info-tile"><span class="tile-ico">🎯</span><div><span class="tile-label">Rata-rata RPA</span><strong class="tile-value">${formatNumber(uniformity.avg_rpa)}</strong></div></div>
+                    </div>
+                </div>
+                <div class="rk-modal-section">
+                    <h3>📊 Sebaran Terhadap Range</h3>
+                    <div class="rk-stacked-bar">
+                        <div class="seg seg-below" style="width:${below}%" title="Undersize ${below}%"></div>
+                        <div class="seg seg-in" style="width:${inRange}%" title="In Range ${inRange}%"></div>
+                        <div class="seg seg-above" style="width:${above}%" title="Oversize ${above}%"></div>
+                    </div>
+                    <div class="rk-uniformity-legend">
+                        <div class="legend-item"><span class="dot dot-below"></span>Undersize<strong>${formatNumber(summary.below.count)} · ${escapeHtml(summary.below.pct)}%</strong></div>
+                        <div class="legend-item"><span class="dot dot-in"></span>In Range<strong>${formatNumber(summary.in_range.count)} · ${escapeHtml(summary.in_range.pct)}%</strong></div>
+                        <div class="legend-item"><span class="dot dot-above"></span>Oversize<strong>${formatNumber(summary.above.count)} · ${escapeHtml(summary.above.pct)}%</strong></div>
+                    </div>
+                </div>
+                <div class="rk-modal-section">
+                    <h3>⚖️ Berat Sampling <span class="rk-count-badge">${weightsArr.length} sampel</span></h3>
+                    <div class="rk-weight-box">
+                        <div class="rk-weight-list">${weights || '<span style="color:var(--muted);font-size:12px;">Belum ada data.</span>'}</div>
+                    </div>
+                </div>
+            `;
         }
 
         modalBody.innerHTML = content;
