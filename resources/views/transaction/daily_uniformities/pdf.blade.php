@@ -54,6 +54,26 @@
     .pdf-table td { border: 1px solid #e2e8f0; padding: 6px 6px; font-size: 9.5px; text-align: center; }
     .pdf-table td.left { text-align: left; }
 
+    .pdf-weight-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #1a56db; margin: 22px 0 8px; }
+    .pdf-truck-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .pdf-truck-table td { width: 25%; border: 1px solid #e2e8f0; padding: 6px 8px; vertical-align: top; }
+    .pdf-truck-table .lbl { display: block; font-size: 8px; color: #64748b; text-transform: uppercase; margin-bottom: 2px; }
+    .pdf-truck-table .val { display: block; font-size: 9.5px; font-weight: bold; }
+    .pdf-weight-legend { font-size: 8.5px; color: #475569; margin-bottom: 7px; }
+    .pdf-weight-legend span { margin-right: 12px; }
+    .pdf-weight-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 3px; }
+    .pdf-weight-dot.below { background: #f59e0b; }
+    .pdf-weight-dot.in { background: #0d9488; }
+    .pdf-weight-dot.above { background: #6366f1; }
+    .pdf-weight-grid { width: 100%; border-collapse: separate; border-spacing: 5px; margin: -5px; }
+    .pdf-weight-grid td { width: 20%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 7px 5px; text-align: center; font-size: 9px; font-weight: bold; }
+    .pdf-weight-grid td.empty { border: 0; background: transparent; }
+    .pdf-weight-grid .weight-seq { display: block; color: #64748b; font-size: 8px; margin-bottom: 2px; }
+    .pdf-weight-grid .weight-value { display: block; font-size: 10px; }
+    .pdf-weight-grid td.below { background: #fef3c7; color: #000000; }
+    .pdf-weight-grid td.in { background: #ccfbf1; color: #000000; }
+    .pdf-weight-grid td.above { background: #e0e7ff; color: #000000; }
+
     .pdf-tag { padding: 2px 6px; border-radius: 4px; font-weight: bold; }
     .pdf-tag-below { background: #fef3c7; color: #b45309; }
     .pdf-tag-in { background: #ccfbf1; color: #0d9488; }
@@ -198,6 +218,69 @@
       @endforelse
     </tbody>
   </table>
+
+  @if (($singleReport ?? false) && $items->isNotEmpty())
+    @php
+      $single = $items->first();
+      $singleSummary = $single->summary_data;
+      $rangeLow = $singleSummary['range_low'];
+      $rangeHigh = $singleSummary['range_high'];
+      $weightRows = $single->weights->chunk(5);
+    @endphp
+    <div class="pdf-weight-title">Data Truk</div>
+    <table class="pdf-truck-table">
+      <tr>
+        <td><span class="lbl">Tanggal</span><span class="val">{{ optional($single->monitorControl->process_date)->format('d/m/Y') }}</span></td>
+        <td><span class="lbl">Shift</span><span class="val">{{ ucfirst($single->shift) }}</span></td>
+        <td><span class="lbl">No. SPPA</span><span class="val">{{ $single->monitorControl->sppa_no ?? '-' }}</span></td>
+        <td><span class="lbl">Nama Farm</span><span class="val">{{ $single->monitorControl->farm->name ?? '-' }}</span></td>
+      </tr>
+      <tr>
+        <td><span class="lbl">No. Polisi</span><span class="val">{{ $single->monitorControl->plateNumber->plate_number ?? '-' }}</span></td>
+        <td><span class="lbl">Ekspedisi</span><span class="val">{{ $single->monitorControl->expedition->name ?? '-' }}</span></td>
+        <td><span class="lbl">Sopir</span><span class="val">{{ $single->driverName() ?? '-' }}</span></td>
+        <td><span class="lbl">Uniformity (Size)</span><span class="val">{{ $single->monitorControl->size ?? '-' }}</span></td>
+      </tr>
+    </table>
+
+    <div class="pdf-weight-title">Detail Input Berat Sampling ({{ $single->weights->count() }} ekor)</div>
+    @if ($single->weights->isNotEmpty())
+      <div class="pdf-weight-legend">
+        <span><span class="pdf-weight-dot below"></span> Di bawah range</span>
+        <span><span class="pdf-weight-dot in"></span> Di dalam range</span>
+        <span><span class="pdf-weight-dot above"></span> Di atas range</span>
+      </div>
+      <table class="pdf-weight-grid">
+        <tbody>
+          @foreach ($weightRows as $weightRow)
+            <tr>
+              @foreach ($weightRow as $weight)
+                @php
+                  $weightValue = (float) $weight->weight_kg;
+                  if ($rangeLow !== null && $weightValue < $rangeLow) {
+                    $weightClass = 'below';
+                  } elseif ($rangeHigh !== null && $weightValue > $rangeHigh) {
+                    $weightClass = 'above';
+                  } else {
+                    $weightClass = 'in';
+                  }
+                @endphp
+                <td class="{{ $weightClass }}">
+                  <span class="weight-seq">No. {{ $weight->sequence }}</span>
+                  <span class="weight-value">{{ number_format($weightValue, 3) }} kg</span>
+                </td>
+              @endforeach
+              @for ($emptyCell = $weightRow->count(); $emptyCell < 5; $emptyCell++)
+                <td class="empty"></td>
+              @endfor
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    @else
+      <p style="color:#94a3b8;">Belum ada data berat sampling.</p>
+    @endif
+  @endif
 
   {{-- ===== Tanda tangan ===== --}}
   <table class="pdf-sign-table">

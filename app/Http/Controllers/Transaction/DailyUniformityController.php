@@ -189,6 +189,7 @@ class DailyUniformityController extends Controller
             'items' => $items,
             'date' => $dailyUniformity->process_date->toDateString(),
             'aggregate' => $this->buildAggregate($items),
+            'singleReport' => true,
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('daily-uniformity-' . $dailyUniformity->monitorControl->sppa_no . '.pdf');
