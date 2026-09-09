@@ -83,6 +83,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/', [DailyUniformityController::class, 'store'])->name('store');
 
         Route::get('/export/pdf', [DailyUniformityController::class, 'exportPdf'])->name('export-pdf');
+        Route::get('/{dailyUniformity}/export/pdf', [DailyUniformityController::class, 'exportSinglePdf'])->name('export-single-pdf');
         Route::get('/{dailyUniformity}', [DailyUniformityController::class, 'show'])->name('show');
         Route::get('/{dailyUniformity}/edit', [DailyUniformityController::class, 'edit'])->name('edit');
         Route::put('/{dailyUniformity}', [DailyUniformityController::class, 'update'])->name('update');

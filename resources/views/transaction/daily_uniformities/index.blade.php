@@ -22,6 +22,9 @@
   .du-filter { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
   .du-filter label { font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.05em; }
   .du-filter input[type=date] { border:1px solid #e2e8f0; border-radius:10px; padding:8px 12px; font-family:inherit; font-size:13px; color:#0f172a; }
+  .du-shift-tabs { display:flex; gap:6px; margin-bottom:20px; }
+  .du-shift-tab { padding:9px 16px; border:1px solid #e2e8f0; border-radius:10px; background:#fff; color:#475569; font-size:13px; font-weight:700; text-decoration:none; }
+  .du-shift-tab.active { background:#1a56db; border-color:#1a56db; color:#fff; }
 
   .du-alert { background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:600; margin-bottom:16px; }
 
@@ -97,7 +100,7 @@
         <div class="du-sub">Trial sampling berat live bird per truk (No. SPPA)</div>
       </div>
       <div class="du-head-actions">
-        <a href="{{ route('daily-uniformities.export-pdf', ['date' => $date]) }}" class="du-btn du-btn-ghost" target="_blank">
+        <a href="{{ route('daily-uniformities.export-pdf', ['date' => $date, 'shift' => $shift]) }}" class="du-btn du-btn-ghost" target="_blank">
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
           Export PDF
         </a>
@@ -114,8 +117,13 @@
     <form method="GET" class="du-filter">
       <label for="date">Tanggal</label>
       <input type="date" id="date" name="date" value="{{ $date }}" onchange="this.form.submit()">
-      <button type="submit" class="du-btn du-btn-ghost">Tampilkan</button>
     </form>
+
+    <div class="du-shift-tabs" role="tablist" aria-label="Filter shift">
+      <a href="{{ route('daily-uniformities.index', ['date' => $date, 'shift' => 'all']) }}" class="du-shift-tab {{ $shift === 'all' ? 'active' : '' }}" role="tab" aria-selected="{{ $shift === 'all' ? 'true' : 'false' }}">Semua</a>
+      <a href="{{ route('daily-uniformities.index', ['date' => $date, 'shift' => 'pagi']) }}" class="du-shift-tab {{ $shift === 'pagi' ? 'active' : '' }}" role="tab" aria-selected="{{ $shift === 'pagi' ? 'true' : 'false' }}">Pagi</a>
+      <a href="{{ route('daily-uniformities.index', ['date' => $date, 'shift' => 'malam']) }}" class="du-shift-tab {{ $shift === 'malam' ? 'active' : '' }}" role="tab" aria-selected="{{ $shift === 'malam' ? 'true' : 'false' }}">Malam</a>
+    </div>
 
     <div class="du-card table-card">
       <table class="du-table">
@@ -151,6 +159,9 @@
                 <div class="du-actions">
                   <a href="{{ route('daily-uniformities.show', $item) }}" class="du-icon-btn" title="Lihat">
                     <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </a>
+                  <a href="{{ route('daily-uniformities.export-single-pdf', $item) }}" class="du-icon-btn" title="Export PDF" target="_blank">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
                   </a>
                   <a href="{{ route('daily-uniformities.edit', $item) }}" class="du-icon-btn" title="Edit">
                     <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>

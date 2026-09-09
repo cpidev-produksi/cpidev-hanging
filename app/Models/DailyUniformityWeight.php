@@ -13,6 +13,7 @@ class DailyUniformityWeight extends Model
     ];
 
     protected $casts = [
+        'sequence' => 'integer',
         'weight_kg' => 'decimal:3',
     ];
 

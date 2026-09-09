@@ -18,10 +18,15 @@ class DailyUniformityController extends Controller
         if ($date === null || $date === '') {
             $date = now()->toDateString();
         }
+        $shift = $request->query('shift', 'all');
+        if (!in_array($shift, ['all', 'pagi', 'malam'], true)) {
+            $shift = 'all';
+        }
 
         $items = DailyUniformity::query()
             ->with(['monitorControl.farm', 'monitorControl.expedition', 'monitorControl.plateNumber', 'weights'])
             ->whereDate('process_date', $date)
+            ->when($shift !== 'all', fn ($query) => $query->where('shift', $shift))
             ->orderBy('location')
             ->orderBy('shift')
             ->get()
@@ -35,6 +40,7 @@ class DailyUniformityController extends Controller
         return view('transaction.daily_uniformities.index', [
             'items' => $items,
             'date' => $date,
+            'shift' => $shift,
             'aggregate' => $aggregate,
         ]);
     }
@@ -44,18 +50,23 @@ class DailyUniformityController extends Controller
         $processDate = $request->query('process_date')
             ?: $request->old('process_date')
             ?: now()->toDateString();
+        $shift = $request->query('shift', $request->old('shift', 'all'));
+        if (!in_array($shift, ['all', 'pagi', 'malam'], true)) {
+            $shift = 'all';
+        }
 
         $monitorControls = MonitorControl::query()
             ->whereNotNull('sppa_no')
             ->where('sppa_no', '!=', '')
             ->whereDate('process_date', $processDate)
+            ->when($shift !== 'all', fn ($query) => $query->where('shift', $shift))
             ->whereDoesntHave('dailyUniformity')
             ->with(['farm', 'expedition', 'plateNumber'])
             ->orderBy('truck_no')
             ->orderByDesc('process_date')
             ->get();
 
-        return view('transaction.daily_uniformities.create', compact('monitorControls', 'processDate'));
+        return view('transaction.daily_uniformities.create', compact('monitorControls', 'processDate', 'shift'));
     }
 
     public function store(Request $request)
@@ -140,10 +151,15 @@ class DailyUniformityController extends Controller
         if ($date === null || $date === '') {
             $date = now()->toDateString();
         }
+        $shift = $request->query('shift', 'all');
+        if (!in_array($shift, ['all', 'pagi', 'malam'], true)) {
+            $shift = 'all';
+        }
 
         $items = DailyUniformity::query()
             ->with(['monitorControl.farm', 'monitorControl.expedition', 'monitorControl.plateNumber', 'monitorControl.hangingForm.lines.sets', 'weights'])
             ->whereDate('process_date', $date)
+            ->when($shift !== 'all', fn ($query) => $query->where('shift', $shift))
             ->orderBy('location')
             ->orderBy('shift')
             ->get()
@@ -163,6 +179,21 @@ class DailyUniformityController extends Controller
         return $pdf->download('daily-uniformity-' . $date . '.pdf');
     }
 
+    public function exportSinglePdf(DailyUniformity $dailyUniformity)
+    {
+        $dailyUniformity->load(['monitorControl.farm', 'monitorControl.expedition', 'monitorControl.plateNumber', 'monitorControl.hangingForm.lines.sets', 'weights']);
+        $dailyUniformity->summary_data = $dailyUniformity->summary();
+
+        $items = collect([$dailyUniformity]);
+        $pdf = Pdf::loadView('transaction.daily_uniformities.pdf', [
+            'items' => $items,
+            'date' => $dailyUniformity->process_date->toDateString(),
+            'aggregate' => $this->buildAggregate($items),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('daily-uniformity-' . $dailyUniformity->monitorControl->sppa_no . '.pdf');
+    }
+
     // ================= Weight entries (input berat satu per satu) =================
 
     public function storeWeight(Request $request, DailyUniformity $dailyUniformity)
@@ -174,7 +205,8 @@ class DailyUniformityController extends Controller
             'weight_kg.numeric' => 'Berat ayam harus berupa angka.',
         ]);
 
-        $nextSeq = ((int) $dailyUniformity->weights()->max('sequence')) + 1;
+        $this->normalizeWeightSequences($dailyUniformity);
+        $nextSeq = $dailyUniformity->weights()->count() + 1;
 
         $dailyUniformity->weights()->create([
             'sequence' => $nextSeq,
@@ -189,8 +221,24 @@ class DailyUniformityController extends Controller
         abort_unless($weight->daily_uniformity_id === $dailyUniformity->id, 404);
 
         $weight->delete();
+        $this->normalizeWeightSequences($dailyUniformity);
 
         return back()->with('status', 'Data berat dihapus.');
+    }
+
+    private function normalizeWeightSequences(DailyUniformity $dailyUniformity): void
+    {
+        $dailyUniformity->weights()
+            ->orderBy('sequence')
+            ->orderBy('id')
+            ->get()
+            ->values()
+            ->each(function (DailyUniformityWeight $weight, int $index) {
+                $sequence = $index + 1;
+                if ($weight->sequence !== $sequence) {
+                    $weight->update(['sequence' => $sequence]);
+                }
+            });
     }
 
     // ================= Helper =================

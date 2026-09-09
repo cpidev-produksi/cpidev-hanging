@@ -15,7 +15,8 @@
   .du-alert-err { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:600; margin-bottom:16px; }
 
   /* ===== Baris atas: 2 kartu sejajar ===== */
-  .du-top-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; align-items:start; }
+  .du-top-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; align-items:stretch; }
+  .du-top-grid > .du-card { height:100%; box-sizing:border-box; }
   @media (max-width:860px) { .du-top-grid { grid-template-columns:1fr; } }
 
   .du-card { background:#fff; border:1px solid #e2e8f0; border-radius:20px; padding:24px; margin-bottom:20px; }

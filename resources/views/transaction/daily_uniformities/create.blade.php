@@ -36,6 +36,7 @@
   .du-filter-field input { width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:11px 14px; font-family:inherit; font-size:14px; color:#0f172a; background:#fff; }
   .du-filter-btn { padding:11px 18px; border:0; border-radius:12px; background:#0f172a; color:#fff; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; }
   .du-filter-btn:hover { background:#1e293b; }
+  .du-filter-shift { border:1px solid #e2e8f0; border-radius:10px; padding:8px 12px; font-family:inherit; font-size:13px; color:#0f172a; background:#fff; }
 
   /* ===== Scroll to top ===== */
   .du-scrolltop {
@@ -54,15 +55,22 @@
   <div class="du-wrap">
 
     <a href="{{ route('daily-uniformities.index') }}" class="du-back">&larr; Kembali ke Daftar</a>
-    <div class="du-title">Buat Laporan Daily Uniformity</div>
-    <div class="du-sub">Filter tanggal process terlebih dahulu, lalu pilih No. SPPA yang sudah terdaftar di Kontrol Monitor.</div>
+    <div class="du-title">Laporan Daily Uniformity Baru</div>
+    <div class="du-sub">Filter tanggal operasional terlebih dahulu, lalu pilih plat nomor truk yang sudah terdaftar.</div>
 
     <form method="GET" action="{{ route('daily-uniformities.create') }}" class="du-filter">
       <div class="du-filter-field">
         <label for="process_date">Tanggal Operasional</label>
-        <input type="date" id="process_date" name="process_date" value="{{ $processDate }}" required>
+        <input type="date" id="process_date" name="process_date" value="{{ $processDate }}" onchange="this.form.submit()" required>
       </div>
-      <button type="submit" class="du-filter-btn">Tampilkan</button>
+      <div class="du-filter-field">
+        <label for="shift">Shift</label>
+        <select id="shift" name="shift" class="du-filter-shift" onchange="this.form.submit()">
+          <option value="all" @selected($shift === 'all')>Semua Shift</option>
+          <option value="pagi" @selected($shift === 'pagi')>Pagi</option>
+          <option value="malam" @selected($shift === 'malam')>Malam</option>
+        </select>
+      </div>
     </form>
 
     <div class="du-card">
@@ -75,6 +83,10 @@
           <select id="monitor_control_id" name="monitor_control_id" onchange="duFillFromMc(this)" required>
             <option value="">-- Pilih salah satu --</option>
             @foreach ($monitorControls as $mc)
+              @php
+                preg_match('/\(([^()]*)\)\s*$/', $mc->expedition->name ?? '', $expeditionMatch);
+                $expeditionCode = $expeditionMatch[1] ?? ($mc->expedition->name ?? '-');
+              @endphp
               <option
                 value="{{ $mc->id }}"
                 data-date="{{ optional($mc->process_date)->format('d-m-Y') }}"
@@ -83,21 +95,21 @@
                 data-location="{{ $mc->location ?? '-' }}"
                 data-farm="{{ $mc->farm->name ?? '-' }}"
                 data-plate="{{ $mc->plateNumber->plate_number ?? '-' }}"
-                data-ekspedisi="{{ $mc->expedition->name ?? '-' }}"
+                data-ekspedisi="{{ $expeditionCode }}"
                 data-sopir="{{ $mc->plateNumber->driver_name ?? '-' }}"
                 data-abw="{{ $mc->abw ?? '-' }}"
                 data-size="{{ $mc->size }}"
                 {{ old('monitor_control_id') == $mc->id ? 'selected' : '' }}
               >
-                {{ $mc->plateNumber->plate_number ?? '-' }} - {{ $mc->location ?? '-' }} - {{ ucfirst($mc->shift) }} - {{ optional($mc->process_date)->format('d/m/Y') }}
+                {{ $mc->plateNumber->plate_number ?? '-' }} - {{ $expeditionCode }} - {{ $mc->location ?? '-' }} - {{ ucfirst($mc->shift) }} - {{ optional($mc->process_date)->format('d/m/Y') }}
               </option>
             @endforeach
           </select>
           @error('monitor_control_id') <div class="du-error">{{ $message }}</div> @enderror
-          <div class="du-hint">Hanya menampilkan Kontrol Monitor yang punya No. SPPA dan belum punya laporan uniformity.</div>
+          <div class="du-hint">Hanya menampilkan daftar registrasi yang punya belum punya laporan uniformity.</div>
         </div>
 
-        <div class="du-section-label">Data Otomatis</div>
+        <div class="du-section-label">Data Registrasi Truk</div>
 
         <div class="du-grid-2">
           <div class="du-field">
@@ -171,6 +183,13 @@
       document.getElementById(id).value = opt.dataset[key] || '-';
     });
   }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const monitorControl = document.getElementById('monitor_control_id');
+    if (monitorControl && monitorControl.value) {
+      duFillFromMc(monitorControl);
+    }
+  });
 
   (function () {
     const btn = document.getElementById('duScrollTop');
