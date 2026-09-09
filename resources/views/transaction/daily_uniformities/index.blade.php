@@ -65,6 +65,24 @@
   .du-table td { padding:13px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#0f172a; vertical-align:middle; }
   .du-table td.center { text-align:center; }
   .du-table tr:last-child td { border-bottom:none; }
+  .du-table .du-toggle-row { cursor:pointer; }
+  .du-table .du-toggle-row:hover td { background:#f8fafc; }
+  .du-toggle-btn { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:8px; background:#eff6ff; color:#1a56db; cursor:pointer; }
+  .du-toggle-btn svg { width:16px; height:16px; transition:transform .2s ease; }
+  .du-toggle-row.open .du-toggle-btn svg { transform:rotate(180deg); }
+  .du-detail-row { display:none; }
+  .du-detail-row.open { display:table-row; }
+  .du-detail-row td { padding:0 14px 14px; background:#f8fafc; }
+  .du-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .du-detail-panel { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; }
+  .du-detail-title { font-size:11px; font-weight:800; color:#1a56db; text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+  .du-detail-info { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; }
+  .du-detail-item .lbl { display:block; font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; }
+  .du-detail-item .val { display:block; margin-top:2px; font-size:12px; font-weight:700; color:#0f172a; }
+  .du-detail-summary { display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+  .du-detail-summary .du-sum-box { padding:10px; }
+  .du-detail-summary .du-sum-box .val { font-size:15px; }
+  @media (max-width:760px) { .du-detail-grid { grid-template-columns:1fr; } }
 
   .du-pct-cell { display:inline-flex; padding:3px 10px; border-radius:100px; font-size:12px; font-weight:800; }
   .du-pct-cell.below { background:#fef3c7; color:#b45309; }
@@ -146,8 +164,13 @@
         <tbody>
           @forelse ($items as $idx => $item)
             @php $s = $item->summary_data; @endphp
-            <tr>
-              <td>{{ $idx + 1 }}</td>
+            <tr class="du-toggle-row" data-detail-id="du-detail-{{ $item->id }}" tabindex="0" aria-expanded="false">
+              <td>
+                <button type="button" class="du-toggle-btn" aria-label="Tampilkan detail" tabindex="-1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                {{ $idx + 1 }}
+              </td>
               <td>{{ optional($item->monitorControl->process_date)->format('d/m/Y') }}</td>
               <td>{{ $item->monitorControl->farm->name ?? '-' }}</td>
               <td>{{ $item->monitorControl->size ?? '-' }}</td>
@@ -173,6 +196,37 @@
                       <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                     </button>
                   </form>
+                </div>
+              </td>
+            </tr>
+            <tr id="du-detail-{{ $item->id }}" class="du-detail-row">
+              <td colspan="9">
+                <div class="du-detail-grid">
+                  <div class="du-detail-panel">
+                    <div class="du-detail-title">Data Trial Sampling Berat Live Bird</div>
+                    <div class="du-detail-info">
+                      <div class="du-detail-item"><span class="lbl">Tanggal</span><span class="val">{{ optional($item->monitorControl->process_date)->format('d/m/Y') }}</span></div>
+                      <div class="du-detail-item"><span class="lbl">Shift</span><span class="val">{{ ucfirst($item->shift) }}</span></div>
+                      <div class="du-detail-item"><span class="lbl">No. SPPA</span><span class="val">{{ $item->monitorControl->sppa_no ?? '-' }}</span></div>
+                      <div class="du-detail-item"><span class="lbl">Nama Farm</span><span class="val">{{ $item->monitorControl->farm->name ?? '-' }}</span></div>
+                      <div class="du-detail-item"><span class="lbl">No. Polisi</span><span class="val">{{ $item->monitorControl->plateNumber->plate_number ?? '-' }}</span></div>
+                      <div class="du-detail-item"><span class="lbl">Ekspedisi</span><span class="val">{{ $item->monitorControl->expedition->name ?? '-' }}</span></div>
+                      <div class="du-detail-item"><span class="lbl">Sopir</span><span class="val">{{ $item->driverName() ?? '-' }}</span></div>
+                      <div class="du-detail-item"><span class="lbl">ABW</span><span class="val">{{ $item->monitorControl->abw ?? '-' }}</span></div>
+                      <div class="du-detail-item"><span class="lbl">Jumlah Ayam Diterima</span><span class="val">{{ number_format((int)($item->monitorControl->ayam_diterima ?? 0)) }} ekor</span></div>
+                      <div class="du-detail-item"><span class="lbl">Uniformity (Size)</span><span class="val">{{ $item->monitorControl->size ?? '-' }}</span></div>
+                    </div>
+                  </div>
+                  <div class="du-detail-panel">
+                    <div class="du-detail-title">Ringkasan Sampling</div>
+                    <div class="du-detail-summary">
+                      <div class="du-sum-box"><div class="lbl">Jumlah Sampling</div><div class="val">{{ $s['count'] }} ekor</div></div>
+                      <div class="du-sum-box"><div class="lbl">Total Berat</div><div class="val">{{ number_format($s['total'], 3) }} kg</div></div>
+                      <div class="du-sum-box"><div class="lbl">Berat Terkecil</div><div class="val">{{ $s['min'] !== null ? number_format($s['min'], 3) : '-' }}</div></div>
+                      <div class="du-sum-box"><div class="lbl">Berat Terbesar</div><div class="val">{{ $s['max'] !== null ? number_format($s['max'], 3) : '-' }}</div></div>
+                      <div class="du-sum-box"><div class="lbl">Rata-rata Berat</div><div class="val">{{ $s['avg'] !== null ? number_format($s['avg'], 3) . ' kg' : '-' }}</div></div>
+                    </div>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -268,5 +322,30 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   })();
+</script>
+<script>
+  document.querySelectorAll('.du-toggle-row').forEach(function (row) {
+    function toggleDetail() {
+      const detail = document.getElementById(row.dataset.detailId);
+      const isOpen = row.classList.toggle('open');
+      detail.classList.toggle('open', isOpen);
+      row.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    row.addEventListener('click', function (event) {
+      if (event.target.closest('a, button, form')) return;
+      toggleDetail();
+    });
+    row.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleDetail();
+      }
+    });
+    row.querySelector('.du-toggle-btn').addEventListener('click', function (event) {
+      event.stopPropagation();
+      toggleDetail();
+    });
+  });
 </script>
 @endsection
