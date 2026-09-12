@@ -39,4 +39,7 @@ return [
         'url' => env('JETSON_COUNTER_URL'),
     ],
 
+    'esp32' => [
+        'api_key' => env('ESP32_API_KEY'),
+    ],
 ];

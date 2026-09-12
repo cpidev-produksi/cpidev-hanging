@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'supervisor' => \App\Http\Middleware\SupervisorOnly::class,
             'superadmin' => \App\Http\Middleware\RoleMiddleware::class,
             'perm' => \App\Http\Middleware\PermissionMiddleware::class,
+            'api.key' => \App\Http\Middleware\ApiKeyMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

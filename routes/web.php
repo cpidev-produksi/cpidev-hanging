@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Account\RolePermissionController;
+use App\Http\Controllers\Api\Esp32MonitorController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DailyYieldController;
 use App\Http\Controllers\DashboardController;
@@ -35,6 +36,11 @@ Route::get('/', function () {
     return $auth->check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
+});
+
+Route::middleware('api.key')->group(function () {
+    Route::get('/api/esp32/monitor-sh02', [Esp32MonitorController::class, 'show'])
+        ->name('api.esp32.monitor-sh02');
 });
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
