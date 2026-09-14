@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\HangingForm;
 use App\Models\HangingLineSet;
+use App\Models\MonitorControl;
 use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,33 @@ class HangingFormController extends Controller
             'monitorControl.farm',
             'lines.sets',
         ]);
+
+        $monitorControl = $hangingForm->monitorControl;
+        $previousForm = null;
+        $previousLastLine = null;
+
+        if ($monitorControl) {
+            $previousForm = HangingForm::query()
+                ->where('id', '!=', $hangingForm->id)
+                ->whereHas('monitorControl', function ($query) use ($monitorControl) {
+                    $query->where('location', $monitorControl->location)
+                        ->where('shift', $monitorControl->shift)
+                        ->whereDate('process_date', $monitorControl->process_date)
+                        ->where('truck_no', '<', $monitorControl->truck_no);
+                })
+                ->with('lines.sets')
+                ->orderByDesc(
+                    MonitorControl::query()
+                        ->select('truck_no')
+                        ->whereColumn('monitor_controls.id', 'hanging_forms.monitor_control_id')
+                )
+                ->first();
+
+            $previousLastLine = $previousForm?->lines
+                ->filter(fn ($line) => $line->sets->contains(fn ($set) => $set->empty_count !== null))
+                ->sortByDesc('line_no')
+                ->first();
+        }
 
         $location   = $hangingForm->monitorControl?->location ?? '';
         $deadCount  = (int) ($hangingForm->dead_count ?? 0);
@@ -75,6 +103,8 @@ class HangingFormController extends Controller
             'selisihAyam'  => $selisihAyam,
             'totalChicken' => $totalChickenMC,
             'fullBlockCount' => $fullBlockCount,
+            'previousForm' => $previousForm,
+            'previousLastLine' => $previousLastLine,
         ]);
     }
 

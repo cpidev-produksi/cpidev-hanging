@@ -109,6 +109,23 @@
       <form method="POST" action="{{ route('hanging-forms.finish', $form) }}" class="sh-finish-form">
         @csrf
         <div class="sh-finish-grid">
+          @if($previousForm)
+            <div class="sh-previous-block" role="status">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+              </svg>
+              <div>
+                <strong>Referensi hanging sebelumnya</strong>
+                @if($previousLastLine)
+                  <span>Nomor blok terakhir yang terisi: <b>{{ $previousLastLine->shackle_label }}</b>.</span>
+                @else
+                  <span>Belum ada blok yang terisi pada form sebelumnya.</span>
+                @endif
+              </div>
+            </div>
+          @endif
+
           <div class="sh-form-group">
             <label class="sh-label" for="unloading_time">Jam Bongkar</label>
             <div class="sh-input-wrap @error('unloading_time') sh-has-error @enderror">
@@ -594,6 +611,19 @@ document.addEventListener('DOMContentLoaded', refreshTotals);
   .sh-sep { color: #C5CAD8; }
 
   .sh-header-actions { display: flex; align-items: center; gap: 10px; }
+
+  .sh-previous-block {
+    display: flex; align-items: flex-start; gap: 10px;
+    grid-column: 1 / -1;
+    margin: 0; padding: 12px 16px;
+    border: 1px solid rgba(245,159,0,.28); border-radius: 12px;
+    background: rgba(245,159,0,.09); color: #7C4A03;
+    font-size: .82rem; line-height: 1.5;
+  }
+  .sh-previous-block svg { flex-shrink: 0; margin-top: 2px; color: #B77908; }
+  .sh-previous-block strong { display: block; color: #6B3F00; font-size: .84rem; }
+  .sh-previous-block span { display: block; }
+
   .sh-btn-back {
     display: inline-flex; align-items: center; gap: 7px;
     padding: 9px 16px;

@@ -340,6 +340,64 @@
             background: var(--accent-orange);
         }
 
+        /* RUNNING TEXT — 2 antrian truk selanjutnya */
+        .ticker-wrap {
+            background: #1E293B;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.35rem;
+            overflow: hidden;
+        }
+        .ticker-label {
+            flex: none;
+            background: var(--accent-orange);
+            color: white;
+            font-size: 0.62rem;
+            font-weight: 800;
+            padding: 0.4rem 0.9rem;
+            border-radius: 30px;
+            white-space: nowrap;
+            letter-spacing: 0.03em;
+        }
+        .ticker-track-outer {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            min-width: 0;
+        }
+        .ticker-track {
+            display: inline-flex;
+            width: max-content;
+            white-space: nowrap;
+            animation: tickerScroll 22s linear infinite;
+        }
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            color: #F1F5F9;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding-right: 2.5rem;
+        }
+        .ticker-item strong {
+            color: #FCD34D;
+            font-weight: 800;
+            margin: 0 0.15rem;
+        }
+        .ticker-sep {
+            color: #64748B;
+            margin: 0 0.5rem;
+        }
+        @keyframes tickerScroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        @media (max-width: 550px) {
+            .ticker-label { display: none; }
+        }
+
         /* PROGRESS STRIP — angka diperbesar */
         .progress-strip {
             display: grid;
@@ -760,6 +818,16 @@
             </div>
         </div>
 
+        <!-- RUNNING TEXT: 2 antrian truk selanjutnya -->
+        <div class="ticker-wrap" id="nextQueueTicker">
+            <div class="ticker-label">🔜 ANTRIAN SELANJUTNYA</div>
+            <div class="ticker-track-outer">
+                <div class="ticker-track" id="tickerTrack">
+                    <span class="ticker-item">Memuat data antrian…</span>
+                </div>
+            </div>
+        </div>
+
         <!-- HERO : TOTAL AYAM DIPROSES -->
         <div class="hero-grid" id="heroGrid">
             <div class="hero-left">
@@ -804,13 +872,20 @@
                         </div>
                     </div>
                 </div>
-                <!-- SLIDE 1 : EKSPEDISI -->
+                <!-- SLIDE 1 : EKSPEDISI + PLAT NOMOR -->
                 <div class="slide" data-slide="1">
                     <div class="slide-item">
                         <div class="slide-icon">🚛</div>
                         <div class="slide-content">
                             <p>EKSPEDISI</p>
                             <p id="carouselExpedisi">—</p>
+                        </div>
+                    </div>
+                    <div class="slide-item">
+                        <div class="slide-icon">🔢</div>
+                        <div class="slide-content">
+                            <p>PLAT NOMOR</p>
+                            <p id="carouselPlat">—</p>
                         </div>
                     </div>
                 </div>
@@ -1100,6 +1175,9 @@
     const carouselFarm = document.getElementById('carouselFarm');
     const carouselSize = document.getElementById('carouselSize');
     const carouselExpedisi = document.getElementById('carouselExpedisi');
+    const carouselPlat = document.getElementById('carouselPlat');
+    const nextQueueTicker = document.getElementById('nextQueueTicker');
+    const tickerTrack = document.getElementById('tickerTrack');
     const todayAyamSpan = document.getElementById('todayAyamCount');
     const planningAyamSpan = document.getElementById('planningAyamTotal');
     const todayTruckSpan = document.getElementById('todayTruckCount');
@@ -1133,13 +1211,48 @@
 
     // Saat shift selesai: sembunyikan semua section kecuali header + banner + infographic
     function setShiftDoneUI(isDone) {
-        const sections = [heroGrid, carouselModule, progressStrip, emptyOverlay];
+        const sections = [heroGrid, carouselModule, progressStrip, emptyOverlay, nextQueueTicker];
         if (isDone) {
             sections.forEach(el => { if (el) el.style.display = 'none'; });
             emptyOverlay.classList.add('hidden');
         } else {
             progressStrip.style.display = '';
+            if (nextQueueTicker) nextQueueTicker.style.display = '';
         }
+    }
+
+    // Escape teks sebelum disisipkan sebagai HTML pada running text
+    function escapeHtml(str) {
+        return String(str ?? '').replace(/[&<>"']/g, (c) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    // Render running text: 2 antrian truk selanjutnya
+    function renderNextQueue(queue) {
+        if (!tickerTrack) return;
+
+        if (!queue || queue.length === 0) {
+            tickerTrack.style.animation = 'none';
+            tickerTrack.innerHTML = '<span class="ticker-item">Tidak ada antrian truk selanjutnya.</span>';
+            return;
+        }
+
+        const itemsHtml = queue.map((q) => {
+            const antrian = escapeHtml(q.truck_no || '—');
+            const plat = escapeHtml(q.plate_number || '—');
+            const eksp = escapeHtml(q.expedition_name || '—');
+            const farm = escapeHtml(q.farm_name || '—');
+            const size = escapeHtml(q.size || '—');
+            return `<span class="ticker-item"> ----->  ${antrian}<span class="ticker-sep">•</span>🚛 <strong>${plat}</strong>`
+                + `<span class="ticker-sep">•</span>${eksp}`
+                + `<span class="ticker-sep">•</span>${farm}`
+                + `<span class="ticker-sep">•</span>Size ${size}</span>`;
+        }).join('');
+
+        // digandakan agar animasi scroll looping mulus (translateX -50%)
+        tickerTrack.innerHTML = itemsHtml + itemsHtml;
+        tickerTrack.style.animation = 'tickerScroll 22s linear infinite';
     }
 
     async function fetchData() {
@@ -1150,6 +1263,9 @@
 
             const now = new Date();
             lastUpdateSpan.innerText = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+            // Running text: 2 antrian truk selanjutnya (berlaku baik saat aktif maupun idle)
+            renderNextQueue(data.next_queue);
 
             const todayAyam = data.today_total_ayam || 0;
             const totalPlanningAyam = data.total_planning_ayam || 0;
@@ -1301,11 +1417,16 @@
             // Ekspedisi
             const expedition = data.expedition_name || '—';
             carouselExpedisi.innerText = expedition;
-            
+
+            // Plat Nomor
+            const platNomor = data.plate_number || '—';
+            if (carouselPlat) carouselPlat.innerText = platNomor;
+
             // tooltips untuk info tambahan
             carouselFarm.setAttribute('title', farmName);
             carouselSize.setAttribute('title', sizeValue);
             carouselExpedisi.setAttribute('title', expedition);
+            if (carouselPlat) carouselPlat.setAttribute('title', platNomor);
         } catch(e) { console.warn(e); }
     }
 
