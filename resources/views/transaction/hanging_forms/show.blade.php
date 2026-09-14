@@ -118,7 +118,8 @@
               <div>
                 <strong>Referensi hanging sebelumnya</strong>
                 @if($previousLastLine)
-                  <span>Nomor blok terakhir yang terisi: <b>{{ $previousLastLine->shackle_label }}</b>.</span>
+                  {{-- <span>Kolom terakhir yang terpakai: <b>Kolom {{ $previousLastSet->set_no }}</b>.</span> --}}
+                  <span>Nomor Blok terakhir dipakai: <b>{{ $previousLastLine->shackle_label }}</b>.</span>
                 @else
                   <span>Belum ada blok yang terisi pada form sebelumnya.</span>
                 @endif

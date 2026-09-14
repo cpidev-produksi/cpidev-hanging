@@ -33,6 +33,7 @@ class HangingFormController extends Controller
 
         $monitorControl = $hangingForm->monitorControl;
         $previousForm = null;
+        $previousLastSet = null;
         $previousLastLine = null;
 
         if ($monitorControl) {
@@ -52,10 +53,24 @@ class HangingFormController extends Controller
                 )
                 ->first();
 
-            $previousLastLine = $previousForm?->lines
-                ->filter(fn ($line) => $line->sets->contains(fn ($set) => $set->empty_count !== null))
-                ->sortByDesc('line_no')
-                ->first();
+            $usedSets = $previousForm?->lines
+                ->flatMap(fn ($line) => $line->sets)
+                ->filter(fn ($set) => $set->empty_count !== null);
+
+            $lastSetNo = $usedSets?->max('set_no');
+            $previousLastSet = $lastSetNo === null
+                ? null
+                : $usedSets->firstWhere('set_no', $lastSetNo);
+
+            $previousLastLine = $lastSetNo === null
+                ? null
+                : $previousForm->lines
+                    ->filter(fn ($line) => $line->sets->contains(
+                        fn ($set) => (int) $set->set_no === (int) $lastSetNo
+                            && $set->empty_count !== null
+                    ))
+                    ->sortByDesc('line_no')
+                    ->first();
         }
 
         $location   = $hangingForm->monitorControl?->location ?? '';
@@ -104,6 +119,7 @@ class HangingFormController extends Controller
             'totalChicken' => $totalChickenMC,
             'fullBlockCount' => $fullBlockCount,
             'previousForm' => $previousForm,
+            'previousLastSet' => $previousLastSet,
             'previousLastLine' => $previousLastLine,
         ]);
     }
