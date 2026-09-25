@@ -72,6 +72,18 @@
     .dmy-btn-link:hover { text-decoration: underline; }
 
     .dmy-panel-header-actions { display: flex; align-items: center; gap: 14px; }
+    .dmy-filter-panel .panel-header { gap: 12px; }
+    .dmy-filter-toggle {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 5px 9px; border: 1px solid var(--card-border);
+        border-radius: 7px; background: #fff; color: var(--text-main);
+        font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .dmy-filter-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    .dmy-filter-toggle svg { transition: transform .18s ease; }
+    .dmy-filter-panel.is-open .dmy-filter-toggle svg { transform: rotate(180deg); }
+    .dmy-filter-summary { color: var(--text-muted); font-size: 11px; font-weight: 600; }
+    .dmy-filter-panel:not(.is-open) .dmy-plant-filter-body { display: none; }
     .dmy-panel-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: block; }
     .dmy-panel-title-col { display: flex; flex-direction: column; }
 
@@ -237,15 +249,25 @@
 @else
 
     {{-- Filter checkbox plant --}}
-    <div class="panel">
+    <div class="panel dmy-filter-panel" id="plantFilterPanel">
         <div class="panel-header">
-            <span class="panel-title">Filter Plant</span>
+            <div class="dmy-panel-title-col">
+                <span class="panel-title">Filter Plant</span>
+                <span class="dmy-filter-summary" id="plantFilterSummary"></span>
+            </div>
             <div class="dmy-panel-header-actions">
                 <button type="button" id="btnCheckAll" class="dmy-btn-link">Pilih Semua</button>
                 <button type="button" id="btnUncheckAll" class="dmy-btn-link">Kosongkan</button>
+                <button type="button" id="btnTogglePlantFilter" class="dmy-filter-toggle"
+                        aria-expanded="false" aria-controls="plantCheckboxes">
+                    Daftar Plant
+                    <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414L10 13.414 3.879 7.293a1 1 0 011.414-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
             </div>
         </div>
-        <div class="panel-body">
+        <div class="panel-body dmy-plant-filter-body">
             <div id="plantCheckboxes" style="display:flex; flex-wrap:wrap; gap:8px;">
                 @foreach($plants as $p)
                     <label class="dmy-chip">
@@ -638,6 +660,14 @@
     function onFilterChange() {
         renderChart();
         renderDetailTable();
+        updatePlantFilterSummary();
+    }
+
+    function updatePlantFilterSummary() {
+        const total = document.querySelectorAll('.plant-filter').length;
+        const selected = document.querySelectorAll('.plant-filter:checked').length;
+        const summary = document.getElementById('plantFilterSummary');
+        if (summary) summary.textContent = `${selected} dari ${total} plant dipilih`;
     }
 
     document.getElementById('btnShowAllDetail')?.addEventListener('click', () => {
@@ -653,6 +683,13 @@
     document.getElementById('btnUncheckAll')?.addEventListener('click', () => {
         document.querySelectorAll('.plant-filter').forEach(cb => (cb.checked = false));
         onFilterChange();
+    });
+
+    document.getElementById('btnTogglePlantFilter')?.addEventListener('click', () => {
+        const panel = document.getElementById('plantFilterPanel');
+        const toggle = document.getElementById('btnTogglePlantFilter');
+        const isOpen = panel.classList.toggle('is-open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
     });
 
     onFilterChange();

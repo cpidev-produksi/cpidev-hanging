@@ -62,8 +62,8 @@ $dead   = (int)($form->dead_count ?? 0);
 $retur  = (int)($form->retur_count ?? 0);
 $totalEkorMC = (int)($mc->total_chicken ?? 0);
 
-// TARGET (DTA) = total ekor - mati - retur
-$targetAyam = max(0, $totalEkorMC - $dead - $retur);
+// TARGET (DTA) = total ekor - mati; retur tetap menjadi bagian selisih
+$targetAyam = max(0, $totalEkorMC - $dead);
 
 // HASIL SHACKLE = blok penuh + kondisional - kosong
 $hasilShackle = $totalAyamCap; // sudah hitung cap - empty
@@ -309,7 +309,7 @@ $fc = $form->feather_condition;
           <div class="sm-kv">
               <span class="sm-kv-key">Selisih</span>
               <span class="sm-kv-val sm-val-{{ $isExcess ? 'warn' : 'danger' }}">
-                  {{ $isExcess ? '+' : '' }}{{ number_format(abs($selisih)) }} ekor
+                  {{ $isExcess ? '+' : '-' }}{{ number_format(abs($selisih)) }} ekor
                   <span style="font-size:10px; font-weight:500;">({{ $isExcess ? 'Lebih' : 'Kurang' }})</span>
               </span>
           </div>
