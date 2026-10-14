@@ -68,6 +68,8 @@
 .pl-input.is-error,
 .pl-select.is-error { border-color: #FCA5A5; }
 
+.pl-help { font-size: 12px; color: #6b7280; }
+
 /* Input with suffix */
 .pl-input-group {
   display: flex;

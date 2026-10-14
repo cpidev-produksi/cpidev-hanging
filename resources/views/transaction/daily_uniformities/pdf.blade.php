@@ -65,10 +65,10 @@
     .pdf-weight-dot.below { background: #f59e0b; }
     .pdf-weight-dot.in { background: #0d9488; }
     .pdf-weight-dot.above { background: #6366f1; }
-    .pdf-weight-grid { width: 100%; border-collapse: separate; border-spacing: 5px; margin: -5px; }
-    .pdf-weight-grid td { width: 20%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 7px 5px; text-align: center; font-size: 9px; font-weight: bold; }
-    .pdf-weight-grid td.empty { border: 0; background: transparent; }
-    .pdf-weight-grid .weight-seq { display: block; color: #64748b; font-size: 8px; margin-bottom: 2px; }
+    .pdf-weight-grid { width: 100%; table-layout: fixed; border-collapse: collapse; border-spacing: 0; margin: 0; }
+    .pdf-weight-grid > tbody > tr > td { width: 20%; padding: 0; vertical-align: top; }
+    .pdf-weight-column { width: 100%; border-collapse: collapse; border-spacing: 0; }
+    .pdf-weight-column td { border: 1px solid #cbd5e1; padding: 7px 5px; text-align: center; font-size: 9px; font-weight: bold; }
     .pdf-weight-grid .weight-value { display: block; font-size: 10px; }
     .pdf-weight-grid td.below { background: #fef3c7; color: #000000; }
     .pdf-weight-grid td.in { background: #ccfbf1; color: #000000; }
@@ -225,7 +225,10 @@
       $singleSummary = $single->summary_data;
       $rangeLow = $singleSummary['range_low'];
       $rangeHigh = $singleSummary['range_high'];
-      $weightRows = $single->weights->chunk(5);
+      $weightColumns = $single->weights
+        ->sortBy('weight_kg')
+        ->values()
+        ->chunk((int) ceil($single->weights->count() / 5));
     @endphp
     <div class="pdf-weight-title">Data Truk</div>
     <table class="pdf-truck-table">
@@ -252,29 +255,36 @@
       </div>
       <table class="pdf-weight-grid">
         <tbody>
-          @foreach ($weightRows as $weightRow)
-            <tr>
-              @foreach ($weightRow as $weight)
-                @php
-                  $weightValue = (float) $weight->weight_kg;
-                  if ($rangeLow !== null && $weightValue < $rangeLow) {
-                    $weightClass = 'below';
-                  } elseif ($rangeHigh !== null && $weightValue > $rangeHigh) {
-                    $weightClass = 'above';
-                  } else {
-                    $weightClass = 'in';
-                  }
-                @endphp
-                <td class="{{ $weightClass }}">
-                  <span class="weight-seq">No. {{ $weight->sequence }}</span>
-                  <span class="weight-value">{{ number_format($weightValue, 3) }} kg</span>
-                </td>
-              @endforeach
-              @for ($emptyCell = $weightRow->count(); $emptyCell < 5; $emptyCell++)
-                <td class="empty"></td>
-              @endfor
-            </tr>
-          @endforeach
+          <tr>
+            @foreach ($weightColumns as $weightColumn)
+              <td>
+                <table class="pdf-weight-column">
+                  <tbody>
+                    @foreach ($weightColumn as $weight)
+                      @php
+                        $weightValue = (float) $weight->weight_kg;
+                        if ($rangeLow !== null && $weightValue < $rangeLow) {
+                          $weightClass = 'below';
+                        } elseif ($rangeHigh !== null && $weightValue > $rangeHigh) {
+                          $weightClass = 'above';
+                        } else {
+                          $weightClass = 'in';
+                        }
+                      @endphp
+                      <tr>
+                        <td class="{{ $weightClass }}">
+                          <span class="weight-value">{{ number_format($weightValue, 3) }} kg</span>
+                        </td>
+                      </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </td>
+            @endforeach
+            @for ($emptyColumn = $weightColumns->count(); $emptyColumn < 5; $emptyColumn++)
+              <td></td>
+            @endfor
+          </tr>
         </tbody>
       </table>
     @else

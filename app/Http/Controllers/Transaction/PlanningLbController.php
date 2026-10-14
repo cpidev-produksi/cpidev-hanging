@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Imports\PlanningLbImport;
 use App\Models\PlanningLb;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class PlanningLbController extends Controller
 {
@@ -30,20 +33,29 @@ class PlanningLbController extends Controller
         return view('planning_lb.create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate([
+        $validated = $request->validate([
             'location' => ['required', 'in:SH01,SH02'],
-            'process_date' => ['required', 'date'],
-            'total_plan_chicken' => ['required', 'integer', 'min:0'],
-            'total_plan_truck' => ['required', 'integer', 'min:0'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:5120'],
         ]);
 
-        PlanningLb::create($data);
+        try {
+            $planning = (new PlanningLbImport())->read($validated['file']);
+        } catch (InvalidArgumentException $exception) {
+            return back()
+                ->withErrors(['file' => $exception->getMessage()])
+                ->withInput();
+        }
+
+        PlanningLb::create([
+            'location' => $validated['location'],
+            ...$planning,
+        ]);
 
         return redirect()
-            ->route('planning-lb.index', ['date' => $data['process_date']])
-            ->with('status', 'Planning LB disimpan.');
+            ->route('planning-lb.index', ['date' => $planning['process_date']])
+            ->with('status', 'Planning LB berhasil diupload.');
     }
 
     public function show(PlanningLb $planningLb)

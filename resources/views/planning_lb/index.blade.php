@@ -17,7 +17,7 @@
           <a href="{{ route('planning-lb.index') }}" class="btn-reset">Reset</a>
         @endif
       </form>
-      <a href="{{ route('planning-lb.create') }}" class="btn-new">+ Buat Planning</a>
+      <a href="{{ route('planning-lb.create') }}" class="btn-new">+ Upload Planning</a>
     </div>
   </div>
 
