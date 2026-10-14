@@ -11,8 +11,7 @@
     </div>
     <div class="pl-actions">
       <form method="GET" class="pl-filter">
-        <input type="date" name="date" value="{{ $date ?? '' }}">
-        <button type="submit" class="btn-filter">Filter</button>
+        <input type="date" name="date" value="{{ $date ?? '' }}" onchange="this.form.submit()" aria-label="Tanggal operasional">
         @if(!empty($date) && $date != now()->toDateString())
           <a href="{{ route('planning-lb.index') }}" class="btn-reset">Reset</a>
         @endif
