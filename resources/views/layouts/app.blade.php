@@ -977,16 +977,17 @@
                     {{-- Defeathering --}}
                     <div class="dropdown-section">
                         <button type="button"
-                                class="dropdown-section-btn {{ request()->routeIs('retur-mati.rekap') ? 'active' : '' }}"
-                                aria-expanded="{{ request()->routeIs('retur-mati.rekap.*') ? 'true' : 'false' }}"
+                                class="dropdown-section-btn {{ request()->routeIs('retur-mati.rekap') || request()->routeIs('defeathering.*') ? 'active' : '' }}"
+                                aria-expanded="{{ request()->routeIs('retur-mati.rekap*') || request()->routeIs('defeathering.*') ? 'true' : 'false' }}"
                                 onclick="toggleDdSection('ddSecDefeathering', this)">
                             Defeathering
                             <svg class="dd-chev" width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
                         </button>
-                        <div id="ddSecDefeathering" class="dropdown-section-body {{ request()->routeIs('defeathering.*') ? 'open' : '' }}">
+                        <div id="ddSecDefeathering" class="dropdown-section-body {{ request()->routeIs('defeathering.*') || request()->routeIs('retur-mati.rekap*') ? 'open' : '' }}">
                             <a class="dropdown-sub-item {{ request()->routeIs('retur-mati.rekap.*') ? 'active' : '' }}" href="{{ route('retur-mati.rekap') }}">Rekap Ayam Retur-Mati</a>
+                            <a class="dropdown-sub-item {{ request()->routeIs('defeathering.efficiency.*') ? 'active' : '' }}" href="{{ route('defeathering.efficiency.index') }}">Efficiency Defeathering Report</a>
                         </div>
                     </div>
 
@@ -1191,7 +1192,7 @@
                     <span class="chev">▾</span>
                 </button>
                 <div id="accFormDefeathering" class="mobile-sub-acc-body {{ request()->routeIs('defeathering.*') ? 'open' : '' }}">
-                    <span class="mobile-sub-leaf" style="opacity:.5; cursor:default;">Segera hadir</span>
+                    <a class="mobile-sub-leaf {{ request()->routeIs('defeathering.efficiency.*') ? 'active' : '' }}" href="{{ route('defeathering.efficiency.index') }}">Efficiency Defeathering Report</a>
                 </div>
 
                 {{-- Evisceration sub-accordion --}}

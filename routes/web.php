@@ -17,6 +17,7 @@ use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Monitor\LiveMonitorController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Report\DefeatReportController;
 use App\Http\Controllers\Transaction\ConditionController;
 use App\Http\Controllers\Transaction\DailyUniformityController;
 use App\Http\Controllers\Transaction\HangingFormController;
@@ -203,6 +204,29 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role-permissions.index');
         Route::post('/role-permissions', [RolePermissionController::class, 'store'])->name('role-permissions.store');
     });
+
+    // Efficiency Defeathering Report (Form > Defeathering)
+    // 1 tabel = 1 tanggal operasional + shift + lokasi; "Tambah Farm" ada di tabel (index), form diisi per farm.
+    Route::middleware('role:checker,checker_hanging,foreman,supervisor,manager,admin,superadmin')
+        ->prefix('defeathering/efficiency')
+        ->name('defeathering.efficiency.')
+        ->group(function () {
+            Route::get('/', [DefeatReportController::class, 'index'])->name('index');
+            Route::post('/', [DefeatReportController::class, 'storeReport'])->name('store');
+            Route::get('/{defeatReport}', [DefeatReportController::class, 'show'])->name('show');
+            Route::delete('/{defeatReport}', [DefeatReportController::class, 'destroy'])->name('destroy');
+            Route::post('/{defeatReport}/checker-name', [DefeatReportController::class, 'saveCheckerName'])->name('checker-name');
+            Route::post('/{defeatReport}/known', [DefeatReportController::class, 'known'])->name('known');
+            Route::post('/{defeatReport}/approve', [DefeatReportController::class, 'approve'])->name('approve');
+            Route::get('/{defeatReport}/pdf', [DefeatReportController::class, 'pdf'])->name('pdf');
+
+            // Baris farm di dalam tabel
+            Route::get('/{defeatReport}/farms/create', [DefeatReportController::class, 'createItem'])->name('items.create');
+            Route::post('/{defeatReport}/farms', [DefeatReportController::class, 'storeItem'])->name('items.store');
+            Route::get('/{defeatReport}/farms/{item}/edit', [DefeatReportController::class, 'editItem'])->name('items.edit');
+            Route::put('/{defeatReport}/farms/{item}', [DefeatReportController::class, 'updateItem'])->name('items.update');
+            Route::delete('/{defeatReport}/farms/{item}', [DefeatReportController::class, 'destroyItem'])->name('items.destroy');
+        });
 
     // Master Produk Evis
     Route::get('/api/product-evis/list', [ProductEvisController::class, 'apiList']);

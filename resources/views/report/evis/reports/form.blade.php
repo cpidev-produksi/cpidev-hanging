@@ -521,7 +521,7 @@
     </div>
 
     <div class="evis-panel-body">
-    <form method="POST" action="@if(isset($reportEvis)) {{ route('report-evis.update', ['report_evi' => $reportEvis->id]) }} @else {{ route('report-evis.store') }} @endif">
+    <form method="POST" action="@if(isset($reportEvis)) {{ route('report-evis.update', ['reportEvis' => $reportEvis->id]) }} @else {{ route('report-evis.store') }} @endif">
         @csrf
         @if(isset($reportEvis)) @method('PUT') @endif
 
