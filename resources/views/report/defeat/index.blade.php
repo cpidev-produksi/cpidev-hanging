@@ -39,7 +39,7 @@
     .rp-actions { display:flex; gap:8px; flex-wrap:wrap; }
     .note { font-size:12px; color:var(--text-muted); margin:10px 0 0; }
 
-    dialog.nr { border:none; border-radius:14px; padding:0; width:min(440px, 92vw); box-shadow:0 20px 50px rgba(15,23,42,.25); }
+    dialog.nr { position:fixed; inset:50% auto auto 50%; transform:translate(-50%, -50%); margin:0; border:none; border-radius:14px; padding:0; width:min(440px, 92vw); max-height:90vh; overflow:auto; box-shadow:0 20px 50px rgba(15,23,42,.25); }
     dialog.nr::backdrop { background:rgba(15,23,42,.45); }
     .nr-body { padding:18px; }
     .nr-title { font-size:15px; font-weight:700; margin-bottom:4px; }
@@ -114,7 +114,7 @@
         @if($tab === 'table')
             {{-- ===================== TABEL (per tanggal operasional + shift + lokasi) ===================== --}}
             @if($reports->isEmpty())
-                <div class="empty">Belum ada tabel pada filter ini. Klik <strong>+ Buat Tabel Baru</strong> untuk memulai.</div>
+                <div class="empty">Belum ada tabel pada filter ini. Klik <strong>+ Buat Laporan</strong> untuk memulai.</div>
             @else
                 @foreach($reports as $report)
                     @php [$bl, $bs] = $badge($report->status); @endphp
