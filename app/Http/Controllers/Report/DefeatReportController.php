@@ -31,55 +31,57 @@ class DefeatReportController extends Controller
     private ?array $hangingCols = null;
 
     /* =====================================================================
-     |  INDEX: tab "Tabel Hasil" (satu tabel per tanggal + shift + lokasi)
-     |         tab "Dashboard Summary"
+     |  INDEX: dashboard summary and report list
      * ===================================================================== */
     public function index(Request $request)
     {
-        $tab = $request->query('tab') === 'table' ? 'table' : 'dashboard';
         $reportId = $request->query('report_id');
-        $detailMode = $tab === 'table' && is_scalar($reportId) && ctype_digit((string) $reportId);
+        $detailMode = is_scalar($reportId) && ctype_digit((string) $reportId);
 
         $filters = [
             'date'      => $request->query('date', ''),
             'location'  => in_array($request->query('location'), self::LOCATIONS, true) ? $request->query('location') : '',
             'shift'     => in_array($request->query('shift'), self::SHIFTS, true) ? $request->query('shift') : '',
+            'farm_name' => is_string($request->query('farm_name')) ? trim($request->query('farm_name')) : '',
         ];
 
-        $reports = null;
-        $dash = null;
+        $reports = DefeatReport::query()
+            ->when($filters['date'], fn ($q, $date) => $q->whereDate('report_date', $date))
+            ->when($detailMode, fn ($q) => $q->whereKey($reportId))
+            ->when($filters['location'], fn ($q, $v) => $q->where('location', $v))
+            ->when($filters['shift'], fn ($q, $v) => $q->where('shift', $v))
+            ->when($filters['farm_name'], fn ($q, $farm) => $q->whereHas('items', fn ($items) => $items->where('farm_name', $farm)))
+            ->with(['items', 'creator'])
+            ->orderByDesc('report_date')
+            ->orderBy('location')
+            ->orderByDesc('shift') // pagi sebelum malam
+            ->paginate(10)
+            ->withQueryString();
 
-        if ($tab === 'table') {
-            $reports = DefeatReport::query()
-                ->when($filters['date'], fn ($q, $date) => $q->whereDate('report_date', $date))
-                ->when($detailMode, fn ($q) => $q->whereKey($reportId))
-                ->when($filters['location'], fn ($q, $v) => $q->where('location', $v))
-                ->when($filters['shift'], fn ($q, $v) => $q->where('shift', $v))
-                ->with(['items', 'creator'])
-                ->orderByDesc('report_date')
-                ->orderBy('location')
-                ->orderByDesc('shift') // pagi sebelum malam
-                ->paginate(10)
-                ->withQueryString();
-        } else {
-            $items = Item::query()
-                ->select('defeat_report_items.*')
-                ->join('defeat_reports', 'defeat_reports.id', '=', 'defeat_report_items.defeat_report_id')
-                ->when($filters['date'], fn ($q, $date) => $q->whereDate('defeat_reports.report_date', $date))
-                ->when($filters['location'], fn ($q, $v) => $q->where('defeat_reports.location', $v))
-                ->when($filters['shift'], fn ($q, $v) => $q->where('defeat_reports.shift', $v))
-                ->with('report')
-                ->get();
+        $items = Item::query()
+            ->select('defeat_report_items.*')
+            ->join('defeat_reports', 'defeat_reports.id', '=', 'defeat_report_items.defeat_report_id')
+            ->when($filters['date'], fn ($q, $date) => $q->whereDate('defeat_reports.report_date', $date))
+            ->when($filters['location'], fn ($q, $v) => $q->where('defeat_reports.location', $v))
+            ->when($filters['shift'], fn ($q, $v) => $q->where('defeat_reports.shift', $v))
+            ->when($filters['farm_name'], fn ($q, $farm) => $q->where('defeat_report_items.farm_name', $farm))
+            ->with('report')
+            ->get();
 
-            $dash = $this->buildDashboard($items);
-        }
+        $dash = $this->buildDashboard($items);
+        $farmOptions = Item::query()
+            ->whereNotNull('farm_name')
+            ->where('farm_name', '!=', '')
+            ->distinct()
+            ->orderBy('farm_name')
+            ->pluck('farm_name');
 
         $hour = (int) now()->format('H');
 
         return view('report.defeat.index', [
-            'tab' => $tab,
             'detailMode' => $detailMode,
             'filters' => $filters,
+            'farmOptions' => $farmOptions,
             'reports' => $reports,
             'dash' => $dash,
             'newDefaults' => [

@@ -9,7 +9,6 @@
         'known'    => ['Diketahui', 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;'],
         default    => ['Draft', 'background:#FEF9C3;color:#92400E;border:1px solid #FDE68A;'],
     };
-    $tabUrl = fn ($t) => request()->fullUrlWithQuery(['tab' => $t, 'page' => null]);
     $f = fn ($v, $d = 1) => DI::fmt($v, $d);
 @endphp
 
@@ -21,10 +20,6 @@
     .df-btn.sm { padding:4px 9px; font-size:12px; }
     .f-label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-bottom:5px; }
     .f-in { padding:8px 12px; border:1px solid var(--card-border); border-radius:8px; font-family:'Inter',sans-serif; font-size:13px; background:#fff; color:var(--text-main); }
-
-    .df-tabs { display:flex; gap:4px; border-bottom:1px solid var(--card-border); margin-bottom:18px; }
-    .df-tab { padding:10px 16px; font-size:13.5px; font-weight:600; color:var(--text-muted); text-decoration:none; border-bottom:2px solid transparent; margin-bottom:-1px; }
-    .df-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
     .df-filter { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:18px; }
     .alert-err { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:14px; }
@@ -80,112 +75,76 @@
             <div class="alert-err"><ul>@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul></div>
         @endif
 
-        <div class="df-tabs">
-            <a class="df-tab {{ $tab === 'table' ? 'active' : '' }}" href="{{ $tabUrl('table') }}">Tabel Hasil</a>
-            <a class="df-tab {{ $tab === 'dashboard' ? 'active' : '' }}" href="{{ $tabUrl('dashboard') }}">Dashboard Summary</a>
-        </div>
+        @unless($detailMode)
+            {{-- Filter --}}
+            <form method="GET" class="df-filter" id="reportFilterForm">
+                <div><label class="f-label">Tanggal</label><input class="f-in" type="date" name="date" value="{{ $filters['date'] }}"></div>
+                <div><label class="f-label">Lokasi</label>
+                    <select class="f-in" name="location">
+                        <option value="">Semua</option>
+                        @foreach(['SH01','SH02'] as $l)<option value="{{ $l }}" @selected($filters['location'] === $l)>{{ $l }}</option>@endforeach
+                    </select></div>
+                <div><label class="f-label">Shift</label>
+                    <select class="f-in" name="shift">
+                        <option value="">Semua</option>
+                        <option value="pagi" @selected($filters['shift'] === 'pagi')>Pagi</option>
+                        <option value="malam" @selected($filters['shift'] === 'malam')>Malam</option>
+                    </select></div>
+                <div>
+                    <label class="f-label" for="farmFilter">Cari Nama Farm</label>
+                    <input class="f-in" type="search" id="farmFilter" name="farm_name" list="farmOptions"
+                           value="{{ $filters['farm_name'] }}" placeholder="Ketik atau pilih farm">
+                    <datalist id="farmOptions">
+                        @foreach($farmOptions as $farmName)
+                            <option value="{{ $farmName }}">
+                        @endforeach
+                    </datalist>
+                </div>
+                <a href="{{ route('defeathering.efficiency.index') }}" class="df-btn">Reset</a>
+            </form>
+            <script>
+                document.getElementById('reportFilterForm').addEventListener('change', event => {
+                    if (event.target.matches('input[name="date"], input[name="farm_name"], select[name="location"], select[name="shift"]')) {
+                        event.currentTarget.requestSubmit();
+                    }
+                });
+            </script>
+        @endunless
 
-        {{-- Filter --}}
-        <form method="GET" class="df-filter">
-            <input type="hidden" name="tab" value="{{ $tab }}">
-            <div><label class="f-label">Tanggal</label><input class="f-in" type="date" name="date" value="{{ $filters['date'] }}"></div>
-            <div><label class="f-label">Lokasi</label>
-                <select class="f-in" name="location">
-                    <option value="">Semua</option>
-                    @foreach(['SH01','SH02'] as $l)<option value="{{ $l }}" @selected($filters['location'] === $l)>{{ $l }}</option>@endforeach
-                </select></div>
-            <div><label class="f-label">Shift</label>
-                <select class="f-in" name="shift">
-                    <option value="">Semua</option>
-                    <option value="pagi" @selected($filters['shift'] === 'pagi')>Pagi</option>
-                    <option value="malam" @selected($filters['shift'] === 'malam')>Malam</option>
-                </select></div>
-            <button type="submit" class="df-btn primary">Filter</button>
-            <a href="{{ route('defeathering.efficiency.index', ['tab' => $tab]) }}" class="df-btn">Reset</a>
-        </form>
-
-        @if($tab === 'table')
-            {{-- ===================== DAFTAR LAPORAN ===================== --}}
+        @if($detailMode)
+            {{-- ===================== DETAIL LAPORAN ===================== --}}
             @if($reports->isEmpty())
-                <div class="empty">{{ $detailMode ? 'Laporan tidak ditemukan.' : 'Belum ada laporan pada filter ini. Klik + Buat Laporan untuk memulai.' }}</div>
+                <div class="empty">Laporan tidak ditemukan.</div>
             @else
-                @if($detailMode)
-                    <p><a class="df-btn" href="{{ route('defeathering.efficiency.index', ['tab' => 'table', 'date' => $filters['date'], 'location' => $filters['location'], 'shift' => $filters['shift']]) }}">Kembali ke Daftar</a></p>
-                    @foreach($reports as $report)
-                        @php [$bl, $bs] = $badge($report->status); @endphp
-                        <div class="rp-card" id="report-{{ $report->id }}">
-                            <div class="rp-head">
-                                <div class="rp-meta">
-                                    <div><div class="lbl">Tanggal Operasional</div><div class="val">{{ $report->report_date->format('d/m/Y') }}</div></div>
-                                    <div><div class="lbl">Shift</div><div class="val">{{ ucfirst($report->shift) }}</div></div>
-                                    <div><div class="lbl">Lokasi</div><div class="val">{{ $report->location }}</div></div>
-                                    <div><div class="lbl">Jumlah Farm</div><div class="val">{{ $report->items->count() }}</div></div>
-                                    <div><div class="lbl">Dibuat oleh</div><div class="val" style="font-weight:600;">{{ $report->checker_name ?: ($report->creator?->name ?? '–') }}</div></div>
-                                    <div><span style="display:inline-block;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:600;{{ $bs }}">{{ $bl }}</span></div>
-                                </div>
-                                <div class="rp-actions">
-                                    @if($report->canManageItems())
-                                        <a class="df-btn primary sm" href="{{ route('defeathering.efficiency.items.create', $report) }}">+ Tambah Farm</a>
-                                    @endif
-                                    <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}">Detail &amp; Pengesahan</a>
-                                    <a class="df-btn sm" href="{{ route('defeathering.efficiency.pdf', $report) }}">PDF</a>
-                                </div>
+                <p><a class="df-btn" href="{{ route('defeathering.efficiency.index', ['date' => $filters['date'], 'location' => $filters['location'], 'shift' => $filters['shift'], 'farm_name' => $filters['farm_name']]) }}">Kembali ke Daftar</a></p>
+                @foreach($reports as $report)
+                    @php [$bl, $bs] = $badge($report->status); @endphp
+                    <div class="rp-card" id="report-{{ $report->id }}">
+                        <div class="rp-head">
+                            <div class="rp-meta">
+                                <div><div class="lbl">Tanggal Operasional</div><div class="val">{{ $report->report_date->format('d/m/Y') }}</div></div>
+                                <div><div class="lbl">Shift</div><div class="val">{{ ucfirst($report->shift) }}</div></div>
+                                <div><div class="lbl">Lokasi</div><div class="val">{{ $report->location }}</div></div>
+                                <div><div class="lbl">Jumlah Farm</div><div class="val">{{ $report->items->count() }}</div></div>
+                                <div><div class="lbl">Dibuat oleh</div><div class="val" style="font-weight:600;">{{ $report->checker_name ?: ($report->creator?->name ?? '–') }}</div></div>
+                                <div><span style="display:inline-block;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:600;{{ $bs }}">{{ $bl }}</span></div>
                             </div>
-
-                            @include('report.defeat.partials.table', ['report' => $report, 'rowActions' => true])
+                            <div class="rp-actions">
+                                @if($report->canManageItems())
+                                    <a class="df-btn primary sm" href="{{ route('defeathering.efficiency.items.create', $report) }}">+ Tambah Farm</a>
+                                @endif
+                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}">Detail &amp; Pengesahan</a>
+                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.pdf', $report) }}">PDF</a>
+                            </div>
                         </div>
-                    @endforeach
-                @else
-                    <div class="report-list-wrap">
-                        <table class="report-list">
-                            <thead>
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>Lokasi</th>
-                                    <th>Shift</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($reports as $report)
-                                    @php
-                                        $rowUrl = route('defeathering.efficiency.index', [
-                                            'tab' => 'table',
-                                            'report_id' => $report->id,
-                                            'date' => $report->report_date->toDateString(),
-                                            'location' => $report->location,
-                                            'shift' => $report->shift,
-                                        ]) . '#report-' . $report->id;
-                                    @endphp
-                                    <tr data-href="{{ $rowUrl }}" role="link" tabindex="0" aria-label="Buka laporan {{ $report->report_date->format('d/m/Y') }} {{ $report->location }} shift {{ ucfirst($report->shift) }}">
-                                        <td>{{ $report->report_date->format('d/m/Y') }}</td>
-                                        <td>{{ $report->location }}</td>
-                                        <td>{{ ucfirst($report->shift) }}</td>
-                                        <td>
-                                            <div class="report-actions">
-                                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}#report-items">Show / Edit</a>
-                                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}#approval">Pengesahan</a>
-                                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.pdf', $report) }}">PDF</a>
-                                                @if($report->canBeDeleted())
-                                                    <form method="POST" action="{{ route('defeathering.efficiency.destroy', $report) }}"
-                                                          onsubmit="return confirm('Hapus laporan ini beserta seluruh datanya?')">
-                                                        @csrf @method('DELETE')
-                                                        <button type="submit" class="df-btn danger sm">Delete</button>
-                                                    </form>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
 
-                    <div style="margin-top:14px;">{{ $reports->links() }}</div>
-                @endif
+                        @include('report.defeat.partials.table', ['report' => $report, 'rowActions' => true])
+                    </div>
+                @endforeach
             @endif
         @else
-            {{-- ===================== DASHBOARD ===================== --}}
+            {{-- ===================== DASHBOARD SUMMARY ===================== --}}
+            <h2 class="sec-h">Dashboard Summary</h2>
             @php $k = $dash['kpi']; $a = $dash['avg']; @endphp
             @if($k['batches'] === 0)
                 <div class="empty">Belum ada data pada filter ini.</div>
@@ -243,10 +202,65 @@
                 <p class="note">Rata-rata dihitung dari seluruh farm pada filter yang dipilih (setiap farm berbobot sama).</p>
             @endif
         @endif
+
+        @unless($detailMode)
+            <section class="report-list-section">
+                <h2 class="sec-h">Daftar Laporan</h2>
+                @if($reports->isEmpty())
+                    <div class="empty">Belum ada laporan pada filter ini. Klik <strong>+ Buat Laporan</strong> untuk memulai.</div>
+                @else
+                    <div class="report-list-wrap">
+                        <table class="report-list">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Lokasi</th>
+                                    <th>Shift</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($reports as $report)
+                                    @php
+                                        $rowUrl = route('defeathering.efficiency.index', [
+                                            'report_id' => $report->id,
+                                            'date' => $report->report_date->toDateString(),
+                                            'location' => $report->location,
+                                            'shift' => $report->shift,
+                                            'farm_name' => $filters['farm_name'],
+                                        ]) . '#report-' . $report->id;
+                                    @endphp
+                                    <tr data-href="{{ $rowUrl }}" role="link" tabindex="0" aria-label="Buka laporan {{ $report->report_date->format('d/m/Y') }} {{ $report->location }} shift {{ ucfirst($report->shift) }}">
+                                        <td>{{ $report->report_date->format('d/m/Y') }}</td>
+                                        <td>{{ $report->location }}</td>
+                                        <td>{{ ucfirst($report->shift) }}</td>
+                                        <td>
+                                            <div class="report-actions">
+                                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}#report-items">Show / Edit</a>
+                                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}#approval">Pengesahan</a>
+                                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.pdf', $report) }}">PDF</a>
+                                                @if($report->canBeDeleted())
+                                                    <form method="POST" action="{{ route('defeathering.efficiency.destroy', $report) }}"
+                                                          onsubmit="return confirm('Hapus laporan ini beserta seluruh datanya?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="df-btn danger sm">Delete</button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top:14px;">{{ $reports->links() }}</div>
+                @endif
+            </section>
+        @endunless
     </div>
 </div>
 
-@if($tab === 'table')
+@unless($detailMode)
     <script>
         document.querySelectorAll('tr[data-href]').forEach(row => {
             row.addEventListener('click', event => {
@@ -294,7 +308,7 @@
     <script>document.getElementById('newReport').showModal();</script>
 @endif
 
-@if($tab === 'dashboard' && ($dash['kpi']['batches'] ?? 0) > 0)
+@if(! $detailMode && ($dash['kpi']['batches'] ?? 0) > 0)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script>
         (function () {
