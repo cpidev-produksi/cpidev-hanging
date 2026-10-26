@@ -20,6 +20,10 @@ class DefeatReportItem extends Model
         'size',
         'time_start',
         'time_end',
+        'sampling_count',
+        'head_pulling_count',
+        'leg_cutting_count',
+        'leg_pulling_count',
         'avg_dta',
         'speed_live_bird',
         'speed_evis_c',
@@ -42,6 +46,10 @@ class DefeatReportItem extends Model
     ];
 
     protected $casts = [
+        'sampling_count' => 'integer',
+        'head_pulling_count' => 'integer',
+        'leg_cutting_count' => 'integer',
+        'leg_pulling_count' => 'integer',
         'avg_dta' => 'float',
         'speed_live_bird' => 'integer',
         'speed_evis_c' => 'integer',
@@ -85,9 +93,9 @@ class DefeatReportItem extends Model
         'scalder3_time'   => ['group' => 'Scalder 3',        'label' => 'Time',                  'kind' => 'time', 'dec' => 0, 'max' => null,  'req' => true,  'avg' => true,  'hist' => true],
         'after_plucker'   => ['group' => 'Defeathering',     'label' => 'After Plucker',         'kind' => 'dec',  'dec' => 1, 'max' => 999,   'req' => true,  'avg' => true],
         'after_sortir'    => ['group' => 'Defeathering',     'label' => 'After Sortir Karyawan', 'kind' => 'dec',  'dec' => 1, 'max' => 999,   'req' => true,  'avg' => true],
-        'head_pulling'    => ['group' => 'Head Pulling',     'label' => '%',                     'kind' => 'dec',  'dec' => 1, 'max' => 100,   'req' => true,  'avg' => true],
-        'leg_cutting'     => ['group' => 'Leg Cutting (%)',  'label' => 'Cutting',               'kind' => 'dec',  'dec' => 1, 'max' => 100,   'req' => true,  'avg' => true],
-        'leg_pulling'     => ['group' => 'Leg Cutting (%)',  'label' => 'Pulling',               'kind' => 'dec',  'dec' => 1, 'max' => 100,   'req' => true,  'avg' => true],
+        'head_pulling'    => ['group' => 'Head Pulling',     'label' => '%',                     'kind' => 'dec',  'dec' => 1, 'max' => 100,   'req' => true,  'avg' => true, 'total' => false],
+        'leg_cutting'     => ['group' => 'Leg Cutting (%)',  'label' => 'Cutting',               'kind' => 'dec',  'dec' => 1, 'max' => 100,   'req' => true,  'avg' => true, 'total' => false],
+        'leg_pulling'     => ['group' => 'Leg Cutting (%)',  'label' => 'Pulling',               'kind' => 'dec',  'dec' => 1, 'max' => 100,   'req' => true,  'avg' => true, 'total' => false],
         'atp'             => ['group' => 'ATP',              'label' => 'Ekor',                  'kind' => 'int',  'dec' => 0, 'max' => 9999,  'req' => false, 'avg' => false],
     ];
 

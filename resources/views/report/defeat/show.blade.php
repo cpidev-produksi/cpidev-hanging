@@ -65,13 +65,13 @@
             </div>
         </div>
 
-        <div class="tbl-wrap">
+        <div class="tbl-wrap" id="report-items">
             @include('report.defeat.partials.table', ['report' => $report, 'rowActions' => true])
         </div>
         <p class="note">Baris <strong>Total</strong> dan <strong>Average</strong> dihitung dari seluruh farm dalam tabel ini. Kolom Time dalam menit.detik (mm.ss).</p>
 
         {{-- Pengesahan --}}
-        <div class="sign-grid">
+        <div class="sign-grid" id="approval">
             <div class="sign-box">
                 <div class="sign-role">Dibuat oleh</div>
                 <div class="sign-sub">(Checker)</div>

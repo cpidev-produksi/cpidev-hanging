@@ -36,14 +36,14 @@ class DefeatReportController extends Controller
      * ===================================================================== */
     public function index(Request $request)
     {
-        $tab = $request->query('tab') === 'dashboard' ? 'dashboard' : 'table';
+        $tab = $request->query('tab') === 'table' ? 'table' : 'dashboard';
+        $reportId = $request->query('report_id');
+        $detailMode = $tab === 'table' && is_scalar($reportId) && ctype_digit((string) $reportId);
 
         $filters = [
-            'date_from' => $request->query('date_from') ?: now()->startOfMonth()->toDateString(),
-            'date_to'   => $request->query('date_to') ?: now()->toDateString(),
+            'date'      => $request->query('date', ''),
             'location'  => in_array($request->query('location'), self::LOCATIONS, true) ? $request->query('location') : '',
             'shift'     => in_array($request->query('shift'), self::SHIFTS, true) ? $request->query('shift') : '',
-            'status'    => in_array($request->query('status'), ['draft', 'known', 'approved'], true) ? $request->query('status') : '',
         ];
 
         $reports = null;
@@ -51,11 +51,10 @@ class DefeatReportController extends Controller
 
         if ($tab === 'table') {
             $reports = DefeatReport::query()
-                ->whereDate('report_date', '>=', $filters['date_from'])
-                ->whereDate('report_date', '<=', $filters['date_to'])
+                ->when($filters['date'], fn ($q, $date) => $q->whereDate('report_date', $date))
+                ->when($detailMode, fn ($q) => $q->whereKey($reportId))
                 ->when($filters['location'], fn ($q, $v) => $q->where('location', $v))
                 ->when($filters['shift'], fn ($q, $v) => $q->where('shift', $v))
-                ->when($filters['status'], fn ($q, $v) => $q->where('status', $v))
                 ->with(['items', 'creator'])
                 ->orderByDesc('report_date')
                 ->orderBy('location')
@@ -66,11 +65,9 @@ class DefeatReportController extends Controller
             $items = Item::query()
                 ->select('defeat_report_items.*')
                 ->join('defeat_reports', 'defeat_reports.id', '=', 'defeat_report_items.defeat_report_id')
-                ->whereDate('defeat_reports.report_date', '>=', $filters['date_from'])
-                ->whereDate('defeat_reports.report_date', '<=', $filters['date_to'])
+                ->when($filters['date'], fn ($q, $date) => $q->whereDate('defeat_reports.report_date', $date))
                 ->when($filters['location'], fn ($q, $v) => $q->where('defeat_reports.location', $v))
                 ->when($filters['shift'], fn ($q, $v) => $q->where('defeat_reports.shift', $v))
-                ->when($filters['status'], fn ($q, $v) => $q->where('defeat_reports.status', $v))
                 ->with('report')
                 ->get();
 
@@ -81,6 +78,7 @@ class DefeatReportController extends Controller
 
         return view('report.defeat.index', [
             'tab' => $tab,
+            'detailMode' => $detailMode,
             'filters' => $filters,
             'reports' => $reports,
             'dash' => $dash,
@@ -185,7 +183,7 @@ class DefeatReportController extends Controller
     {
         $date = $report->report_date->toDateString();
 
-        return route('defeathering.efficiency.index', ['date_from' => $date, 'date_to' => $date])
+        return route('defeathering.efficiency.index', ['date' => $date])
             . '#report-' . $report->id;
     }
 
@@ -510,11 +508,13 @@ class DefeatReportController extends Controller
         $request->merge($this->normalize($request->all()));
 
         $rules = [
+            'sampling_count' => ['required', 'integer', 'min:1', 'max:4294967295'],
             'time_start' => ['nullable', 'date_format:H:i'],
             'time_end' => ['nullable', 'date_format:H:i'],
         ];
         $attributes = [
             'monitor_control_id' => 'Nama Farm',
+            'sampling_count' => 'Jumlah Sampling',
             'time_start' => 'Waktu mulai hanging',
             'time_end' => 'Waktu selesai hanging',
         ];
@@ -528,6 +528,10 @@ class DefeatReportController extends Controller
         }
 
         foreach (Item::FIELDS as $key => $f) {
+            if (in_array($key, ['head_pulling', 'leg_cutting', 'leg_pulling'], true)) {
+                continue;
+            }
+
             $r = [$f['req'] ? 'required' : 'nullable'];
 
             if ($f['kind'] === 'time') {
@@ -548,10 +552,21 @@ class DefeatReportController extends Controller
             $attributes[$key] = $f['kind'] === 'time' ? "$name (format mm.ss)" : $name;
         }
 
+        foreach (['head_pulling', 'leg_cutting', 'leg_pulling'] as $key) {
+            $countKey = $key . '_count';
+            $rules[$countKey] = ['required', 'integer', 'min:0', 'max:4294967295', 'lte:sampling_count'];
+            $attributes[$countKey] = match ($key) {
+                'head_pulling' => 'Jumlah Head Pulling',
+                'leg_cutting' => 'Jumlah Cutting',
+                'leg_pulling' => 'Jumlah Pulling',
+            };
+        }
+
         $validator = Validator::make($request->all(), $rules, [
             'monitor_control_id.required' => 'Pilih Nama Farm.',
             'monitor_control_id.unique' => 'Farm tersebut sudah ada pada tabel ini.',
             'regex' => ':attribute harus berformat mm.ss (contoh 01.16).',
+            'lte' => ':attribute tidak boleh melebihi Jumlah Sampling.',
         ], $attributes);
 
         $mc = null;
@@ -604,8 +619,23 @@ class DefeatReportController extends Controller
     /** Nilai parameter siap simpan. */
     private function values(array $data): array
     {
-        $out = [];
+        $sampleCount = (int) $data['sampling_count'];
+        $out = [
+            'sampling_count' => $sampleCount,
+        ];
+
+        foreach (['head_pulling', 'leg_cutting', 'leg_pulling'] as $key) {
+            $countKey = $key . '_count';
+            $count = (int) $data[$countKey];
+            $out[$countKey] = $count;
+            $out[$key] = round($count / $sampleCount * 100, 2);
+        }
+
         foreach (Item::FIELDS as $key => $f) {
+            if (in_array($key, ['head_pulling', 'leg_cutting', 'leg_pulling'], true)) {
+                continue;
+            }
+
             $v = $data[$key] ?? null;
             $out[$key] = ($v === null || $v === '')
                 ? null
@@ -624,11 +654,20 @@ class DefeatReportController extends Controller
     {
         $out = [
             'monitor_control_id' => $in['monitor_control_id'] ?? null,
+            'sampling_count' => $in['sampling_count'] ?? null,
             'time_start' => $this->hhmm($in['time_start'] ?? null),
             'time_end' => $this->hhmm($in['time_end'] ?? null),
         ];
 
+        foreach (['head_pulling', 'leg_cutting', 'leg_pulling'] as $key) {
+            $out[$key . '_count'] = $in[$key . '_count'] ?? null;
+        }
+
         foreach (Item::FIELDS as $key => $f) {
+            if (in_array($key, ['head_pulling', 'leg_cutting', 'leg_pulling'], true)) {
+                continue;
+            }
+
             $out[$key] = match ($f['kind']) {
                 'int' => $this->digits($in[$key] ?? null),
                 'time' => $this->mmss($in[$key] ?? null),

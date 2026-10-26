@@ -30,13 +30,14 @@
     .alert-err { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:14px; }
     .alert-err ul { margin:0; padding-left:18px; }
 
-    /* satu kartu = satu tabel (tanggal operasional + shift + lokasi) */
-    .rp-card { border:1px solid var(--card-border); border-radius:12px; background:#fff; margin-bottom:18px; overflow:hidden; }
-    .rp-head { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 14px; background:#f8fafc; border-bottom:1px solid var(--card-border); }
-    .rp-meta { display:flex; gap:22px; flex-wrap:wrap; align-items:center; }
-    .rp-meta .lbl { font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); }
-    .rp-meta .val { font-size:14px; font-weight:700; margin-top:1px; }
-    .rp-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .report-list-wrap { overflow-x:auto; }
+    table.report-list { width:100%; border-collapse:collapse; font-size:13px; }
+    table.report-list th, table.report-list td { padding:10px 12px; border-bottom:1px solid var(--card-border); text-align:left; white-space:nowrap; }
+    table.report-list th { background:#f5f7fc; color:var(--text-muted); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; }
+    table.report-list tbody tr[data-href] { cursor:pointer; }
+    table.report-list tbody tr[data-href]:hover td { background:#f8fafc; }
+    .report-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    .report-actions form { margin:0; }
     .note { font-size:12px; color:var(--text-muted); margin:10px 0 0; }
 
     dialog.nr { position:fixed; inset:50% auto auto 50%; transform:translate(-50%, -50%); margin:0; border:none; border-radius:14px; padding:0; width:min(440px, 92vw); max-height:90vh; overflow:auto; box-shadow:0 20px 50px rgba(15,23,42,.25); }
@@ -87,8 +88,7 @@
         {{-- Filter --}}
         <form method="GET" class="df-filter">
             <input type="hidden" name="tab" value="{{ $tab }}">
-            <div><label class="f-label">Dari</label><input class="f-in" type="date" name="date_from" value="{{ $filters['date_from'] }}"></div>
-            <div><label class="f-label">Sampai</label><input class="f-in" type="date" name="date_to" value="{{ $filters['date_to'] }}"></div>
+            <div><label class="f-label">Tanggal</label><input class="f-in" type="date" name="date" value="{{ $filters['date'] }}"></div>
             <div><label class="f-label">Lokasi</label>
                 <select class="f-in" name="location">
                     <option value="">Semua</option>
@@ -100,48 +100,89 @@
                     <option value="pagi" @selected($filters['shift'] === 'pagi')>Pagi</option>
                     <option value="malam" @selected($filters['shift'] === 'malam')>Malam</option>
                 </select></div>
-            <div><label class="f-label">Status</label>
-                <select class="f-in" name="status">
-                    <option value="">Semua</option>
-                    <option value="draft" @selected($filters['status'] === 'draft')>Draft</option>
-                    <option value="known" @selected($filters['status'] === 'known')>Diketahui</option>
-                    <option value="approved" @selected($filters['status'] === 'approved')>Disetujui</option>
-                </select></div>
             <button type="submit" class="df-btn primary">Filter</button>
             <a href="{{ route('defeathering.efficiency.index', ['tab' => $tab]) }}" class="df-btn">Reset</a>
         </form>
 
         @if($tab === 'table')
-            {{-- ===================== TABEL (per tanggal operasional + shift + lokasi) ===================== --}}
+            {{-- ===================== DAFTAR LAPORAN ===================== --}}
             @if($reports->isEmpty())
-                <div class="empty">Belum ada tabel pada filter ini. Klik <strong>+ Buat Laporan</strong> untuk memulai.</div>
+                <div class="empty">{{ $detailMode ? 'Laporan tidak ditemukan.' : 'Belum ada laporan pada filter ini. Klik + Buat Laporan untuk memulai.' }}</div>
             @else
-                @foreach($reports as $report)
-                    @php [$bl, $bs] = $badge($report->status); @endphp
-                    <div class="rp-card" id="report-{{ $report->id }}">
-                        <div class="rp-head">
-                            <div class="rp-meta">
-                                <div><div class="lbl">Tanggal Operasional</div><div class="val">{{ $report->report_date->format('d/m/Y') }}</div></div>
-                                <div><div class="lbl">Shift</div><div class="val">{{ ucfirst($report->shift) }}</div></div>
-                                <div><div class="lbl">Lokasi</div><div class="val">{{ $report->location }}</div></div>
-                                <div><div class="lbl">Jumlah Farm</div><div class="val">{{ $report->items->count() }}</div></div>
-                                <div><div class="lbl">Dibuat oleh</div><div class="val" style="font-weight:600;">{{ $report->checker_name ?: ($report->creator?->name ?? '–') }}</div></div>
-                                <div><span style="display:inline-block;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:600;{{ $bs }}">{{ $bl }}</span></div>
+                @if($detailMode)
+                    <p><a class="df-btn" href="{{ route('defeathering.efficiency.index', ['tab' => 'table', 'date' => $filters['date'], 'location' => $filters['location'], 'shift' => $filters['shift']]) }}">Kembali ke Daftar</a></p>
+                    @foreach($reports as $report)
+                        @php [$bl, $bs] = $badge($report->status); @endphp
+                        <div class="rp-card" id="report-{{ $report->id }}">
+                            <div class="rp-head">
+                                <div class="rp-meta">
+                                    <div><div class="lbl">Tanggal Operasional</div><div class="val">{{ $report->report_date->format('d/m/Y') }}</div></div>
+                                    <div><div class="lbl">Shift</div><div class="val">{{ ucfirst($report->shift) }}</div></div>
+                                    <div><div class="lbl">Lokasi</div><div class="val">{{ $report->location }}</div></div>
+                                    <div><div class="lbl">Jumlah Farm</div><div class="val">{{ $report->items->count() }}</div></div>
+                                    <div><div class="lbl">Dibuat oleh</div><div class="val" style="font-weight:600;">{{ $report->checker_name ?: ($report->creator?->name ?? '–') }}</div></div>
+                                    <div><span style="display:inline-block;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:600;{{ $bs }}">{{ $bl }}</span></div>
+                                </div>
+                                <div class="rp-actions">
+                                    @if($report->canManageItems())
+                                        <a class="df-btn primary sm" href="{{ route('defeathering.efficiency.items.create', $report) }}">+ Tambah Farm</a>
+                                    @endif
+                                    <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}">Detail &amp; Pengesahan</a>
+                                    <a class="df-btn sm" href="{{ route('defeathering.efficiency.pdf', $report) }}">PDF</a>
+                                </div>
                             </div>
-                            <div class="rp-actions">
-                                @if($report->canManageItems())
-                                    <a class="df-btn primary sm" href="{{ route('defeathering.efficiency.items.create', $report) }}">+ Tambah Farm</a>
-                                @endif
-                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}">Detail &amp; Pengesahan</a>
-                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.pdf', $report) }}">PDF</a>
-                            </div>
+
+                            @include('report.defeat.partials.table', ['report' => $report, 'rowActions' => true])
                         </div>
-
-                        @include('report.defeat.partials.table', ['report' => $report, 'rowActions' => true])
+                    @endforeach
+                @else
+                    <div class="report-list-wrap">
+                        <table class="report-list">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Lokasi</th>
+                                    <th>Shift</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($reports as $report)
+                                    @php
+                                        $rowUrl = route('defeathering.efficiency.index', [
+                                            'tab' => 'table',
+                                            'report_id' => $report->id,
+                                            'date' => $report->report_date->toDateString(),
+                                            'location' => $report->location,
+                                            'shift' => $report->shift,
+                                        ]) . '#report-' . $report->id;
+                                    @endphp
+                                    <tr data-href="{{ $rowUrl }}" role="link" tabindex="0" aria-label="Buka laporan {{ $report->report_date->format('d/m/Y') }} {{ $report->location }} shift {{ ucfirst($report->shift) }}">
+                                        <td>{{ $report->report_date->format('d/m/Y') }}</td>
+                                        <td>{{ $report->location }}</td>
+                                        <td>{{ ucfirst($report->shift) }}</td>
+                                        <td>
+                                            <div class="report-actions">
+                                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}#report-items">Show / Edit</a>
+                                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}#approval">Pengesahan</a>
+                                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.pdf', $report) }}">PDF</a>
+                                                @if($report->canBeDeleted())
+                                                    <form method="POST" action="{{ route('defeathering.efficiency.destroy', $report) }}"
+                                                          onsubmit="return confirm('Hapus laporan ini beserta seluruh datanya?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="df-btn danger sm">Delete</button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                @endforeach
 
-                <div style="margin-top:14px;">{{ $reports->links() }}</div>
+                    <div style="margin-top:14px;">{{ $reports->links() }}</div>
+                @endif
             @endif
         @else
             {{-- ===================== DASHBOARD ===================== --}}
@@ -205,6 +246,22 @@
     </div>
 </div>
 
+@if($tab === 'table')
+    <script>
+        document.querySelectorAll('tr[data-href]').forEach(row => {
+            row.addEventListener('click', event => {
+                if (event.target.closest('a, button, form')) return;
+                window.location.href = row.dataset.href;
+            });
+            row.addEventListener('keydown', event => {
+                if ((event.key === 'Enter' || event.key === ' ') && event.target === row) {
+                    event.preventDefault();
+                    window.location.href = row.dataset.href;
+                }
+            });
+        });
+    </script>
+@endif
 
 {{-- Dialog: buat tabel baru (dokumen per tanggal operasional + shift + lokasi) --}}
 <dialog class="nr" id="newReport">

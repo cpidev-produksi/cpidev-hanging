@@ -21,7 +21,11 @@
             $groups[] = ['name' => $f['group'], 'span' => 1];
         }
     }
-    $lead = 4; // No, Nama Farm, Size, Waktu
+    $lead = 5; // No, Nama Farm, Size, Waktu, Jumlah Sampling
+    $hasSamplingCounts = $report->items->every(fn ($item) => $item->sampling_count !== null);
+    $samplingTotal = $hasSamplingCounts ? $report->items->sum('sampling_count') : null;
+    $samplingAverage = $hasSamplingCounts ? $report->items->avg('sampling_count') : null;
+    $percentageFields = ['head_pulling', 'leg_cutting', 'leg_pulling'];
 @endphp
 
 @unless($isPdf)
@@ -51,6 +55,7 @@
                 <th rowspan="2" class="l">Nama Farm</th>
                 <th rowspan="2">Size</th>
                 <th rowspan="2">Waktu</th>
+                <th rowspan="2">Jumlah Sampling</th>
                 @foreach($groups as $g)
                     <th colspan="{{ $g['span'] }}">{{ $g['name'] }}</th>
                 @endforeach
@@ -69,8 +74,9 @@
                     <td class="l" style="font-weight:600;">{{ $it->farm_name }}</td>
                     <td>{{ $it->size_label }}</td>
                     <td>{{ $it->time_range }}</td>
+                    <td>{{ $it->sampling_count !== null ? number_format($it->sampling_count, 0, ',', '.') : '–' }}</td>
                     @foreach($fields as $key => $f)
-                        <td>{{ $it->display($key) }}</td>
+                        <td>{{ $it->display($key) }}@if(in_array($key, $percentageFields, true) && $it->numeric($key) !== null)%@endif</td>
                     @endforeach
                     @if($rowActions)
                         <td>
@@ -97,15 +103,17 @@
             <tfoot>
                 <tr class="sum-tot">
                     <td class="sum-lbl" colspan="{{ $lead }}">Total</td>
+                    <td>{{ $samplingTotal !== null ? number_format($samplingTotal, 0, ',', '.') : '–' }}</td>
                     @foreach($fields as $key => $f)
-                        <td>{{ ($f['total'] ?? true) ? DI::format($key, $sum['total'][$key]) : '' }}</td>
+                        <td>{{ ($f['total'] ?? true) ? DI::format($key, $sum['total'][$key]) : '' }}@if(($f['total'] ?? true) && in_array($key, $percentageFields, true) && $sum['total'][$key] !== null)%@endif</td>
                     @endforeach
                     @if($rowActions)<td></td>@endif
                 </tr>
                 <tr class="sum-avg">
                     <td class="sum-lbl" colspan="{{ $lead }}">Average</td>
+                    <td>{{ $samplingAverage !== null ? number_format($samplingAverage, 1, ',', '.') : '–' }}</td>
                     @foreach($fields as $key => $f)
-                        <td>{{ $f['avg'] ? DI::format($key, $sum['average'][$key]) : '' }}</td>
+                        <td>{{ $f['avg'] ? DI::format($key, $sum['average'][$key]) : '' }}@if($f['avg'] && in_array($key, $percentageFields, true) && $sum['average'][$key] !== null)%@endif</td>
                     @endforeach
                     @if($rowActions)<td></td>@endif
                 </tr>

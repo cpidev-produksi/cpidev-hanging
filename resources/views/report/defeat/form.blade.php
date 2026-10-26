@@ -6,9 +6,14 @@
 
     $editing = (bool) $item;
     $backUrl = route('defeathering.efficiency.index', [
-        'date_from' => $report->report_date->toDateString(),
-        'date_to' => $report->report_date->toDateString(),
+        'date' => $report->report_date->toDateString(),
     ]) . '#report-' . $report->id;
+    $samplingCount = old('sampling_count', $item?->sampling_count);
+    $countFields = [
+        'head_pulling' => 'Jumlah Head Pulling',
+        'leg_cutting' => 'Jumlah Cutting',
+        'leg_pulling' => 'Jumlah Pulling',
+    ];
 
     // nilai awal input: old() > data tersimpan; desimal tampil dengan koma, mm.ss apa adanya
     $val = function (string $key) use ($item) {
@@ -75,6 +80,7 @@
     .pr-field input { width:100%; padding:10px 12px; border:1px solid #cfd6e4; border-radius:10px; font-family:'Inter',sans-serif; font-size:14px; background:#fff; color:var(--text-main); }
     input:focus { outline:none; border-color:var(--accent) !important; box-shadow:0 0 0 3px rgba(232,93,47,.12); }
     input.clamped { border-color:#ef4444 !important; background:#fef2f2 !important; }
+    .percentage-preview { display:block; margin-top:6px; color:#0d3b6e; font-size:13px; font-weight:700; }
 </style>
 
 <form id="farmForm" method="POST" autocomplete="off"
@@ -150,6 +156,15 @@
                         </div>
                     </div>
 
+                    <div class="ff-block">
+                        <label class="ff-lbl blue" for="sampling_count">Jumlah Sampling</label>
+                        <div class="dta-row">
+                            <input type="text" id="sampling_count" name="sampling_count" class="num int" inputmode="numeric"
+                                   value="{{ $samplingCount }}" required>
+                            <span>ekor</span>
+                        </div>
+                    </div>
+
                     <div class="ff-actions">
                         <button type="submit" class="df-btn primary" id="submitBtn">Simpan</button>
                         <a href="{{ $backUrl }}" class="df-btn">Batal</a>
@@ -164,14 +179,22 @@
                             @foreach($cols as $key => $f)
                                 @php $cls = $f['kind'] === 'time' ? 'mmss' : ($f['kind'] === 'int' ? 'int' : 'dec'); @endphp
                                 <div class="pr-field">
-                                    <label for="f_{{ $key }}">{{ $f['label'] }}</label>
-                                    <input type="text" id="f_{{ $key }}" name="{{ $key }}" class="num {{ $cls }}" data-key="{{ $key }}" data-kind="{{ $f['kind'] }}"
-                                           @if($f['max'] !== null) data-max="{{ $f['max'] }}" @endif
-                                           @if(! empty($f['hist'])) data-hist="1" @endif
-                                           @if($f['kind'] === 'time') maxlength="5" @endif
-                                           inputmode="{{ $f['kind'] === 'dec' || $f['kind'] === 'time' ? 'decimal' : 'numeric' }}"
-                                           placeholder="{{ $placeholders[$key] ?? '' }}"
-                                           value="{{ $val($key) }}" @if($f['req']) required @endif>
+                                    @if(isset($countFields[$key]))
+                                        <label for="f_{{ $key }}_count">{{ $countFields[$key] }}</label>
+                                        <input type="text" id="f_{{ $key }}_count" name="{{ $key }}_count" class="num int sample-dependent"
+                                               inputmode="numeric" value="{{ old($key . '_count', $item?->getAttribute($key . '_count')) }}"
+                                               @disabled(! $samplingCount) required>
+                                        <output class="percentage-preview" id="percentage_{{ $key }}">Persentase: –</output>
+                                    @else
+                                        <label for="f_{{ $key }}">{{ $f['label'] }}</label>
+                                        <input type="text" id="f_{{ $key }}" name="{{ $key }}" class="num {{ $cls }}" data-key="{{ $key }}" data-kind="{{ $f['kind'] }}"
+                                               @if($f['max'] !== null) data-max="{{ $f['max'] }}" @endif
+                                               @if(! empty($f['hist'])) data-hist="1" @endif
+                                               @if($f['kind'] === 'time') maxlength="5" @endif
+                                               inputmode="{{ $f['kind'] === 'dec' || $f['kind'] === 'time' ? 'decimal' : 'numeric' }}"
+                                               placeholder="{{ $placeholders[$key] ?? '' }}"
+                                               value="{{ $val($key) }}" @if($f['req']) required @endif>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -204,6 +227,9 @@
     const manual = $('#manualTime');
     const manualNote = $('#manualNote');
     const hint = $('#hint');
+    const samplingInput = $('#sampling_count');
+    const sampleDependentInputs = $$('.sample-dependent');
+    const sampleCounts = ['head_pulling', 'leg_cutting', 'leg_pulling'];
     const histInputs = $$('input[data-hist]');
 
     /* ---------- tandai isian yang diubah user (tidak ditimpa riwayat) ---------- */
@@ -258,6 +284,27 @@
         applyHistory(opt, force);
     }
 
+    function updateSamplePercentages() {
+        const sampleCount = num(samplingInput.value);
+        const hasSample = Number.isInteger(sampleCount) && sampleCount > 0;
+        sampleDependentInputs.forEach(input => {
+            input.disabled = !hasSample;
+        });
+
+        sampleCounts.forEach(key => {
+            const input = $('#f_' + key + '_count');
+            const count = num(input.value);
+            const output = $('#percentage_' + key);
+            const percentage = hasSample && Number.isInteger(count) ? count / sampleCount * 100 : null;
+            input.setCustomValidity(hasSample && Number.isInteger(count) && count > sampleCount
+                ? 'Jumlah tidak boleh melebihi Jumlah Sampling.'
+                : '');
+            output.textContent = 'Persentase: ' + (percentage === null || !Number.isFinite(percentage)
+                ? '–'
+                : percentage.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%');
+        });
+    }
+
     if (sel && !D.editing) sel.addEventListener('change', () => refresh(true));
 
     /* ---------- sanitasi & batas nilai ---------- */
@@ -278,6 +325,10 @@
             el.title = 'Maksimal ' + max;
             setTimeout(() => el.classList.remove('clamped'), 1200);
         }
+
+        if (el.id === 'sampling_count' || el.classList.contains('sample-dependent')) {
+            updateSamplePercentages();
+        }
     });
 
     document.addEventListener('change', e => {
@@ -294,6 +345,7 @@
     });
 
     /* ---------- init: setelah gagal validasi / mode ubah, nilai yang sudah ada tidak ditimpa ---------- */
+    updateSamplePercentages();
     refresh(false);
 })();
 </script>
