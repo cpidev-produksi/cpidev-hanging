@@ -10,8 +10,8 @@
         .meta { margin-bottom: 10px; }
 
         /* Tabel data (partial) - hitam putih, gaya sama dengan baking-report */
-        table.df-tbl { width: 100%; border-collapse: collapse; font-size: 7px; }
-        table.df-tbl th, table.df-tbl td { border: 1px solid #222; padding: 4px 3px; text-align: center; color: #000; }
+        table.df-tbl { width: 100%; border-collapse: collapse; font-size: 6px; }
+        table.df-tbl th, table.df-tbl td { border: 1px solid #222; padding: 3px 2px; text-align: center; color: #000; }
         table.df-tbl th { background: #e5e5e5 !important; }
         table.df-tbl td.l, table.df-tbl th.l { text-align: left; }
         table.df-tbl tr.sum-tot td, table.df-tbl tr.sum-avg td { background: #fff !important; font-weight: bold; }

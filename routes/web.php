@@ -18,6 +18,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Monitor\LiveMonitorController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Report\DefeatReportController;
+use App\Http\Controllers\Report\EviscerationEfficiencyController;
 use App\Http\Controllers\Transaction\ConditionController;
 use App\Http\Controllers\Transaction\DailyUniformityController;
 use App\Http\Controllers\Transaction\HangingFormController;
@@ -226,6 +227,26 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::get('/{defeatReport}/farms/{item}/edit', [DefeatReportController::class, 'editItem'])->name('items.edit');
             Route::put('/{defeatReport}/farms/{item}', [DefeatReportController::class, 'updateItem'])->name('items.update');
             Route::delete('/{defeatReport}/farms/{item}', [DefeatReportController::class, 'destroyItem'])->name('items.destroy');
+        });
+
+    // Efficiency Evisceration Report
+    Route::middleware('role:checker,checker_hanging,foreman,supervisor,manager,admin,superadmin')
+        ->prefix('evisceration/efficiency')
+        ->name('evisceration.efficiency.')
+        ->group(function () {
+            Route::get('/', [EviscerationEfficiencyController::class, 'index'])->name('index');
+            Route::post('/', [EviscerationEfficiencyController::class, 'storeReport'])->name('store');
+            Route::get('/{report}/farms/create', [EviscerationEfficiencyController::class, 'createItem'])->name('items.create');
+            Route::post('/{report}/farms', [EviscerationEfficiencyController::class, 'storeItem'])->name('items.store');
+            Route::get('/{report}/farms/{item}/edit', [EviscerationEfficiencyController::class, 'editItem'])->name('items.edit');
+            Route::put('/{report}/farms/{item}', [EviscerationEfficiencyController::class, 'updateItem'])->name('items.update');
+            Route::delete('/{report}/farms/{item}', [EviscerationEfficiencyController::class, 'destroyItem'])->name('items.destroy');
+            Route::post('/{report}/checker-name', [EviscerationEfficiencyController::class, 'saveCheckerName'])->name('checker-name');
+            Route::post('/{report}/known', [EviscerationEfficiencyController::class, 'known'])->name('known');
+            Route::post('/{report}/approve', [EviscerationEfficiencyController::class, 'approve'])->name('approve');
+            Route::get('/{report}/pdf', [EviscerationEfficiencyController::class, 'pdf'])->name('pdf');
+            Route::delete('/{report}', [EviscerationEfficiencyController::class, 'destroy'])->name('destroy');
+            Route::get('/{report}', [EviscerationEfficiencyController::class, 'show'])->name('show');
         });
 
     // Master Produk Evis

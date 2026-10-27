@@ -113,6 +113,7 @@ class DefeatReportController extends Controller
             'live_bird' => $avg['speed_live_bird'],
             'evis_c'    => $avg['speed_evis_c'],
             'atp_total' => $items->sum(fn ($i) => $i->atp ?? 0),
+            'fallen_total' => $items->sum(fn ($i) => $i->scalder_fallen ?? 0),
         ];
 
         // tren harian
@@ -130,6 +131,7 @@ class DefeatReportController extends Controller
                 'farm'          => $farm,
                 'batches'       => $g->count(),
                 'avg_dta'       => $mean($g->pluck('avg_dta')),
+                'fallen'        => $g->sum(fn ($i) => $i->scalder_fallen ?? 0),
                 'head_pulling'  => $mean($g->pluck('head_pulling')),
                 'leg_cutting'   => $mean($g->pluck('leg_cutting')),
                 'leg_pulling'   => $mean($g->pluck('leg_pulling')),
@@ -510,13 +512,11 @@ class DefeatReportController extends Controller
         $request->merge($this->normalize($request->all()));
 
         $rules = [
-            'sampling_count' => ['required', 'integer', 'min:1', 'max:4294967295'],
             'time_start' => ['nullable', 'date_format:H:i'],
             'time_end' => ['nullable', 'date_format:H:i'],
         ];
         $attributes = [
             'monitor_control_id' => 'Nama Farm',
-            'sampling_count' => 'Jumlah Sampling',
             'time_start' => 'Waktu mulai hanging',
             'time_end' => 'Waktu selesai hanging',
         ];
@@ -529,8 +529,9 @@ class DefeatReportController extends Controller
             ];
         }
 
+        // semua parameter input (persentase % OK dihitung sistem, bukan input)
         foreach (Item::FIELDS as $key => $f) {
-            if (in_array($key, ['head_pulling', 'leg_cutting', 'leg_pulling'], true)) {
+            if (! empty($f['calc'])) {
                 continue;
             }
 
@@ -540,7 +541,7 @@ class DefeatReportController extends Controller
                 $r[] = 'regex:/^\d{2}\.[0-5]\d$/';
             } else {
                 $r[] = 'numeric';
-                $r[] = 'min:0';
+                $r[] = 'min:' . ($f['min'] ?? 0);
                 if ($f['kind'] === 'int') {
                     $r[] = 'integer';
                 }
@@ -550,31 +551,36 @@ class DefeatReportController extends Controller
             }
 
             $rules[$key] = $r;
-            $name = $f['group'] === $f['label'] ? $f['label'] : $f['group'] . ' ' . $f['label'];
+            $name = $f['name'] ?? ($f['group'] === $f['label'] ? $f['label'] : $f['group'] . ' ' . $f['label']);
             $attributes[$key] = $f['kind'] === 'time' ? "$name (format mm.ss)" : $name;
-        }
-
-        foreach (['head_pulling', 'leg_cutting', 'leg_pulling'] as $key) {
-            $countKey = $key . '_count';
-            $rules[$countKey] = ['required', 'integer', 'min:0', 'max:4294967295', 'lte:sampling_count'];
-            $attributes[$countKey] = match ($key) {
-                'head_pulling' => 'Jumlah Head Pulling',
-                'leg_cutting' => 'Jumlah Cutting',
-                'leg_pulling' => 'Jumlah Pulling',
-            };
         }
 
         $validator = Validator::make($request->all(), $rules, [
             'monitor_control_id.required' => 'Pilih Nama Farm.',
             'monitor_control_id.unique' => 'Farm tersebut sudah ada pada tabel ini.',
             'regex' => ':attribute harus berformat mm.ss (contoh 01.16).',
-            'lte' => ':attribute tidak boleh melebihi Jumlah Sampling.',
         ], $attributes);
 
         $mc = null;
         $window = null;
 
         $validator->after(function ($v) use ($request, $report, $item, &$mc, &$window) {
+            // OK + Not OK pada tiap pemeriksaan tidak boleh melebihi Jumlah Sampling
+            $sampling = (int) $request->input('sampling_count');
+            foreach (Item::QC as $key => $label) {
+                if ($v->errors()->hasAny([$key . '_ok', $key . '_not_ok', 'sampling_count'])) {
+                    continue;
+                }
+
+                $used = (int) $request->input($key . '_ok') + (int) $request->input($key . '_not_ok');
+                if ($used > $sampling) {
+                    $v->errors()->add(
+                        $key . '_ok',
+                        "$label: OK + Not OK ($used) tidak boleh melebihi Jumlah Sampling ($sampling)."
+                    );
+                }
+            }
+
             if ($v->errors()->isNotEmpty()) {
                 return;
             }
@@ -618,23 +624,13 @@ class DefeatReportController extends Controller
         return [$validator->validate(), $mc, $window];
     }
 
-    /** Nilai parameter siap simpan. */
+    /** Nilai parameter siap simpan. % OK dihitung dari OK / Jumlah Sampling. */
     private function values(array $data): array
     {
-        $sampleCount = (int) $data['sampling_count'];
-        $out = [
-            'sampling_count' => $sampleCount,
-        ];
-
-        foreach (['head_pulling', 'leg_cutting', 'leg_pulling'] as $key) {
-            $countKey = $key . '_count';
-            $count = (int) $data[$countKey];
-            $out[$countKey] = $count;
-            $out[$key] = round($count / $sampleCount * 100, 2);
-        }
+        $out = [];
 
         foreach (Item::FIELDS as $key => $f) {
-            if (in_array($key, ['head_pulling', 'leg_cutting', 'leg_pulling'], true)) {
+            if (! empty($f['calc'])) {
                 continue;
             }
 
@@ -648,6 +644,10 @@ class DefeatReportController extends Controller
                 };
         }
 
+        foreach (array_keys(Item::QC) as $key) {
+            $out[$key] = Item::percentOk($out[$key . '_ok'], $out['sampling_count']);
+        }
+
         return $out;
     }
 
@@ -656,17 +656,12 @@ class DefeatReportController extends Controller
     {
         $out = [
             'monitor_control_id' => $in['monitor_control_id'] ?? null,
-            'sampling_count' => $in['sampling_count'] ?? null,
             'time_start' => $this->hhmm($in['time_start'] ?? null),
             'time_end' => $this->hhmm($in['time_end'] ?? null),
         ];
 
-        foreach (['head_pulling', 'leg_cutting', 'leg_pulling'] as $key) {
-            $out[$key . '_count'] = $in[$key . '_count'] ?? null;
-        }
-
         foreach (Item::FIELDS as $key => $f) {
-            if (in_array($key, ['head_pulling', 'leg_cutting', 'leg_pulling'], true)) {
+            if (! empty($f['calc'])) {
                 continue;
             }
 

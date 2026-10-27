@@ -22,7 +22,7 @@
 
     .alert-err { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:14px; }
     .df-btn.sm { padding:4px 9px; font-size:12px; }
-    .tbl-wrap { border:1px solid var(--card-border); border-radius:12px; background:#fff; margin-bottom:18px; overflow:hidden; }
+    .tbl-wrap { margin-bottom:18px; }
     .note { font-size:12px; color:var(--text-muted); margin:0 0 18px; }
 
     .sign-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:8px; }
@@ -68,7 +68,7 @@
         <div class="tbl-wrap" id="report-items">
             @include('report.defeat.partials.table', ['report' => $report, 'rowActions' => true])
         </div>
-        <p class="note">Baris <strong>Total</strong> dan <strong>Average</strong> dihitung dari seluruh farm dalam tabel ini. Kolom Time dalam menit.detik (mm.ss).</p>
+        <p class="note">Baris <strong>Total</strong> dan <strong>Average</strong> dihitung dari seluruh farm dalam tabel ini. Kolom Time dalam menit.detik (mm.ss). <strong>% OK</strong> = OK ÷ Jumlah Sampling × 100.</p>
 
         {{-- Pengesahan --}}
         <div class="sign-grid" id="approval">

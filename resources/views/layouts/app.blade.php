@@ -965,7 +965,7 @@
             {{-- Form --}}
             <div class="dropdown" id="ddForm">
                 <button type="button"
-                        class="topnav-button {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('cut-up.*') ? 'active' : '' }}"
+                        class="topnav-button {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('evisceration.efficiency.*') || request()->routeIs('cut-up.*') ? 'active' : '' }}"
                         onclick="toggleDropdown('ddFormMenu')">
                     Form
                     <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" style="opacity:.7">
@@ -994,17 +994,18 @@
                     {{-- Evisceration --}}
                     <div class="dropdown-section">
                         <button type="button"
-                                class="dropdown-section-btn {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'active' : '' }}"
-                                aria-expanded="{{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'true' : 'false' }}"
+                                class="dropdown-section-btn {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('evisceration.efficiency.*') ? 'active' : '' }}"
+                                aria-expanded="{{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('evisceration.efficiency.*') ? 'true' : 'false' }}"
                                 onclick="toggleDdSection('ddSecEvis', this)">
                             Evisceration
                             <svg class="dd-chev" width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
                         </button>
-                        <div id="ddSecEvis" class="dropdown-section-body {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'open' : '' }}">
+                        <div id="ddSecEvis" class="dropdown-section-body {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('evisceration.efficiency.*') ? 'open' : '' }}">
                             <a class="dropdown-sub-item {{ request()->routeIs('product-evis.*') ? 'active' : '' }}" href="{{ route('product-evis.index') }}">Daftar Produk Evis</a>
                             <a class="dropdown-sub-item {{ request()->routeIs('report-evis.*') ? 'active' : '' }}" href="{{ route('report-evis.index') }}">Daily Report Evis</a>
+                            <a class="dropdown-sub-item {{ request()->routeIs('evisceration.efficiency.*') ? 'active' : '' }}" href="{{ route('evisceration.efficiency.index') }}">Efficiency Evisceration Report</a>
                         </div>
                     </div>
 
@@ -1175,13 +1176,13 @@
 
             {{-- Form (nested accordion mobile) --}}
             <button type="button"
-                    class="mobile-accordion {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('cut-up.*') ? 'active' : '' }}"
-                    aria-expanded="{{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('cut-up.*') ? 'true' : 'false' }}"
+                    class="mobile-accordion {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('evisceration.efficiency.*') || request()->routeIs('cut-up.*') ? 'active' : '' }}"
+                    aria-expanded="{{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('evisceration.efficiency.*') || request()->routeIs('cut-up.*') ? 'true' : 'false' }}"
                     onclick="toggleAccordion('accForm', this)">
                 Form
                 <span class="chev">▾</span>
             </button>
-            <div id="accForm" class="mobile-acc-body {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('cut-up.*') ? 'open' : '' }}">
+            <div id="accForm" class="mobile-acc-body {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('defeathering.*') || request()->routeIs('evisceration.efficiency.*') || request()->routeIs('cut-up.*') ? 'open' : '' }}">
 
                 {{-- Defeathering sub-accordion --}}
                 <button type="button"
@@ -1197,15 +1198,16 @@
 
                 {{-- Evisceration sub-accordion --}}
                 <button type="button"
-                        class="mobile-sub-accordion {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'active' : '' }}"
-                        aria-expanded="{{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'true' : 'false' }}"
+                        class="mobile-sub-accordion {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('evisceration.efficiency.*') ? 'active' : '' }}"
+                            aria-expanded="{{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('evisceration.efficiency.*') ? 'true' : 'false' }}"
                         onclick="toggleAccordion('accFormEvis', this)">
                     Evisceration
                     <span class="chev">▾</span>
                 </button>
-                <div id="accFormEvis" class="mobile-sub-acc-body {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') ? 'open' : '' }}">
+                <div id="accFormEvis" class="mobile-sub-acc-body {{ request()->routeIs('product-evis.*') || request()->routeIs('report-evis.*') || request()->routeIs('evisceration.efficiency.*') ? 'open' : '' }}">
                     <a class="mobile-sub-leaf {{ request()->routeIs('product-evis.*') ? 'active' : '' }}" href="{{ route('product-evis.index') }}">Daftar Produk Evis</a>
                     <a class="mobile-sub-leaf {{ request()->routeIs('report-evis.*') ? 'active' : '' }}" href="{{ route('report-evis.index') }}">Daily Report Evis</a>
+                    <a class="mobile-sub-leaf {{ request()->routeIs('evisceration.efficiency.*') ? 'active' : '' }}" href="{{ route('evisceration.efficiency.index') }}">Efficiency Evisceration Report</a>
                 </div>
 
                 {{-- Cut Up sub-accordion --}}

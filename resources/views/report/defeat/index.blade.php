@@ -5,9 +5,9 @@
     use App\Models\DefeatReportItem as DI;
 
     $badge = fn ($status) => match ($status) {
-        'approved' => ['Disetujui', 'background:rgba(16,185,129,.10);color:#047857;border:1px solid rgba(16,185,129,.25);'],
-        'known'    => ['Diketahui', 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;'],
-        default    => ['Draft', 'background:#FEF9C3;color:#92400E;border:1px solid #FDE68A;'],
+        'approved' => ['Disetujui', 'approved'],
+        'known'    => ['Diketahui', 'known'],
+        default    => ['Draft', 'draft'],
     };
     $f = fn ($v, $d = 1) => DI::fmt($v, $d);
 @endphp
@@ -62,6 +62,61 @@
     table.df-rekap th, table.df-rekap td { padding:8px 9px; border-bottom:1px solid var(--card-border); white-space:nowrap; text-align:center; }
     table.df-rekap thead th { background:#f5f7fc; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); }
     table.df-rekap td.l, table.df-rekap th.l { text-align:left; }
+
+    /* ===== Tombol: transisi & fokus ===== */
+    .df-btn { line-height:1.2; transition:background-color .15s, border-color .15s, color .15s; }
+    .df-btn:hover { border-color:#cbd3e3; background:#f8fafc; }
+    .df-btn.primary:hover { background:#d44f24; border-color:#d44f24; }
+    .df-btn.danger:hover { background:#fee2e2; }
+    .df-btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    .df-btn svg { width:14px; height:14px; flex:none; }
+
+    /* ===== Detail laporan ===== */
+    .dt-back { display:inline-flex; align-items:center; gap:4px; margin-bottom:16px; font-size:13px; font-weight:600; color:var(--text-muted); text-decoration:none; }
+    .dt-back svg { width:16px; height:16px; transition:transform .15s; }
+    .dt-back:hover { color:var(--accent); }
+    .dt-back:hover svg { transform:translateX(-3px); }
+    .dt-back:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+
+    .dt-card.rp-card { --st:#d97706; position:relative; margin:0 0 22px; padding:0; background:#fff; border:1px solid var(--card-border); border-radius:14px; box-shadow:0 1px 3px rgba(15,23,42,.04), 0 10px 28px -14px rgba(15,23,42,.12); scroll-margin-top:90px; }
+    .dt-card.is-known { --st:#0284c7; }
+    .dt-card.is-approved { --st:#059669; }
+    .dt-card::before { content:''; position:absolute; inset:0 auto 0 0; width:4px; background:var(--st); border-radius:14px 0 0 14px; }
+
+    .dt-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px 24px; padding:22px 24px 20px 28px; }
+    .dt-title-row { display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; }
+    .dt-title { font-size:22px; font-weight:800; letter-spacing:-.01em; line-height:1.25; color:var(--text-main); }
+    .dt-actions { display:flex; flex-wrap:wrap; gap:8px; }
+    .dt-actions .df-btn { padding:8px 14px; }
+
+    .dt-status { display:inline-flex; align-items:center; gap:6px; padding:3px 10px 3px 8px; border-radius:999px; border:1px solid; font-size:12px; font-weight:600; white-space:nowrap; }
+    .dt-status::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .dt-status.draft { background:#FEF9C3; color:#92400E; border-color:#FDE68A; }
+    .dt-status.known { background:#e0f2fe; color:#0369a1; border-color:#bae6fd; }
+    .dt-status.approved { background:rgba(16,185,129,.10); color:#047857; border-color:rgba(16,185,129,.25); }
+
+    .dt-facts { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:14px 28px; padding:16px 24px 18px 28px; background:#fafbff; border-top:1px solid var(--card-border); }
+    .dt-fact dt { margin-bottom:3px; font-size:12px; font-weight:500; color:var(--text-muted); }
+    .dt-fact dd { display:flex; align-items:center; gap:6px; font-size:14.5px; font-weight:700; color:var(--text-main); }
+    .dt-fact dd svg { width:15px; height:15px; flex:none; color:var(--text-muted); }
+
+    .dt-section-head { padding:16px 24px 12px 28px; border-top:1px solid var(--card-border); }
+    .dt-section-head h3 { font-size:14px; font-weight:700; }
+    .dt-table-wrap { overflow-x:auto; padding:0 14px 14px 18px; }
+
+    @media (max-width:640px) {
+        .dt-head { padding:18px 16px 16px 20px; }
+        .dt-title { font-size:19px; }
+        .dt-actions { width:100%; }
+        .dt-actions .df-btn { flex:1 1 auto; justify-content:center; }
+        .dt-facts { grid-template-columns:repeat(2, minmax(0, 1fr)); padding:14px 16px 16px 20px; }
+        .dt-section-head { padding:14px 16px 10px 20px; }
+        .dt-table-wrap { padding:0 8px 12px 12px; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+        .df-btn, .dt-back svg { transition:none; }
+        .dt-back:hover svg { transform:none; }
+    }
 </style>
 
 <div class="panel df-wrap">
@@ -113,33 +168,55 @@
 
         @if($detailMode)
             {{-- ===================== DETAIL LAPORAN ===================== --}}
+            <a class="dt-back" href="{{ route('defeathering.efficiency.index', ['date' => $filters['date'], 'location' => $filters['location'], 'shift' => $filters['shift'], 'farm_name' => $filters['farm_name']]) }}">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l-5 5 5 5"/></svg>
+                Kembali ke daftar laporan
+            </a>
+
             @if($reports->isEmpty())
-                <div class="empty">Laporan tidak ditemukan.</div>
+                <div class="empty">Laporan tidak ditemukan. Mungkin sudah dihapus. Kembali ke daftar untuk memilih laporan lain.</div>
             @else
-                <p><a class="df-btn" href="{{ route('defeathering.efficiency.index', ['date' => $filters['date'], 'location' => $filters['location'], 'shift' => $filters['shift'], 'farm_name' => $filters['farm_name']]) }}">Kembali ke Daftar</a></p>
                 @foreach($reports as $report)
-                    @php [$bl, $bs] = $badge($report->status); @endphp
-                    <div class="rp-card" id="report-{{ $report->id }}">
-                        <div class="rp-head">
-                            <div class="rp-meta">
-                                <div><div class="lbl">Tanggal Operasional</div><div class="val">{{ $report->report_date->format('d/m/Y') }}</div></div>
-                                <div><div class="lbl">Shift</div><div class="val">{{ ucfirst($report->shift) }}</div></div>
-                                <div><div class="lbl">Lokasi</div><div class="val">{{ $report->location }}</div></div>
-                                <div><div class="lbl">Jumlah Farm</div><div class="val">{{ $report->items->count() }}</div></div>
-                                <div><div class="lbl">Dibuat oleh</div><div class="val" style="font-weight:600;">{{ $report->checker_name ?: ($report->creator?->name ?? '–') }}</div></div>
-                                <div><span style="display:inline-block;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:600;{{ $bs }}">{{ $bl }}</span></div>
+                    @php [$bl, $bc] = $badge($report->status); @endphp
+                    <article class="dt-card rp-card is-{{ $bc }}" id="report-{{ $report->id }}">
+                        <header class="dt-head">
+                            <div class="dt-title-row">
+                                <h2 class="dt-title">{{ $report->report_date->locale('id')->translatedFormat('l, d F Y') }}</h2>
+                                <span class="dt-status {{ $bc }}">{{ $bl }}</span>
                             </div>
-                            <div class="rp-actions">
+                            <div class="dt-actions">
                                 @if($report->canManageItems())
                                     <a class="df-btn primary sm" href="{{ route('defeathering.efficiency.items.create', $report) }}">+ Tambah Farm</a>
                                 @endif
                                 <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}">Detail &amp; Pengesahan</a>
-                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.pdf', $report) }}">PDF</a>
+                                <a class="df-btn sm" href="{{ route('defeathering.efficiency.pdf', $report) }}">
+                                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v9m0 0L6.5 8.5M10 12l3.5-3.5M4 16h12"/></svg>
+                                    Unduh PDF
+                                </a>
                             </div>
-                        </div>
+                        </header>
 
-                        @include('report.defeat.partials.table', ['report' => $report, 'rowActions' => true])
-                    </div>
+                        <dl class="dt-facts">
+                            <div class="dt-fact"><dt>Lokasi</dt><dd>{{ $report->location }}</dd></div>
+                            <div class="dt-fact"><dt>Shift</dt>
+                                <dd>
+                                    @if($report->shift === 'malam')
+                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 11.6A6.6 6.6 0 0 1 8.4 3.5a6.6 6.6 0 1 0 8.1 8.1z"/></svg>
+                                    @else
+                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="3.2"/><path d="M10 2.5v1.8M10 15.7v1.8M2.5 10h1.8M15.7 10h1.8M4.7 4.7L6 6M14 14l1.3 1.3M15.3 4.7L14 6M6 14l-1.3 1.3"/></svg>
+                                    @endif
+                                    {{ ucfirst($report->shift) }}
+                                </dd>
+                            </div>
+                            <div class="dt-fact"><dt>Jumlah farm</dt><dd>{{ $report->items->count() }}</dd></div>
+                            <div class="dt-fact"><dt>Dibuat oleh</dt><dd>{{ $report->checker_name ?: ($report->creator?->name ?? '–') }}</dd></div>
+                        </dl>
+
+                        <div class="dt-section-head"><h3>Data per farm</h3></div>
+                        <div class="dt-table-wrap">
+                            @include('report.defeat.partials.table', ['report' => $report, 'rowActions' => true])
+                        </div>
+                    </article>
                 @endforeach
             @endif
         @else
@@ -153,11 +230,12 @@
                     <div class="kpi"><div class="lbl">Laporan</div><div class="val">{{ $k['reports'] }}</div>
                         <div class="sub">{{ $k['draft'] }} draft · {{ $k['known'] }} diketahui · {{ $k['approved'] }} disetujui</div></div>
                     <div class="kpi"><div class="lbl">Farm Tercatat</div><div class="val">{{ $k['batches'] }}</div><div class="sub">batch</div></div>
-                    <div class="kpi"><div class="lbl">Head Pulling</div><div class="val">{{ $f($a['head_pulling'], 1) }}<small style="font-size:13px;"> %</small></div><div class="sub">rata-rata</div></div>
-                    <div class="kpi"><div class="lbl">Leg Cutting</div><div class="val">{{ $f($a['leg_cutting'], 1) }}<small style="font-size:13px;"> %</small></div><div class="sub">Pulling {{ $f($a['leg_pulling'], 1) }} %</div></div>
+                    <div class="kpi"><div class="lbl">Head Pulling</div><div class="val">{{ $f($a['head_pulling'], 1) }}<small style="font-size:13px;"> %</small></div><div class="sub">rata-rata % OK</div></div>
+                    <div class="kpi"><div class="lbl">Leg Cutting</div><div class="val">{{ $f($a['leg_cutting'], 1) }}<small style="font-size:13px;"> %</small></div><div class="sub">% OK · Leg Pulling {{ $f($a['leg_pulling'], 1) }} %</div></div>
                     <div class="kpi"><div class="lbl">After Plucker</div><div class="val">{{ $f($a['after_plucker'], 1) }}</div><div class="sub">Sortir karyawan {{ $f($a['after_sortir'], 1) }}</div></div>
                     <div class="kpi"><div class="lbl">AVG DTA</div><div class="val">{{ $f($k['avg_dta'], 2) }}<small style="font-size:13px;"> kg</small></div><div class="sub">rata-rata</div></div>
                     <div class="kpi"><div class="lbl">Speed Line</div><div class="val">{{ $k['live_bird'] !== null ? number_format($k['live_bird'], 0, ',', '') : '–' }}</div><div class="sub">Live Bird BPH · Evis C. {{ $k['evis_c'] !== null ? number_format($k['evis_c'], 0, ',', '') : '–' }}</div></div>
+                    <div class="kpi"><div class="lbl">Ayam Jatuh di Scalder</div><div class="val">{{ number_format($k['fallen_total'], 0, ',', '') }}</div><div class="sub">total ekor</div></div>
                     <div class="kpi"><div class="lbl">ATP</div><div class="val">{{ number_format($k['atp_total'], 0, ',', '') }}</div><div class="sub">total</div></div>
                 </div>
 
@@ -169,7 +247,7 @@
                 </div>
 
                 <div class="chart-grid">
-                    <div class="chart-box"><h4>Efisiensi per Tanggal (%)</h4><div class="cv"><canvas id="chEff"></canvas></div></div>
+                    <div class="chart-box"><h4>Persentase OK per Tanggal (%)</h4><div class="cv"><canvas id="chEff"></canvas></div></div>
                     <div class="chart-box"><h4>After Plucker vs After Sortir Karyawan</h4><div class="cv"><canvas id="chDefeat"></canvas></div></div>
                 </div>
 
@@ -179,7 +257,8 @@
                         <thead>
                             <tr>
                                 <th class="l">Nama Farm</th><th>Batch</th><th>AVG DTA</th>
-                                <th>Head Pulling %</th><th>Leg Cutting %</th><th>Leg Pulling %</th>
+                                <th>Ayam Jatuh</th>
+                                <th>Head Pulling % OK</th><th>Leg Cutting % OK</th><th>Leg Pulling % OK</th>
                                 <th>After Plucker</th><th>After Sortir</th>
                             </tr>
                         </thead>
@@ -189,6 +268,7 @@
                                     <td class="l">{{ $r['farm'] }}</td>
                                     <td>{{ $r['batches'] }}</td>
                                     <td>{{ $f($r['avg_dta'], 2) }}</td>
+                                    <td>{{ number_format($r['fallen'], 0, ',', '') }}</td>
                                     <td>{{ $f($r['head_pulling'], 1) }}</td>
                                     <td>{{ $f($r['leg_cutting'], 1) }}</td>
                                     <td>{{ $f($r['leg_pulling'], 1) }}</td>
@@ -319,9 +399,9 @@
             new Chart(document.getElementById('chEff'), {
                 type: 'line',
                 data: { labels: T.labels, datasets: [
-                    line('Head Pulling', T.head_pulling, '#e85d2f'),
-                    line('Leg Cutting', T.leg_cutting, '#0284c7'),
-                    line('Leg Pulling', T.leg_pulling, '#16a34a'),
+                    line('Head Pulling % OK', T.head_pulling, '#e85d2f'),
+                    line('Leg Cutting % OK', T.leg_cutting, '#0284c7'),
+                    line('Leg Pulling % OK', T.leg_pulling, '#16a34a'),
                 ] },
                 options: { ...common, scales: { y: { suggestedMax: 100 } } },
             });
