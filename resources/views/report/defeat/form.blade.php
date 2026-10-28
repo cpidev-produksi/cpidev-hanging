@@ -5,9 +5,7 @@
     use App\Models\DefeatReportItem as DI;
 
     $editing = (bool) $item;
-    $backUrl = route('defeathering.efficiency.index', [
-        'date' => $report->report_date->toDateString(),
-    ]) . '#report-' . $report->id;
+    $backUrl = route('defeathering.efficiency.show', $report) . '#report-items';
 
     // nilai awal input: old() > data tersimpan; desimal tampil dengan koma, mm.ss apa adanya
     $val = function (string $key) use ($item) {

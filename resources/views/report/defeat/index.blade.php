@@ -10,137 +10,202 @@
         default    => ['Draft', 'draft'],
     };
     $f = fn ($v, $d = 1) => DI::fmt($v, $d);
+    $pct = fn ($v) => max(0, min(100, (float) ($v ?? 0)));
 @endphp
 
 <style>
-    .df-wrap { font-family:'Inter',sans-serif; }
-    .df-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600; border:1px solid var(--card-border); background:#fff; color:var(--text-main); cursor:pointer; text-decoration:none; }
-    .df-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
-    .df-btn.danger { color:#b91c1c; border-color:#fecaca; background:#fff5f5; }
-    .df-btn.sm { padding:4px 9px; font-size:12px; }
-    .f-label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-bottom:5px; }
-    .f-in { padding:8px 12px; border:1px solid var(--card-border); border-radius:8px; font-family:'Inter',sans-serif; font-size:13px; background:#fff; color:var(--text-main); }
+    .ef, dialog.nr { --ink:var(--text-main,#0d1117); --mut:var(--text-muted,#6b7896); --line:var(--card-border,#e4e8f0); --acc:var(--accent,#e85d2f); --soft:#f6f8fc; --hover:#fafbfe; }
+    .ef { max-width:1440px; margin:0 auto; font-family:'Inter',system-ui,sans-serif; color:var(--ink); }
 
-    .df-filter { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:18px; }
-    .alert-err { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:14px; }
-    .alert-err ul { margin:0; padding-left:18px; }
+    /* ===== Header halaman ===== */
+    .ef-head { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:14px 24px; margin-bottom:22px; }
+    .ef-title { font-size:26px; font-weight:800; letter-spacing:-.025em; line-height:1.15; }
+    .ef-desc { margin-top:6px; max-width:56ch; font-size:14px; line-height:1.5; color:var(--mut); }
 
-    .report-list-wrap { overflow-x:auto; }
-    table.report-list { width:100%; border-collapse:collapse; font-size:13px; }
-    table.report-list th, table.report-list td { padding:10px 12px; border-bottom:1px solid var(--card-border); text-align:left; white-space:nowrap; }
-    table.report-list th { background:#f5f7fc; color:var(--text-muted); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; }
+    /* ===== Tombol & input ===== */
+    .df-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:9px 15px; border-radius:10px; font:600 13px/1.2 'Inter',sans-serif; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; text-decoration:none; transition:background-color .15s, border-color .15s, color .15s; }
+    .df-btn:hover { background:var(--soft); border-color:#cfd6e4; }
+    .df-btn.primary { background:var(--acc); border-color:var(--acc); color:#fff; box-shadow:0 1px 2px rgba(232,93,47,.3); }
+    .df-btn.primary:hover { background:#d44f24; border-color:#d44f24; }
+    .df-btn.danger { color:#b91c1c; border-color:#f3c6c6; }
+    .df-btn.danger:hover { background:#fef2f2; border-color:#ecaaaa; }
+    .df-btn.sm { padding:6px 10px; font-size:12px; border-radius:8px; }
+    .df-btn:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+    .df-btn svg { width:15px; height:15px; flex:none; }
+
+    .f-label { display:block; margin-bottom:6px; font-size:12px; font-weight:600; color:var(--mut); }
+    .f-in { width:100%; min-height:40px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; font:500 13.5px 'Inter',sans-serif; background:#fff; color:var(--ink); transition:border-color .15s, box-shadow .15s; }
+    .f-in:focus { outline:none; border-color:var(--acc); box-shadow:0 0 0 3px rgba(232,93,47,.15); }
+
+    /* ===== Filter ===== */
+    .df-filter { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)) auto; gap:12px; align-items:end; padding:14px 16px; margin-bottom:26px; background:#fff; border:1px solid var(--line); border-radius:16px; }
+    .df-filter .df-btn { min-height:40px; }
+    @media (max-width:980px) { .df-filter { grid-template-columns:repeat(2, minmax(0,1fr)); } .df-filter .df-btn { grid-column:1 / -1; } }
+    @media (max-width:480px) { .df-filter { grid-template-columns:1fr; } }
+
+    .sec-h { display:flex; align-items:baseline; gap:10px; margin:26px 0 12px; font-size:16px; font-weight:700; letter-spacing:-.01em; }
+    .sec-h.s { margin:20px 0 10px; font-size:13.5px; color:var(--mut); font-weight:600; }
+    .sec-h .hint { font-size:12.5px; font-weight:500; color:var(--mut); }
+    .ef-body > .df-filter + .sec-h { margin-top:0; }
+    .note { margin:12px 0 0; font-size:12.5px; color:var(--mut); }
+    .empty { padding:44px 16px; text-align:center; font-size:14px; color:var(--mut); background:#fff; border:1px dashed #cfd6e4; border-radius:16px; }
+
+    /* ===== Status ===== */
+    .dt-status, .chip { display:inline-flex; align-items:center; gap:6px; border-radius:999px; border:1px solid; font-weight:600; white-space:nowrap; }
+    .dt-status { padding:3px 10px 3px 8px; font-size:12px; }
+    .dt-status::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .chip { padding:2px 9px; font-size:11.5px; gap:4px; }
+    .chip b { font-weight:800; }
+    .dt-status.draft, .chip.draft { background:#FEF9C3; color:#92400E; border-color:#FDE68A; }
+    .dt-status.known, .chip.known { background:#e0f2fe; color:#0369a1; border-color:#bae6fd; }
+    .dt-status.approved, .chip.approved { background:rgba(16,185,129,.10); color:#047857; border-color:rgba(16,185,129,.25); }
+
+    /* ===== KPI ===== */
+    .kpi .lbl { font-size:12.5px; font-weight:600; color:var(--mut); }
+    .kpi .val { margin-top:8px; font-size:34px; font-weight:800; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; }
+    .kpi .val .u { margin-left:3px; font-size:15px; font-weight:600; letter-spacing:0; color:var(--mut); }
+    .kpi .sub { margin-top:7px; font-size:12px; color:var(--mut); }
+    .chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+
+    .kpi-hero { display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:14px; margin-bottom:14px; }
+    .kpi-hero .kpi { padding:18px 20px 18px; background:#fff; border:1px solid var(--line); border-radius:16px; }
+    .kpi.has-meter .lbl { display:flex; align-items:center; gap:8px; }
+    .kpi.has-meter .lbl::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--mc, var(--acc)); }
+    .meter { height:6px; margin-top:14px; border-radius:99px; background:#eef1f6; overflow:hidden; }
+    .meter i { display:block; height:100%; border-radius:inherit; background:var(--mc, var(--acc)); }
+
+    .stat-strip { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); margin-bottom:14px; background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+    .stat-strip .kpi { padding:16px 18px; margin:0 -1px -1px 0; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .stat-strip .kpi .val { margin-top:6px; font-size:24px; }
+    .stat-strip .kpi .val.sm { font-size:19px; }
+
+    /* ===== Grafik ===== */
+    .chart-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; margin-top:26px; }
+    .chart-box { padding:16px 18px 12px; background:#fff; border:1px solid var(--line); border-radius:16px; }
+    .chart-box h4 { margin-bottom:12px; font-size:13.5px; font-weight:700; }
+    .chart-box .cv { position:relative; height:270px; }
+    @media (max-width:900px) { .chart-grid { grid-template-columns:1fr; } .chart-box .cv { height:230px; } }
+
+    /* ===== Tabel rekap ===== */
+    .tbl-card { background:#fff; border:1px solid var(--line); border-radius:16px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    table.df-rekap { width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; font-size:13px; font-variant-numeric:tabular-nums; }
+    table.df-rekap th, table.df-rekap td { padding:11px 14px; border-bottom:1px solid var(--line); white-space:nowrap; text-align:right; }
+    table.df-rekap thead th { background:var(--soft); font-size:12px; font-weight:600; color:var(--mut); }
+    table.df-rekap td.l, table.df-rekap th.l { position:sticky; left:0; z-index:1; text-align:left; box-shadow:1px 0 0 var(--line); }
+    table.df-rekap td.l { background:#fff; font-weight:600; }
+    table.df-rekap thead th.l { background:var(--soft); }
+    table.df-rekap tbody tr:last-child td { border-bottom:0; }
+    table.df-rekap tbody tr:hover td, table.df-rekap tbody tr:hover td.l { background:var(--hover); }
+
+    /* ===== Daftar laporan ===== */
+    .report-list-wrap { background:#fff; border:1px solid var(--line); border-radius:16px; overflow-x:auto; }
+    table.report-list { width:100%; border-collapse:collapse; font-size:13.5px; }
+    table.report-list th, table.report-list td { padding:12px 16px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
+    table.report-list th { background:var(--soft); font-size:12px; font-weight:600; color:var(--mut); }
+    table.report-list tbody tr:last-child td { border-bottom:0; }
     table.report-list tbody tr[data-href] { cursor:pointer; }
-    table.report-list tbody tr[data-href]:hover td { background:#f8fafc; }
+    table.report-list tbody tr[data-href]:hover td { background:var(--hover); }
+    table.report-list tbody tr[data-href]:focus-visible { outline:2px solid var(--acc); outline-offset:-2px; }
     .report-actions { display:flex; gap:6px; flex-wrap:wrap; }
     .report-actions form { margin:0; }
-    .note { font-size:12px; color:var(--text-muted); margin:10px 0 0; }
 
-    dialog.nr { position:fixed; inset:50% auto auto 50%; transform:translate(-50%, -50%); margin:0; border:none; border-radius:14px; padding:0; width:min(440px, 92vw); max-height:90vh; overflow:auto; box-shadow:0 20px 50px rgba(15,23,42,.25); }
-    dialog.nr::backdrop { background:rgba(15,23,42,.45); }
-    .nr-body { padding:18px; }
-    .nr-title { font-size:15px; font-weight:700; margin-bottom:4px; }
-    .nr-sub { font-size:12px; color:var(--text-muted); margin-bottom:14px; }
-    .nr-grid { display:grid; gap:12px; }
-    .nr-grid .f-in { width:100%; }
-    .nr-foot { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+    @media (max-width:720px) {
+        table.report-list, table.report-list tbody, table.report-list tr, table.report-list td { display:block; width:100%; }
+        table.report-list thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+        table.report-list tbody tr { padding:12px 16px; border-bottom:1px solid var(--line); }
+        table.report-list tbody tr:last-child { border-bottom:0; }
+        table.report-list td { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 0; border:0; white-space:normal; }
+        table.report-list td::before { content:attr(data-label); font-size:12px; font-weight:600; color:var(--mut); }
+        table.report-list td.act { display:block; padding-top:10px; }
+        table.report-list td.act::before { content:none; }
+        table.report-list tbody tr[data-href]:hover td { background:transparent; }
+    }
 
-    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
-    .kpi { border:1px solid var(--card-border); border-radius:12px; padding:14px; background:#fff; }
-    .kpi .lbl { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); }
-    .kpi .val { font-size:24px; font-weight:800; margin-top:4px; }
-    .kpi .sub { font-size:11.5px; color:var(--text-muted); margin-top:2px; }
-    .chart-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
-    @media (max-width:900px){ .chart-grid { grid-template-columns:1fr; } }
-    .chart-box { border:1px solid var(--card-border); border-radius:12px; padding:14px; background:#fff; }
-    .chart-box h4 { font-size:13px; margin-bottom:10px; }
-    .chart-box .cv { position:relative; height:260px; }
-    .sec-h { font-size:13px; font-weight:700; margin:6px 0 10px; }
-    .empty { padding:40px 10px; text-align:center; color:var(--text-muted); }
-
-    /* tabel rekap dashboard */
-    table.df-rekap { width:max-content; min-width:100%; border-collapse:collapse; font-size:12.5px; }
-    table.df-rekap th, table.df-rekap td { padding:8px 9px; border-bottom:1px solid var(--card-border); white-space:nowrap; text-align:center; }
-    table.df-rekap thead th { background:#f5f7fc; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); }
-    table.df-rekap td.l, table.df-rekap th.l { text-align:left; }
-
-    /* ===== Tombol: transisi & fokus ===== */
-    .df-btn { line-height:1.2; transition:background-color .15s, border-color .15s, color .15s; }
-    .df-btn:hover { border-color:#cbd3e3; background:#f8fafc; }
-    .df-btn.primary:hover { background:#d44f24; border-color:#d44f24; }
-    .df-btn.danger:hover { background:#fee2e2; }
-    .df-btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-    .df-btn svg { width:14px; height:14px; flex:none; }
+    /* ===== Dialog buat laporan ===== */
+    dialog.nr { position:fixed; inset:50% auto auto 50%; transform:translate(-50%, -50%); margin:0; border:none; border-radius:18px; padding:0; width:min(460px, 92vw); max-height:90vh; overflow:auto; font-family:'Inter',system-ui,sans-serif; color:var(--ink); box-shadow:0 24px 60px rgba(15,23,42,.28); }
+    dialog.nr::backdrop { background:rgba(13,17,23,.5); backdrop-filter:blur(3px); }
+    dialog.nr[open] { animation:nr-in .18s ease-out; }
+    @keyframes nr-in { from { opacity:0; transform:translate(-50%, -48%) scale(.98); } }
+    .nr-body { padding:20px; }
+    .nr-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .nr-title { font-size:17px; font-weight:700; letter-spacing:-.01em; }
+    .nr-sub { margin-top:4px; font-size:13px; line-height:1.5; color:var(--mut); }
+    .nr-x { flex:none; display:grid; place-items:center; width:32px; height:32px; margin:-4px -6px 0 0; border:0; border-radius:8px; background:transparent; color:var(--mut); cursor:pointer; }
+    .nr-x:hover { background:var(--soft); color:var(--ink); }
+    .nr-x:focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
+    .nr-x svg { width:16px; height:16px; }
+    .nr-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .nr-grid > div:first-child { grid-column:1 / -1; }
+    @media (max-width:420px) { .nr-grid { grid-template-columns:1fr; } }
+    .nr-foot { display:flex; justify-content:flex-end; gap:8px; margin-top:22px; padding-top:16px; border-top:1px solid var(--line); }
 
     /* ===== Detail laporan ===== */
-    .dt-back { display:inline-flex; align-items:center; gap:4px; margin-bottom:16px; font-size:13px; font-weight:600; color:var(--text-muted); text-decoration:none; }
+    .dt-back { display:inline-flex; align-items:center; gap:4px; margin-bottom:16px; font-size:13px; font-weight:600; color:var(--mut); text-decoration:none; }
     .dt-back svg { width:16px; height:16px; transition:transform .15s; }
-    .dt-back:hover { color:var(--accent); }
+    .dt-back:hover { color:var(--acc); }
     .dt-back:hover svg { transform:translateX(-3px); }
-    .dt-back:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+    .dt-back:focus-visible { outline:2px solid var(--acc); outline-offset:3px; border-radius:4px; }
 
-    .dt-card.rp-card { --st:#d97706; position:relative; margin:0 0 22px; padding:0; background:#fff; border:1px solid var(--card-border); border-radius:14px; box-shadow:0 1px 3px rgba(15,23,42,.04), 0 10px 28px -14px rgba(15,23,42,.12); scroll-margin-top:90px; }
+    .dt-card.rp-card { --st:#d97706; position:relative; margin:0 0 22px; padding:0; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 1px 2px rgba(15,23,42,.04), 0 12px 30px -16px rgba(15,23,42,.14); scroll-margin-top:90px; }
     .dt-card.is-known { --st:#0284c7; }
     .dt-card.is-approved { --st:#059669; }
-    .dt-card::before { content:''; position:absolute; inset:0 auto 0 0; width:4px; background:var(--st); border-radius:14px 0 0 14px; }
+    .dt-card::before { content:''; position:absolute; inset:0 auto 0 0; width:4px; background:var(--st); border-radius:16px 0 0 16px; }
 
     .dt-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px 24px; padding:22px 24px 20px 28px; }
     .dt-title-row { display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; }
-    .dt-title { font-size:22px; font-weight:800; letter-spacing:-.01em; line-height:1.25; color:var(--text-main); }
+    .dt-title { font-size:22px; font-weight:800; letter-spacing:-.02em; line-height:1.25; }
     .dt-actions { display:flex; flex-wrap:wrap; gap:8px; }
-    .dt-actions .df-btn { padding:8px 14px; }
 
-    .dt-status { display:inline-flex; align-items:center; gap:6px; padding:3px 10px 3px 8px; border-radius:999px; border:1px solid; font-size:12px; font-weight:600; white-space:nowrap; }
-    .dt-status::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
-    .dt-status.draft { background:#FEF9C3; color:#92400E; border-color:#FDE68A; }
-    .dt-status.known { background:#e0f2fe; color:#0369a1; border-color:#bae6fd; }
-    .dt-status.approved { background:rgba(16,185,129,.10); color:#047857; border-color:rgba(16,185,129,.25); }
+    .dt-facts { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:14px 28px; padding:16px 24px 18px 28px; background:var(--soft); border-top:1px solid var(--line); }
+    .dt-fact dt { margin-bottom:3px; font-size:12px; font-weight:500; color:var(--mut); }
+    .dt-fact dd { display:flex; align-items:center; gap:6px; font-size:14.5px; font-weight:700; }
+    .dt-fact dd svg { width:15px; height:15px; flex:none; color:var(--mut); }
 
-    .dt-facts { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:14px 28px; padding:16px 24px 18px 28px; background:#fafbff; border-top:1px solid var(--card-border); }
-    .dt-fact dt { margin-bottom:3px; font-size:12px; font-weight:500; color:var(--text-muted); }
-    .dt-fact dd { display:flex; align-items:center; gap:6px; font-size:14.5px; font-weight:700; color:var(--text-main); }
-    .dt-fact dd svg { width:15px; height:15px; flex:none; color:var(--text-muted); }
-
-    .dt-section-head { padding:16px 24px 12px 28px; border-top:1px solid var(--card-border); }
+    .dt-section-head { padding:16px 24px 12px 28px; border-top:1px solid var(--line); }
     .dt-section-head h3 { font-size:14px; font-weight:700; }
     .dt-table-wrap { overflow-x:auto; padding:0 14px 14px 18px; }
 
     @media (max-width:640px) {
+        .ef-title { font-size:21px; }
+        .ef-head .df-btn { width:100%; }
+        .kpi .val { font-size:28px; }
         .dt-head { padding:18px 16px 16px 20px; }
         .dt-title { font-size:19px; }
         .dt-actions { width:100%; }
-        .dt-actions .df-btn { flex:1 1 auto; justify-content:center; }
+        .dt-actions .df-btn { flex:1 1 auto; }
         .dt-facts { grid-template-columns:repeat(2, minmax(0, 1fr)); padding:14px 16px 16px 20px; }
         .dt-section-head { padding:14px 16px 10px 20px; }
         .dt-table-wrap { padding:0 8px 12px 12px; }
     }
     @media (prefers-reduced-motion:reduce) {
-        .df-btn, .dt-back svg { transition:none; }
+        .df-btn, .dt-back svg, .f-in { transition:none; }
         .dt-back:hover svg { transform:none; }
+        dialog.nr[open] { animation:none; }
     }
 </style>
 
-<div class="panel df-wrap">
-    <div class="panel-header">
-        <div class="panel-title">Efficiency Defeathering Report</div>
-        <button type="button" class="df-btn primary" onclick="document.getElementById('newReport').showModal()">+ Buat Laporan</button>
-    </div>
+<div class="ef df-wrap">
+    <header class="ef-head">
+        <div>
+            <h1 class="ef-title">Efficiency Defeathering Report</h1>
+            <p class="ef-desc">Pantau efisiensi head pulling, leg cutting, dan leg pulling per farm, shift, dan lokasi.</p>
+        </div>
+        <button type="button" class="df-btn primary" onclick="document.getElementById('newReport').showModal()"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg> Buat laporan</button>
+    </header>
 
-    <div class="panel-body">
-        @if($errors->any())
-            <div class="alert-err"><ul>@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul></div>
-        @endif
+    <div class="ef-body">
 
         @unless($detailMode)
             {{-- Filter --}}
             <form method="GET" class="df-filter" id="reportFilterForm">
-                <div><label class="f-label">Tanggal</label><input class="f-in" type="date" name="date" value="{{ $filters['date'] }}"></div>
-                <div><label class="f-label">Lokasi</label>
-                    <select class="f-in" name="location">
+                <div><label class="f-label" for="fDate">Tanggal</label><input class="f-in" type="date" id="fDate" name="date" value="{{ $filters['date'] }}"></div>
+                <div><label class="f-label" for="fLoc">Lokasi</label>
+                    <select class="f-in" id="fLoc" name="location">
                         <option value="">Semua</option>
                         @foreach(['SH01','SH02'] as $l)<option value="{{ $l }}" @selected($filters['location'] === $l)>{{ $l }}</option>@endforeach
                     </select></div>
-                <div><label class="f-label">Shift</label>
-                    <select class="f-in" name="shift">
+                <div><label class="f-label" for="fShift">Shift</label>
+                    <select class="f-in" id="fShift" name="shift">
                         <option value="">Semua</option>
                         <option value="pagi" @selected($filters['shift'] === 'pagi')>Pagi</option>
                         <option value="malam" @selected($filters['shift'] === 'malam')>Malam</option>
@@ -221,29 +286,53 @@
             @endif
         @else
             {{-- ===================== DASHBOARD SUMMARY ===================== --}}
-            <h2 class="sec-h">Dashboard Summary</h2>
+            <h2 class="sec-h">Ringkasan dashboard</h2>
             @php $k = $dash['kpi']; $a = $dash['avg']; @endphp
             @if($k['batches'] === 0)
                 <div class="empty">Belum ada data pada filter ini.</div>
             @else
-                <div class="kpi-grid">
+                <div class="kpi-hero">
+                    <div class="kpi has-meter" style="--mc:#e85d2f">
+                        <div class="lbl">Head pulling</div>
+                        <div class="val">{{ $f($a['head_pulling'], 1) }}<span class="u">%</span></div>
+                        <div class="sub">rata-rata % OK</div>
+                        <div class="meter" role="img" aria-label="Head pulling {{ $f($a['head_pulling'], 1) }} persen OK"><i style="width:{{ $pct($a['head_pulling']) }}%"></i></div>
+                    </div>
+                    <div class="kpi has-meter" style="--mc:#0284c7">
+                        <div class="lbl">Leg cutting</div>
+                        <div class="val">{{ $f($a['leg_cutting'], 1) }}<span class="u">%</span></div>
+                        <div class="sub">rata-rata % OK</div>
+                        <div class="meter" role="img" aria-label="Leg cutting {{ $f($a['leg_cutting'], 1) }} persen OK"><i style="width:{{ $pct($a['leg_cutting']) }}%"></i></div>
+                    </div>
+                    <div class="kpi has-meter" style="--mc:#16a34a">
+                        <div class="lbl">Leg pulling</div>
+                        <div class="val">{{ $f($a['leg_pulling'], 1) }}<span class="u">%</span></div>
+                        <div class="sub">rata-rata % OK</div>
+                        <div class="meter" role="img" aria-label="Leg pulling {{ $f($a['leg_pulling'], 1) }} persen OK"><i style="width:{{ $pct($a['leg_pulling']) }}%"></i></div>
+                    </div>
+                </div>
+
+                <div class="stat-strip">
                     <div class="kpi"><div class="lbl">Laporan</div><div class="val">{{ $k['reports'] }}</div>
-                        <div class="sub">{{ $k['draft'] }} draft · {{ $k['known'] }} diketahui · {{ $k['approved'] }} disetujui</div></div>
-                    <div class="kpi"><div class="lbl">Farm Tercatat</div><div class="val">{{ $k['batches'] }}</div><div class="sub">batch</div></div>
-                    <div class="kpi"><div class="lbl">Head Pulling</div><div class="val">{{ $f($a['head_pulling'], 1) }}<small style="font-size:13px;"> %</small></div><div class="sub">rata-rata % OK</div></div>
-                    <div class="kpi"><div class="lbl">Leg Cutting</div><div class="val">{{ $f($a['leg_cutting'], 1) }}<small style="font-size:13px;"> %</small></div><div class="sub">% OK · Leg Pulling {{ $f($a['leg_pulling'], 1) }} %</div></div>
-                    <div class="kpi"><div class="lbl">After Plucker</div><div class="val">{{ $f($a['after_plucker'], 1) }}</div><div class="sub">Sortir karyawan {{ $f($a['after_sortir'], 1) }}</div></div>
-                    <div class="kpi"><div class="lbl">AVG DTA</div><div class="val">{{ $f($k['avg_dta'], 2) }}<small style="font-size:13px;"> kg</small></div><div class="sub">rata-rata</div></div>
-                    <div class="kpi"><div class="lbl">Speed Line</div><div class="val">{{ $k['live_bird'] !== null ? number_format($k['live_bird'], 0, ',', '') : '–' }}</div><div class="sub">Live Bird BPH · Evis C. {{ $k['evis_c'] !== null ? number_format($k['evis_c'], 0, ',', '') : '–' }}</div></div>
-                    <div class="kpi"><div class="lbl">Ayam Jatuh di Scalder</div><div class="val">{{ number_format($k['fallen_total'], 0, ',', '') }}</div><div class="sub">total ekor</div></div>
+                        <div class="chips">
+                            <span class="chip draft"><b>{{ $k['draft'] }}</b> draft</span>
+                            <span class="chip known"><b>{{ $k['known'] }}</b> diketahui</span>
+                            <span class="chip approved"><b>{{ $k['approved'] }}</b> disetujui</span>
+                        </div></div>
+                    <div class="kpi"><div class="lbl">Farm tercatat</div><div class="val">{{ $k['batches'] }}</div><div class="sub">batch</div></div>
+                    <div class="kpi"><div class="lbl">After plucker</div><div class="val">{{ $f($a['after_plucker'], 1) }}</div><div class="sub">Sortir karyawan {{ $f($a['after_sortir'], 1) }}</div></div>
+                    <div class="kpi"><div class="lbl">AVG DTA</div><div class="val">{{ $f($k['avg_dta'], 2) }}<span class="u">kg</span></div><div class="sub">rata-rata</div></div>
+                    <div class="kpi"><div class="lbl">Speed line</div><div class="val">{{ $k['live_bird'] !== null ? number_format($k['live_bird'], 0, ',', '') : '–' }}</div><div class="sub">Live Bird BPH · Evis C. {{ $k['evis_c'] !== null ? number_format($k['evis_c'], 0, ',', '') : '–' }}</div></div>
+                    <div class="kpi"><div class="lbl">Ayam jatuh di scalder</div><div class="val">{{ number_format($k['fallen_total'], 0, ',', '') }}</div><div class="sub">total ekor</div></div>
                     <div class="kpi"><div class="lbl">ATP</div><div class="val">{{ number_format($k['atp_total'], 0, ',', '') }}</div><div class="sub">total</div></div>
                 </div>
 
-                <div class="kpi-grid">
-                    <div class="kpi"><div class="lbl">Stunner</div><div class="val" style="font-size:18px;">{{ $f($a['amp'], 2) }} A · {{ $f($a['volt'], 1) }} V</div><div class="sub">rata-rata Amp · Volt</div></div>
-                    <div class="kpi"><div class="lbl">Scalder 1</div><div class="val" style="font-size:18px;">{{ $f($a['scalder1_temp'], 1) }} °C</div><div class="sub">rata-rata suhu</div></div>
-                    <div class="kpi"><div class="lbl">Scalder 2</div><div class="val" style="font-size:18px;">{{ $f($a['scalder2_temp'], 1) }} °C</div><div class="sub">rata-rata suhu</div></div>
-                    <div class="kpi"><div class="lbl">Scalder 3</div><div class="val" style="font-size:18px;">{{ $f($a['scalder3_temp'], 1) }} °C</div><div class="sub">rata-rata suhu</div></div>
+                <div class="sec-h s">Parameter mesin <span class="hint">rata-rata seluruh farm</span></div>
+                <div class="stat-strip">
+                    <div class="kpi"><div class="lbl">Stunner</div><div class="val sm">{{ $f($a['amp'], 2) }}<span class="u">A</span>&ensp;{{ $f($a['volt'], 1) }}<span class="u">V</span></div></div>
+                    <div class="kpi"><div class="lbl">Scalder 1</div><div class="val sm">{{ $f($a['scalder1_temp'], 1) }}<span class="u">°C</span></div></div>
+                    <div class="kpi"><div class="lbl">Scalder 2</div><div class="val sm">{{ $f($a['scalder2_temp'], 1) }}<span class="u">°C</span></div></div>
+                    <div class="kpi"><div class="lbl">Scalder 3</div><div class="val sm">{{ $f($a['scalder3_temp'], 1) }}<span class="u">°C</span></div></div>
                 </div>
 
                 <div class="chart-grid">
@@ -252,7 +341,7 @@
                 </div>
 
                 <div class="sec-h">Rekap per Farm</div>
-                <div style="overflow-x:auto;">
+                <div class="tbl-card">
                     <table class="df-rekap">
                         <thead>
                             <tr>
@@ -287,7 +376,7 @@
             <section class="report-list-section">
                 <h2 class="sec-h">Daftar Laporan</h2>
                 @if($reports->isEmpty())
-                    <div class="empty">Belum ada laporan pada filter ini. Klik <strong>+ Buat Laporan</strong> untuk memulai.</div>
+                    <div class="empty">Belum ada laporan pada filter ini. Klik <strong>Buat laporan</strong> untuk memulai.</div>
                 @else
                     <div class="report-list-wrap">
                         <table class="report-list">
@@ -296,12 +385,14 @@
                                     <th>Tanggal</th>
                                     <th>Lokasi</th>
                                     <th>Shift</th>
+                                    <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($reports as $report)
                                     @php
+                                        [$bl, $bc] = $badge($report->status);
                                         $rowUrl = route('defeathering.efficiency.index', [
                                             'report_id' => $report->id,
                                             'date' => $report->report_date->toDateString(),
@@ -311,10 +402,11 @@
                                         ]) . '#report-' . $report->id;
                                     @endphp
                                     <tr data-href="{{ $rowUrl }}" role="link" tabindex="0" aria-label="Buka laporan {{ $report->report_date->format('d/m/Y') }} {{ $report->location }} shift {{ ucfirst($report->shift) }}">
-                                        <td>{{ $report->report_date->format('d/m/Y') }}</td>
-                                        <td>{{ $report->location }}</td>
-                                        <td>{{ ucfirst($report->shift) }}</td>
-                                        <td>
+                                        <td data-label="Tanggal">{{ $report->report_date->format('d/m/Y') }}</td>
+                                        <td data-label="Lokasi">{{ $report->location }}</td>
+                                        <td data-label="Shift">{{ ucfirst($report->shift) }}</td>
+                                        <td data-label="Status"><span class="dt-status {{ $bc }}">{{ $bl }}</span></td>
+                                        <td class="act">
                                             <div class="report-actions">
                                                 <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}#report-items">Show / Edit</a>
                                                 <a class="df-btn sm" href="{{ route('defeathering.efficiency.show', $report) }}#approval">Pengesahan</a>
@@ -358,12 +450,17 @@
 @endif
 
 {{-- Dialog: buat tabel baru (dokumen per tanggal operasional + shift + lokasi) --}}
-<dialog class="nr" id="newReport">
+<dialog class="nr" id="newReport" onclick="if (event.target === this) this.close()">
     <form method="POST" action="{{ route('defeathering.efficiency.store') }}" autocomplete="off">
         @csrf
         <div class="nr-body">
-            <div class="nr-title">Buat Tabel Baru</div>
-            <div class="nr-sub">Satu tabel untuk satu tanggal operasional, shift, dan lokasi. Farm ditambahkan dari tabel.</div>
+            <div class="nr-head">
+                <div>
+                    <div class="nr-title">Buat Tabel Baru</div>
+                    <div class="nr-sub">Satu tabel untuk satu tanggal operasional, shift, dan lokasi. Farm ditambahkan dari tabel.</div>
+                </div>
+                <button type="button" class="nr-x" aria-label="Tutup" onclick="document.getElementById('newReport').close()"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+            </div>
             <div class="nr-grid">
                 <div><label class="f-label" for="nr_date">Tanggal Operasional</label>
                     <input class="f-in" type="date" id="nr_date" name="report_date" value="{{ old('report_date', $newDefaults['report_date']) }}" required></div>
@@ -393,8 +490,20 @@
     <script>
         (function () {
             const T = @json($dash['trend']);
-            const line = (label, data, color) => ({ label, data, borderColor: color, backgroundColor: color, tension: .25, spanGaps: true, pointRadius: 3 });
-            const common = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
+            Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+            Chart.defaults.font.size = 12;
+            Chart.defaults.color = '#6b7896';
+            Chart.defaults.borderColor = '#eef1f6';
+            const line = (label, data, color) => ({ label, data, borderColor: color, backgroundColor: color, tension: .25, spanGaps: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2.5 });
+            const common = {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8, padding: 16 } },
+                    tooltip: { backgroundColor: '#0d1117', padding: 10, cornerRadius: 8, boxPadding: 4 },
+                },
+                scales: { x: { grid: { display: false } } },
+            };
 
             new Chart(document.getElementById('chEff'), {
                 type: 'line',
@@ -403,16 +512,16 @@
                     line('Leg Cutting % OK', T.leg_cutting, '#0284c7'),
                     line('Leg Pulling % OK', T.leg_pulling, '#16a34a'),
                 ] },
-                options: { ...common, scales: { y: { suggestedMax: 100 } } },
+                options: { ...common, scales: { x: common.scales.x, y: { suggestedMax: 100 } } },
             });
 
             new Chart(document.getElementById('chDefeat'), {
                 type: 'bar',
                 data: { labels: T.labels, datasets: [
-                    { label: 'After Plucker', data: T.after_plucker, backgroundColor: '#7c3aed' },
-                    { label: 'After Sortir Karyawan', data: T.after_sortir, backgroundColor: '#94a3b8' },
+                    { label: 'After Plucker', data: T.after_plucker, backgroundColor: '#7c3aed', borderRadius: 4, maxBarThickness: 28 },
+                    { label: 'After Sortir Karyawan', data: T.after_sortir, backgroundColor: '#94a3b8', borderRadius: 4, maxBarThickness: 28 },
                 ] },
-                options: { ...common, scales: { y: { beginAtZero: true } } },
+                options: { ...common, scales: { x: common.scales.x, y: { beginAtZero: true } } },
             });
         })();
     </script>

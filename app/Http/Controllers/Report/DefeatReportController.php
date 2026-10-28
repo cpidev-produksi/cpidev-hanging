@@ -191,6 +191,11 @@ class DefeatReportController extends Controller
             . '#report-' . $report->id;
     }
 
+    private function itemsUrl(DefeatReport $report): string
+    {
+        return route('defeathering.efficiency.show', $report) . '#report-items';
+    }
+
     /* =====================================================================
      |  FORM FARM (tambah / ubah satu baris)
      * ===================================================================== */
@@ -376,7 +381,7 @@ class DefeatReportController extends Controller
             ]
         );
 
-        return redirect($this->indexUrl($defeatReport))
+        return redirect($this->itemsUrl($defeatReport))
             ->with('status', 'Farm ' . $item->farm_name . ' ditambahkan ke tabel.');
     }
 
@@ -392,7 +397,7 @@ class DefeatReportController extends Controller
             'time_end' => $window['end'],
         ]);
 
-        return redirect($this->indexUrl($defeatReport))
+        return redirect($this->itemsUrl($defeatReport))
             ->with('status', 'Data farm ' . $item->farm_name . ' diperbarui.');
     }
 
@@ -404,7 +409,7 @@ class DefeatReportController extends Controller
         $name = $item->farm_name;
         $item->delete();
 
-        return redirect($this->indexUrl($defeatReport))
+        return redirect($this->itemsUrl($defeatReport))
             ->with('status', 'Farm ' . $name . ' dihapus dari tabel.');
     }
 

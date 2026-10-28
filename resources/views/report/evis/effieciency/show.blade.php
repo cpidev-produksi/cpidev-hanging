@@ -70,7 +70,6 @@
         <div class="tbl-wrap" id="report-items">
             @include('report.evis.effieciency.partials.table', ['report' => $report, 'actions' => true])
         </div>
-        <p class="note">Persentase Vent dan Nouva = jumlah temuan ÷ Jumlah Sampling × 100. Total dan Average ditampilkan untuk Vent Tidak Sobek, Jeroan Tidak Terambil, dan Temuan Grit.</p>
 
         {{-- Pengesahan --}}
         <div class="sign-grid" id="approval">
