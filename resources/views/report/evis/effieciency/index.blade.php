@@ -85,13 +85,13 @@
     @media (max-width:900px) { .chart-grid { grid-template-columns:1fr; } .chart-box .cv { height:230px; } }
 
     /* ===== Tabel rekap ===== */
-    .tbl-card { background:#fff; border:1px solid var(--line); border-radius:16px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .tbl-card { max-height:480px; background:#fff; border:1px solid var(--line); border-radius:16px; overflow:auto; -webkit-overflow-scrolling:touch; }
     table.df-rekap { width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; font-size:13px; font-variant-numeric:tabular-nums; }
     table.df-rekap th, table.df-rekap td { padding:11px 14px; border-bottom:1px solid var(--line); white-space:nowrap; text-align:right; }
-    table.df-rekap thead th { background:var(--soft); font-size:12px; font-weight:600; color:var(--mut); }
+    table.df-rekap thead th { position:sticky; top:0; z-index:2; background:var(--soft); font-size:12px; font-weight:600; color:var(--mut); }
     table.df-rekap td.l, table.df-rekap th.l { position:sticky; left:0; z-index:1; text-align:left; box-shadow:1px 0 0 var(--line); }
     table.df-rekap td.l { background:#fff; font-weight:600; }
-    table.df-rekap thead th.l { background:var(--soft); }
+    table.df-rekap thead th.l { left:0; z-index:3; background:var(--soft); }
     table.df-rekap tbody tr:last-child td { border-bottom:0; }
     table.df-rekap tbody tr:hover td, table.df-rekap tbody tr:hover td.l { background:var(--hover); }
 
@@ -186,7 +186,6 @@
     <header class="ef-head">
         <div>
             <h1 class="ef-title">Efficiency Evisceration Report</h1>
-            <p class="ef-desc">Pantau vent, jeroan, dan temuan grit per farm, shift, dan lokasi.</p>
         </div>
         <button type="button" class="df-btn primary" onclick="document.getElementById('newReport').showModal()"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg> Buat laporan</button>
     </header>
@@ -328,34 +327,7 @@
                     <div class="chart-box"><h4>Persentase per Tanggal (%)</h4><div class="cv"><canvas id="chPct"></canvas></div></div>
                     <div class="chart-box"><h4>Temuan Grit per Tanggal (ekor)</h4><div class="cv"><canvas id="chGrit"></canvas></div></div>
                 </div>
-
-                <div class="sec-h">Rekap per Farm</div>
-                <div class="tbl-card">
-                    <table class="df-rekap">
-                        <thead>
-                            <tr>
-                                <th class="l">Nama Farm</th><th>Batch</th><th>Speed Evis (BPH)</th><th>Jumlah Sampling</th>
-                                <th>Vent Tidak Sobek %</th><th>Jeroan Tidak Terambil %</th><th>Temuan Grit</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($dash['byFarm'] as $r)
-                                <tr>
-                                    <td class="l">{{ $r['farm'] }}</td>
-                                    <td>{{ $r['batches'] }}</td>
-                                    <td>{{ $f($r['speed_evis'], 0) }}</td>
-                                    <td>{{ number_format($r['sampling'], 0, ',', '') }}</td>
-                                    <td>{{ $f($r['vent'], 1) }}</td>
-                                    <td>{{ $f($r['viscera'], 1) }}</td>
-                                    <td>{{ number_format($r['grit'], 0, ',', '') }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <p class="note">Rata-rata dihitung dari seluruh farm pada filter yang dipilih (setiap farm berbobot sama).</p>
             @endif
-        @endif
 
         @unless($detailMode)
             <section class="report-list-section">
@@ -416,6 +388,35 @@
                 @endif
             </section>
         @endunless
+
+        @if($dash['kpi']['batches'] > 0)
+            <div class="sec-h">Rekap per Farm</div>
+            <div class="tbl-card">
+                <table class="df-rekap">
+                    <thead>
+                        <tr>
+                            <th class="l">Nama Farm</th><th>Batch</th><th>Speed Evis (BPH)</th><th>Jumlah Sampling</th>
+                            <th>Vent Tidak Sobek %</th><th>Jeroan Tidak Terambil %</th><th>Temuan Grit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($dash['byFarm'] as $r)
+                            <tr>
+                                <td class="l">{{ $r['farm'] }}</td>
+                                <td>{{ $r['batches'] }}</td>
+                                <td>{{ $f($r['speed_evis'], 0) }}</td>
+                                <td>{{ number_format($r['sampling'], 0, ',', '') }}</td>
+                                <td>{{ $f($r['vent'], 1) }}</td>
+                                <td>{{ $f($r['viscera'], 1) }}</td>
+                                <td>{{ number_format($r['grit'], 0, ',', '') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="note">Rata-rata dihitung dari seluruh farm pada filter yang dipilih (setiap farm berbobot sama).</p>
+        @endif
+        @endif
     </div>
 </div>
 

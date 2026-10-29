@@ -87,13 +87,13 @@
     @media (max-width:900px) { .chart-grid { grid-template-columns:1fr; } .chart-box .cv { height:230px; } }
 
     /* ===== Tabel rekap ===== */
-    .tbl-card { background:#fff; border:1px solid var(--line); border-radius:16px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .tbl-card { max-height:480px; background:#fff; border:1px solid var(--line); border-radius:16px; overflow:auto; -webkit-overflow-scrolling:touch; }
     table.df-rekap { width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; font-size:13px; font-variant-numeric:tabular-nums; }
     table.df-rekap th, table.df-rekap td { padding:11px 14px; border-bottom:1px solid var(--line); white-space:nowrap; text-align:right; }
-    table.df-rekap thead th { background:var(--soft); font-size:12px; font-weight:600; color:var(--mut); }
+    table.df-rekap thead th { position:sticky; top:0; z-index:2; background:var(--soft); font-size:12px; font-weight:600; color:var(--mut); }
     table.df-rekap td.l, table.df-rekap th.l { position:sticky; left:0; z-index:1; text-align:left; box-shadow:1px 0 0 var(--line); }
     table.df-rekap td.l { background:#fff; font-weight:600; }
-    table.df-rekap thead th.l { background:var(--soft); }
+    table.df-rekap thead th.l { left:0; z-index:3; background:var(--soft); }
     table.df-rekap tbody tr:last-child td { border-bottom:0; }
     table.df-rekap tbody tr:hover td, table.df-rekap tbody tr:hover td.l { background:var(--hover); }
 
@@ -188,7 +188,6 @@
     <header class="ef-head">
         <div>
             <h1 class="ef-title">Efficiency Defeathering Report</h1>
-            <p class="ef-desc">Pantau efisiensi head pulling, leg cutting, dan leg pulling per farm, shift, dan lokasi.</p>
         </div>
         <button type="button" class="df-btn primary" onclick="document.getElementById('newReport').showModal()"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg> Buat laporan</button>
     </header>
@@ -339,38 +338,7 @@
                     <div class="chart-box"><h4>Persentase OK per Tanggal (%)</h4><div class="cv"><canvas id="chEff"></canvas></div></div>
                     <div class="chart-box"><h4>After Plucker vs After Sortir Karyawan</h4><div class="cv"><canvas id="chDefeat"></canvas></div></div>
                 </div>
-
-                <div class="sec-h">Rekap per Farm</div>
-                <div class="tbl-card">
-                    <table class="df-rekap">
-                        <thead>
-                            <tr>
-                                <th class="l">Nama Farm</th><th>Batch</th><th>AVG DTA</th>
-                                <th>Ayam Jatuh</th>
-                                <th>Head Pulling % OK</th><th>Leg Cutting % OK</th><th>Leg Pulling % OK</th>
-                                <th>After Plucker</th><th>After Sortir</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($dash['byFarm'] as $r)
-                                <tr>
-                                    <td class="l">{{ $r['farm'] }}</td>
-                                    <td>{{ $r['batches'] }}</td>
-                                    <td>{{ $f($r['avg_dta'], 2) }}</td>
-                                    <td>{{ number_format($r['fallen'], 0, ',', '') }}</td>
-                                    <td>{{ $f($r['head_pulling'], 1) }}</td>
-                                    <td>{{ $f($r['leg_cutting'], 1) }}</td>
-                                    <td>{{ $f($r['leg_pulling'], 1) }}</td>
-                                    <td>{{ $f($r['after_plucker'], 1) }}</td>
-                                    <td>{{ $f($r['after_sortir'], 1) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <p class="note">Rata-rata dihitung dari seluruh farm pada filter yang dipilih (setiap farm berbobot sama).</p>
             @endif
-        @endif
 
         @unless($detailMode)
             <section class="report-list-section">
@@ -429,6 +397,39 @@
                 @endif
             </section>
         @endunless
+
+        @if($dash['kpi']['batches'] > 0)
+            <div class="sec-h">Rekap per Farm</div>
+            <div class="tbl-card">
+                <table class="df-rekap">
+                    <thead>
+                        <tr>
+                            <th class="l">Nama Farm</th><th>Batch</th><th>AVG DTA</th>
+                            <th>Ayam Jatuh</th>
+                            <th>Head Pulling % OK</th><th>Leg Cutting % OK</th><th>Leg Pulling % OK</th>
+                            <th>After Plucker</th><th>After Sortir</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($dash['byFarm'] as $r)
+                            <tr>
+                                <td class="l">{{ $r['farm'] }}</td>
+                                <td>{{ $r['batches'] }}</td>
+                                <td>{{ $f($r['avg_dta'], 2) }}</td>
+                                <td>{{ number_format($r['fallen'], 0, ',', '') }}</td>
+                                <td>{{ $f($r['head_pulling'], 1) }}</td>
+                                <td>{{ $f($r['leg_cutting'], 1) }}</td>
+                                <td>{{ $f($r['leg_pulling'], 1) }}</td>
+                                <td>{{ $f($r['after_plucker'], 1) }}</td>
+                                <td>{{ $f($r['after_sortir'], 1) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="note">Rata-rata dihitung dari seluruh farm pada filter yang dipilih (setiap farm berbobot sama).</p>
+        @endif
+        @endif
     </div>
 </div>
 

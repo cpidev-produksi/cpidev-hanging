@@ -1021,8 +1021,8 @@
                             </svg>
                         </button>
                         <div id="ddSecCutUp" class="dropdown-section-body {{ request()->routeIs('cut-up.*') ? 'open' : '' }}">
-                            {{-- submenu cut up nanti --}}
-                            <span class="dropdown-sub-item" style="cursor:default; opacity:.5;">Segera hadir</span>
+                            <a class="dropdown-sub-item {{ request()->routeIs('cut-up.products.*') ? 'active' : '' }}" href="{{ route('cut-up.products.index') }}">Daftar Produk</a>
+                            <a class="dropdown-sub-item {{ request()->routeIs('cut-up.metal-detector.*') ? 'active' : '' }}" href="{{ route('cut-up.metal-detector.index') }}">Pemeriksaan Metal Detector</a>
                         </div>
                     </div>
 
@@ -1219,7 +1219,8 @@
                     <span class="chev">▾</span>
                 </button>
                 <div id="accFormCutUp" class="mobile-sub-acc-body {{ request()->routeIs('cut-up.*') ? 'open' : '' }}">
-                    <span class="mobile-sub-leaf" style="opacity:.5; cursor:default;">Segera hadir</span>
+                    <a class="mobile-sub-leaf {{ request()->routeIs('cut-up.products.*') ? 'active' : '' }}" href="{{ route('cut-up.products.index') }}">Daftar Produk</a>
+                    <a class="mobile-sub-leaf {{ request()->routeIs('cut-up.metal-detector.*') ? 'active' : '' }}" href="{{ route('cut-up.metal-detector.index') }}">Pemeriksaan Metal Detector</a>
                 </div>
 
             </div>

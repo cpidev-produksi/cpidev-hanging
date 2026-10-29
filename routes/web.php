@@ -3,6 +3,8 @@
 use App\Http\Controllers\Account\RolePermissionController;
 use App\Http\Controllers\Api\Esp32MonitorController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Report\CutUpMetalDetectorController;
+use App\Http\Controllers\Report\CutUpProductController;
 use App\Http\Controllers\DailyYieldController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Form\ProductEvisController;
@@ -247,6 +249,26 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::get('/{report}/pdf', [EviscerationEfficiencyController::class, 'pdf'])->name('pdf');
             Route::delete('/{report}', [EviscerationEfficiencyController::class, 'destroy'])->name('destroy');
             Route::get('/{report}', [EviscerationEfficiencyController::class, 'show'])->name('show');
+        });
+
+    // Pemeriksaan Metal Detector
+    Route::middleware('role:checker,checker_hanging,foreman,supervisor,manager,admin,superadmin')
+        ->prefix('form/cut-up')
+        ->name('cut-up.')->group(function () {
+            // Daftar Produk
+            Route::get('products',             [CutUpProductController::class, 'index'])->name('products.index');
+            Route::post('products',            [CutUpProductController::class, 'store'])->name('products.store');
+            Route::put('products/{product}',   [CutUpProductController::class, 'update'])->name('products.update');
+            Route::delete('products/{product}',[CutUpProductController::class, 'destroy'])->name('products.destroy');
+
+            // Pemeriksaan Metal Detector
+            Route::get('metal-detector',                 [CutUpMetalDetectorController::class, 'index'])->name('metal-detector.index');
+            Route::get('metal-detector/create',          [CutUpMetalDetectorController::class, 'create'])->name('metal-detector.create');
+            Route::post('metal-detector',                [CutUpMetalDetectorController::class, 'store'])->name('metal-detector.store');
+            Route::get('metal-detector/{report}/edit',   [CutUpMetalDetectorController::class, 'edit'])->name('metal-detector.edit');
+            Route::put('metal-detector/{report}',        [CutUpMetalDetectorController::class, 'update'])->name('metal-detector.update');
+            Route::delete('metal-detector/{report}',     [CutUpMetalDetectorController::class, 'destroy'])->name('metal-detector.destroy');
+            Route::get('metal-detector/{report}/pdf',    [CutUpMetalDetectorController::class, 'pdf'])->name('metal-detector.pdf');
         });
 
     // Master Produk Evis
