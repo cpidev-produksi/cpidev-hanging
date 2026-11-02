@@ -36,6 +36,11 @@
 @php
     $isEdit = (bool) $report;
     $hm = fn ($t) => $t ? substr($t, 0, 5) : '';
+    $diameters = [
+        'fe' => number_format(\App\Models\CutUpMdReport::SPECIMEN_DIAMETERS['fe_diameter'], 1, ',', '.'),
+        'nonfe' => number_format(\App\Models\CutUpMdReport::SPECIMEN_DIAMETERS['nonfe_diameter'], 1, ',', '.'),
+        'sus316' => number_format(\App\Models\CutUpMdReport::SPECIMEN_DIAMETERS['sus316_diameter'], 1, ',', '.'),
+    ];
 
     $checksInit = old('checks', $isEdit
         ? $report->checks->map(fn ($c) => [
@@ -60,9 +65,8 @@
             ], collect(\App\Models\CutUpMdVerification::RESULT_COLUMNS)->mapWithKeys(fn ($c) => [$c => $v->{$c}])->all());
         })->values()->all()
         : []);
-
     $val = fn ($key, $fallback = null) => old($key, $fallback);
-    $dia = fn ($col) => old($col, $isEdit ? $report->{$col} : ($defaults->{$col} ?? null));
+    $val = fn ($key, $fallback = null) => old($key, $fallback);
 @endphp
 
 <div class="cu-wrap">
@@ -130,32 +134,10 @@
             </div>
         </div>
 
-        {{-- ================= DIAMETER SPESIMEN ================= --}}
-        <div class="panel">
-            <div class="panel-header"><div class="panel-title"><span class="cu-step">2</span>Diameter Spesimen</div></div>
-            <div class="panel-body">
-                <div class="cu-grid c3">
-                    <div>
-                        <label class="cu-label" for="fe_diameter">Fe — Ø</label>
-                        <div class="cu-unit"><input type="number" step="0.01" min="0" id="fe_diameter" name="fe_diameter" class="cu-input cu-mono" value="{{ $dia('fe_diameter') }}" required></div>
-                    </div>
-                    <div>
-                        <label class="cu-label" for="nonfe_diameter">Non Fe — Ø</label>
-                        <div class="cu-unit"><input type="number" step="0.01" min="0" id="nonfe_diameter" name="nonfe_diameter" class="cu-input cu-mono" value="{{ $dia('nonfe_diameter') }}" required></div>
-                    </div>
-                    <div>
-                        <label class="cu-label" for="sus316_diameter">SUS 316 — Ø</label>
-                        <div class="cu-unit"><input type="number" step="0.01" min="0" id="sus316_diameter" name="sus316_diameter" class="cu-input cu-mono" value="{{ $dia('sus316_diameter') }}" required></div>
-                    </div>
-                </div>
-                <div class="cu-hint">Diameter ini dipakai di seluruh form (pemeriksaan maupun verifikasi).</div>
-            </div>
-        </div>
-
-        {{-- ================= 3. PEMERIKSAAN SENSITIVITAS ================= --}}
+        {{-- ================= 2. PEMERIKSAAN SENSITIVITAS ================= --}}
         <div class="panel">
             <div class="panel-header">
-                <div class="panel-title"><span class="cu-step">3</span>Pemeriksaan Sensitivitas</div>
+                <div class="panel-title"><span class="cu-step">2</span>Pemeriksaan Sensitivitas</div>
                 <button type="button" class="cu-btn sm primary" onclick="openEditor('check')">+ Tambah Pemeriksaan</button>
             </div>
             <div class="panel-body">
@@ -182,10 +164,10 @@
             </div>
         </div>
 
-        {{-- ================= 4. VERIFIKASI SENSITIVITAS ================= --}}
+        {{-- ================= 3. VERIFIKASI SENSITIVITAS ================= --}}
         <div class="panel">
             <div class="panel-header">
-                <div class="panel-title"><span class="cu-step">4</span>Verifikasi Sensitivitas</div>
+                <div class="panel-title"><span class="cu-step">3</span>Verifikasi Sensitivitas</div>
                 <button type="button" class="cu-btn sm primary" onclick="openEditor('verif')">+ Tambah Verifikasi</button>
             </div>
             <div class="panel-body">
@@ -196,7 +178,7 @@
                     <table class="table rec-table">
                         <thead>
                             <tr>
-                                <th>#</th><th>Pukul</th><th>No. MD</th><th>Nama Produk</th><th>Kode Produk</th>
+                                <th>#</th><th>Pukul</th><th>No. MD</th><th>Nama Produk</th><th>Kode Batch</th>
                                 <th>Fe<em class="th-dia" data-dia="fe"></em></th>
                                 <th>Non Fe<em class="th-dia" data-dia="nonfe"></em></th>
                                 <th>SUS 316<em class="th-dia" data-dia="sus316"></em></th>
@@ -263,6 +245,7 @@
 
     const RES  = [['OK', 'OK', 'ok'], ['NOT OK', 'NOT OK', 'bad']];
     const SPEC = [['fe', 'Fe'], ['nonfe', 'Non Fe'], ['sus316', 'SUS 316']];
+    const SPECIMEN_DIAMETERS = @json($diameters);
     const POS  = [['d', 'Depan'], ['t', 'Tengah'], ['b', 'Belakang']];
     const VERIF_RESULTS = SPEC.flatMap(([k]) => POS.map(([p]) => `${k}_${p}`));
 
@@ -278,7 +261,7 @@
         verif: {
             label: 'Verifikasi', prefix: 'verifications',
             root: 'verifEditor', body: 'verifBody', wrap: 'verifTableWrap', empty: 'verifEmpty', hint: 'verifHint', hidden: 'verifHidden',
-            fields: ['check_time', 'metal_detector_no', 'product_id', 'product_code', ...VERIF_RESULTS],
+            fields: ['check_time', 'metal_detector_no', 'product_id', 'product_name', 'product_code', ...VERIF_RESULTS],
         },
     };
 
@@ -341,13 +324,14 @@
                 <select class="cu-select" ${NF} data-f="metal_detector_no">${mdOptions()}</select></div>
             <div class="v-product"><label class="cu-label">Nama Produk</label>
                 <div class="combo">
-                    <input type="text" class="cu-input combo-input" ${NF} placeholder="Cari nama produk..." autocomplete="off">
+                    <input type="text" class="cu-input combo-input" ${NF} placeholder="Pilih atau ketik nama produk..." maxlength="150" autocomplete="off">
                     <input type="hidden" ${NF} data-f="product_id">
+                    <input type="hidden" ${NF} data-f="product_name">
                     <ul class="combo-list"></ul>
                 </div>
-                <div class="cu-field-error" data-orphan hidden>Produk ini sudah dihapus dari daftar — pilih produk lagi.</div>
+                <div class="cu-hint">Pilih dari daftar atau ketik nama produk jika tidak tersedia.</div>
             </div>
-            <div><label class="cu-label">Kode Produk</label>
+            <div><label class="cu-label">Kode Batch</label>
                 <input type="text" class="cu-input code" ${NF} data-f="product_code" data-code maxlength="10" placeholder="10 karakter" autocomplete="off">
                 <div class="cu-hint cnt"><span data-cnt>0</span>/10 karakter</div></div>
         </div>
@@ -395,9 +379,6 @@
         const ci = root.querySelector('.combo-input');
         if (ci) {
             ci.value = productName(d);
-            const orphan = !d.product_id && !!ci.value;
-            ci.classList.toggle('is-error', orphan);
-            root.querySelector('[data-orphan]').hidden = !orphan;
         }
         updateCnt(root);
     }
@@ -416,15 +397,14 @@
         el.hidden = !msg;
     }
 
-    /* ---------- Hari otomatis & label diameter ---------- */
+    /* ---------- Hari otomatis & diameter spesimen ---------- */
     function updateDay() {
         const v = $('report_date').value;
         $('day_name').value = v ? new Date(v + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long' }) : '';
     }
     function updateDia() {
         SPEC.forEach(([k]) => {
-            const v = $(k + '_diameter').value;
-            document.querySelectorAll(`[data-dia="${k}"]`).forEach(el => el.textContent = 'Ø ' + (v || '—') + ' mm');
+            document.querySelectorAll(`[data-dia="${k}"]`).forEach(el => el.textContent = 'Ø ' + SPECIMEN_DIAMETERS[k] + ' mm');
         });
     }
 
@@ -476,8 +456,8 @@
         const miss = [];
         if (!d.check_time) miss.push('Pukul');
         if (!d.metal_detector_no) miss.push('No. MD');
-        if (!d.product_id) miss.push('Nama Produk (pilih dari daftar)');
-        if (d.product_code.length !== 10) miss.push('Kode Produk (harus 10 karakter)');
+        if (!d.product_name.trim()) miss.push('Nama Produk');
+        if (d.product_code.length !== 10) miss.push('Kode Batch (harus 10 karakter)');
         SPEC.forEach(([k, l]) => { if (POS.some(([p]) => !d[`${k}_${p}`])) miss.push(`${l} (Depan/Tengah/Belakang)`); });
         return miss.length ? 'Lengkapi dulu: ' + miss.join(', ') + '.' : '';
     }
@@ -488,7 +468,10 @@
         const msg = kind === 'check' ? validateCheck(d) : validateVerif(d);
         if (msg) { setErr(root, msg); return; }
 
-        if (kind === 'verif') d.product_name = productName({ product_id: d.product_id });
+        if (kind === 'verif') {
+            d.product_name = d.product_name.trim();
+            if (d.product_id) d.product_name = productName({ product_id: d.product_id });
+        }
         if (editing[kind] < 0) state[kind].push(d);
         else state[kind][editing[kind]] = d;
         closeEditor(kind);
@@ -533,7 +516,7 @@
             <td class="cu-mono">${n}</td>
             <td class="cu-mono">${esc(d.check_time)}</td>
             <td>MD ${esc(d.metal_detector_no)}</td>
-            <td class="wrap" style="font-weight:700;">${esc(name) || '–'}${d.product_id ? '' : ' <span class="cu-badge bad">Pilih ulang</span>'}</td>
+            <td class="wrap" style="font-weight:700;">${esc(name) || '–'}</td>
             <td class="cu-mono" style="letter-spacing:.05em;">${esc(d.product_code)}</td>
             <td>${specCell('fe')}</td>
             <td>${specCell('nonfe')}</td>
@@ -589,7 +572,7 @@
         }
     });
 
-    // Kode produk: huruf besar + counter
+    // Kode batch: huruf besar + counter
     $('verifEditor').addEventListener('input', (e) => {
         if (!e.target.matches('[data-code]')) return;
         e.target.value = e.target.value.toUpperCase();
@@ -619,9 +602,8 @@
     $('verifEditor').addEventListener('input', (e) => {
         if (!e.target.matches('.combo-input')) return;
         const combo = e.target.closest('.combo');
-        combo.querySelector('input[type=hidden]').value = '';   // harus memilih dari daftar
-        e.target.classList.add('is-error');
-        $('verifEditor').querySelector('[data-orphan]').hidden = true;
+        combo.querySelector('[data-f="product_id"]').value = '';
+        combo.querySelector('[data-f="product_name"]').value = e.target.value;
         renderList(combo, e.target.value);
     });
     $('verifEditor').addEventListener('mousedown', (e) => {
@@ -629,11 +611,10 @@
         if (!li) return;
         e.preventDefault();
         const combo = li.closest('.combo');
-        combo.querySelector('input[type=hidden]').value = li.dataset.id;
+        combo.querySelector('[data-f="product_id"]').value = li.dataset.id;
+        combo.querySelector('[data-f="product_name"]').value = li.dataset.name;
         const input = combo.querySelector('.combo-input');
         input.value = li.dataset.name;
-        input.classList.remove('is-error');
-        $('verifEditor').querySelector('[data-orphan]').hidden = true;
         combo.querySelector('.combo-list').classList.remove('open');
         const code = $('verifEditor').querySelector('[data-code]');
         if (code && !code.value) code.focus();
@@ -684,18 +665,10 @@
     });
 
     $('report_date').addEventListener('change', updateDay);
-    SPEC.forEach(([k]) => $(k + '_diameter').addEventListener('input', updateDia));
-    updateDay(); render('check'); render('verif');
+    updateDay(); updateDia(); render('check'); render('verif');
 
     // Pengaman sebelum menyimpan laporan
     $('mdForm').addEventListener('submit', (e) => {
-        const orphan = state.verif.findIndex(d => !d.product_id);
-        if (orphan > -1) {
-            e.preventDefault();
-            alert('Ada verifikasi dengan produk yang sudah dihapus dari daftar. Pilih produk lagi.');
-            openEditor('verif', orphan);
-            return;
-        }
         if ((editing.check !== null || editing.verif !== null) &&
             !confirm('Masih ada isian pemeriksaan/verifikasi yang belum disimpan ke tabel dan tidak akan ikut tersimpan. Lanjutkan?')) {
             e.preventDefault();

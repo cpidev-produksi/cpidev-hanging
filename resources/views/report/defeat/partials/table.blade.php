@@ -22,7 +22,7 @@
     $prevGroup = null;
     foreach ($fields as $key => $f) {
         if ($f['group'] !== $prevGroup) {
-            $groups[] = ['name' => $f['group'], 'span' => 1];
+            $groups[] = ['name' => $f['group'] === 'Defeathering' ? 'Defeathering (ekor)' : $f['group'], 'span' => 1];
             $starts[$key] = true;
             $prevGroup = $f['group'];
         } else {

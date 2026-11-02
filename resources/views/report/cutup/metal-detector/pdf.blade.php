@@ -1,10 +1,11 @@
 @php
     $hm   = fn ($t) => $t ? substr($t, 0, 5) : '';
-    $fmt  = fn ($n) => rtrim(rtrim(number_format((float) $n, 2, '.', ''), '0'), '.');
+    $fmt  = fn ($n) => number_format((float) $n, 1, ',', '.');
+    $specimenDiameters = \App\Models\CutUpMdReport::SPECIMEN_DIAMETERS;
     $dia  = [
-        'fe'     => $report->fe_diameter !== null ? $fmt($report->fe_diameter) : '',
-        'nonfe'  => $report->nonfe_diameter !== null ? $fmt($report->nonfe_diameter) : '',
-        'sus316' => $report->sus316_diameter !== null ? $fmt($report->sus316_diameter) : '',
+        'fe'     => $fmt($specimenDiameters['fe_diameter']),
+        'nonfe'  => $fmt($specimenDiameters['nonfe_diameter']),
+        'sus316' => $fmt($specimenDiameters['sus316_diameter']),
     ];
 
     $checks = $report->checks;

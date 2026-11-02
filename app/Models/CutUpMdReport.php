@@ -9,6 +9,12 @@ class CutUpMdReport extends Model
 {
     protected $table = 'cutup_md_reports';
 
+    public const SPECIMEN_DIAMETERS = [
+        'fe_diameter' => 3.0,
+        'nonfe_diameter' => 3.5,
+        'sus316_diameter' => 4.5,
+    ];
+
     protected $guarded = [];
 
     protected $casts = [

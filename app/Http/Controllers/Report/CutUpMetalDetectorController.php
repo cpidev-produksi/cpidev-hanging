@@ -70,9 +70,6 @@ class CutUpMetalDetectorController extends Controller
         return view('report.cutup.metal-detector.form', [
             'report'   => null,
             'products' => $this->productList(),
-            // Diameter spesimen biasanya sama antar laporan -> pakai nilai laporan terakhir sebagai default
-            'defaults' => CutUpMdReport::latest('report_date')->latest('id')
-                ->first(['fe_diameter', 'nonfe_diameter', 'sus316_diameter']),
         ]);
     }
 
@@ -98,7 +95,6 @@ class CutUpMetalDetectorController extends Controller
         return view('report.cutup.metal-detector.form', [
             'report'   => $report,
             'products' => $this->productList(),
-            'defaults' => null,
         ]);
     }
 
@@ -158,8 +154,6 @@ class CutUpMetalDetectorController extends Controller
         $result = ['required', Rule::in(['OK', 'NOT OK'])];
         $time   = ['required', 'date_format:H:i'];
         $md     = ['required', Rule::in(['01', '02', '03'])];
-        $dia    = ['required', 'numeric', 'gt:0', 'max:999.99'];
-
         $rules = [
             'report_date'     => ['required', 'date'],
             'location'        => ['required', Rule::in(['SH01', 'SH02'])],
@@ -167,9 +161,6 @@ class CutUpMetalDetectorController extends Controller
             'start_time'      => ['nullable', 'date_format:H:i'],
             'break_time'      => ['nullable', 'date_format:H:i'],
             'end_time'        => ['nullable', 'date_format:H:i'],
-            'fe_diameter'     => $dia,
-            'nonfe_diameter'  => $dia,
-            'sus316_diameter' => $dia,
             'made_by'         => ['nullable', 'string', 'max:100'],
             'approved_by'     => ['nullable', 'string', 'max:100'],
             'known_by'        => ['nullable', 'string', 'max:100'],
@@ -186,7 +177,8 @@ class CutUpMetalDetectorController extends Controller
             'verifications'                      => ['nullable', 'array'],
             'verifications.*.check_time'         => $time,
             'verifications.*.metal_detector_no'  => $md,
-            'verifications.*.product_id'         => ['required', 'integer', 'exists:cutup_products,id'],
+            'verifications.*.product_id'         => ['nullable', 'integer', 'exists:cutup_products,id'],
+            'verifications.*.product_name'       => ['required', 'string', 'max:150'],
             'verifications.*.product_code'       => ['required', 'string', 'size:10'],
         ];
 
@@ -194,10 +186,6 @@ class CutUpMetalDetectorController extends Controller
             'report_date'     => 'Tanggal',
             'location'        => 'Lokasi',
             'shift'           => 'Shift',
-            'fe_diameter'     => 'Diameter Fe',
-            'nonfe_diameter'  => 'Diameter Non Fe',
-            'sus316_diameter' => 'Diameter SUS 316',
-
             'checks.*.metal_detector_no' => 'No. Metal Detector (pemeriksaan ke-:position)',
             'checks.*.check_time'        => 'Pukul (pemeriksaan ke-:position)',
             'checks.*.fe_result'         => 'Fe (pemeriksaan ke-:position)',
@@ -208,7 +196,7 @@ class CutUpMetalDetectorController extends Controller
 
             'verifications.*.check_time'        => 'Pukul (verifikasi ke-:position)',
             'verifications.*.metal_detector_no' => 'No. Metal Detector (verifikasi ke-:position)',
-            'verifications.*.product_id'        => 'Nama Produk (verifikasi ke-:position)',
+            'verifications.*.product_name'      => 'Nama Produk (verifikasi ke-:position)',
             'verifications.*.product_code'      => 'Kode Produk (verifikasi ke-:position)',
         ];
 
@@ -245,11 +233,13 @@ class CutUpMetalDetectorController extends Controller
             ]);
         }
 
-        $header = collect($v)->only([
-            'report_date', 'location', 'shift', 'start_time', 'break_time', 'end_time',
-            'fe_diameter', 'nonfe_diameter', 'sus316_diameter',
-            'made_by', 'approved_by', 'known_by',
-        ])->all();
+        $header = array_merge(
+            collect($v)->only([
+                'report_date', 'location', 'shift', 'start_time', 'break_time', 'end_time',
+                'made_by', 'approved_by', 'known_by',
+            ])->all(),
+            CutUpMdReport::SPECIMEN_DIAMETERS
+        );
 
         return [
             'header'        => $header,
@@ -270,7 +260,9 @@ class CutUpMetalDetectorController extends Controller
 
         $verifs = collect($data['verifications'])->sortBy('check_time')->values();
         foreach ($verifs as $row) {
-            $row['product_name'] = $names[$row['product_id']] ?? '-';
+            $row['product_name'] = $row['product_id']
+                ? $names[$row['product_id']]
+                : trim($row['product_name']);
             $row['product_code'] = strtoupper($row['product_code']);
             $report->verifications()->create($row);
         }
