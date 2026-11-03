@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Models\MonitorControl;
+use App\Support\HangingReportBuilder;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -97,25 +98,16 @@ class MonitorSummaryController extends Controller
     {
         $this->assertComplete($monitorControl);
         // $this->assertSigned($monitorControl);
-        // $this->assertComplete($monitorControl);
 
         $form = $monitorControl->hangingForm;
-        $sets = $form->lines->flatMap->sets;
 
-        $totalKosong = (int) $sets->sum(fn ($s) => (int) ($s->empty_count ?? 0));
-        $totalAyamTerima = (int) $sets->sum(function ($s) {
-            if ($s->empty_count === null) return 0;
-            return 50 - (int)$s->empty_count;
-        });
+        // Semua angka (kapasitas shackle kondisional, selisih, total per kolom, dll.)
+        // dihitung di HangingReportBuilder supaya view PDF cukup menampilkan.
+        $report = HangingReportBuilder::build($monitorControl, $form);
 
-        $createdBy = $request->user()->name;
-
-        $pdf = Pdf::loadView('transaction.monitor_controls.summary_pdf', [
+        $pdf = Pdf::loadView('transaction.monitor_controls.hanging_report_pdf', [
             'mc' => $monitorControl,
-            'form' => $form,
-            'totalKosong' => $totalKosong,
-            'totalAyamTerima' => $totalAyamTerima,
-            'createdBy' => $createdBy,
+            'r'  => $report,
         ])->setPaper('A4', 'portrait');
 
         $filename = 'Laporan-' . $monitorControl->report_code . '.pdf';

@@ -134,6 +134,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::delete('monitor-controls/{monitorControl}', [MonitorControlController::class, 'destroy'])->name('monitor-controls.destroy');
         Route::post('monitor-controls/{monitorControl}/start', [MonitorControlController::class, 'start'])->name('monitor-controls.start');
         Route::post('monitor-controls/{monitorControl}/move', [MonitorControlController::class, 'moveTruckNo'])->name('monitor-controls.move');
+        Route::post('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'sign'])->name('monitor-controls.summary.sign');
+        Route::delete('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'unsign'])->name('monitor-controls.summary.unsign');
+        Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])->name('monitor-controls.summary.pdf');
+
     });
 
     // Delete monitor-controls (Supervisor only)
@@ -175,8 +179,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // Summary + Sign + PDF (Supervisor only)
     Route::middleware('role:supervisor,superadmin,manager')->group(function () {
         Route::post('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'sign'])->name('monitor-controls.summary.sign');
-        Route::delete('monitor-controls/{monitorControl}/summary/sign', [MonitorSummaryController::class, 'unsign'])->name('monitor-controls.summary.unsign');
-        Route::get('monitor-controls/{monitorControl}/summary/pdf', [MonitorSummaryController::class, 'pdf'])->name('monitor-controls.summary.pdf');
     });
 
     Route::middleware('perm:shfi.view')->prefix('inventory')->name('inventory.')->group(function () {
@@ -209,7 +211,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // Efficiency Defeathering Report (Form > Defeathering)
-    // 1 tabel = 1 tanggal operasional + shift + lokasi; "Tambah Farm" ada di tabel (index), form diisi per farm.
     Route::middleware('role:checker,checker_hanging,foreman,supervisor,manager,admin,superadmin')
         ->prefix('defeathering/efficiency')
         ->name('defeathering.efficiency.')
