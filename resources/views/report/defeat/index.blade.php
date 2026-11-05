@@ -383,7 +383,7 @@
                                                     <form method="POST" action="{{ route('defeathering.efficiency.destroy', $report) }}"
                                                           onsubmit="return confirm('Hapus laporan ini beserta seluruh datanya?')">
                                                         @csrf @method('DELETE')
-                                                        <button type="submit" class="df-btn danger sm">Delete</button>
+                                                        <button type="submit" class="df-btn danger sm">Hapus</button>
                                                     </form>
                                                 @endif
                                             </div>
