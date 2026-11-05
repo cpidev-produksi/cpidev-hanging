@@ -20,6 +20,7 @@
                placeholder="{{ $placeholder ?? '' }}"
                value="{{ $value }}"
                @if($f['req']) required @endif
+               @if(! empty($readonly)) readonly @endif
                @if(! empty($disabled)) disabled @endif>
         @if($unit)<span class="unit">{{ $unit }}</span>@endif
     </div>

@@ -274,6 +274,7 @@ class DefeatReportController extends Controller
             'label' => '#' . ($m->truck_no ?? '–') . ' · ' . $farm . ($m->size ? ' · ' . $m->size : ''),
             'farm' => $farm,
             'size_label' => $m->size ? str_replace('-', ' - ', $m->size) : '–',
+            'abw' => $m->abw,
             'time_start' => $window['start'] ?? null,
             'time_end' => $window['end'] ?? null,
             'history' => $this->history($m, $report, $exclude),
@@ -536,7 +537,7 @@ class DefeatReportController extends Controller
 
         // semua parameter input (persentase % OK dihitung sistem, bukan input)
         foreach (Item::FIELDS as $key => $f) {
-            if (! empty($f['calc'])) {
+            if (! empty($f['calc']) || str_ends_with($key, '_not_ok')) {
                 continue;
             }
 
@@ -570,18 +571,18 @@ class DefeatReportController extends Controller
         $window = null;
 
         $validator->after(function ($v) use ($request, $report, $item, &$mc, &$window) {
-            // OK + Not OK pada tiap pemeriksaan tidak boleh melebihi Jumlah Sampling
+            // Not OK dihitung dari Jumlah Sampling - OK; OK tidak boleh melebihi sampling.
             $sampling = (int) $request->input('sampling_count');
             foreach (Item::QC as $key => $label) {
-                if ($v->errors()->hasAny([$key . '_ok', $key . '_not_ok', 'sampling_count'])) {
+                if ($v->errors()->hasAny([$key . '_ok', 'sampling_count'])) {
                     continue;
                 }
 
-                $used = (int) $request->input($key . '_ok') + (int) $request->input($key . '_not_ok');
-                if ($used > $sampling) {
+                $ok = (int) $request->input($key . '_ok');
+                if ($ok > $sampling) {
                     $v->errors()->add(
                         $key . '_ok',
-                        "$label: OK + Not OK ($used) tidak boleh melebihi Jumlah Sampling ($sampling)."
+                        "$label: OK ($ok) tidak boleh melebihi Jumlah Sampling ($sampling)."
                     );
                 }
             }
@@ -626,7 +627,12 @@ class DefeatReportController extends Controller
             }
         });
 
-        return [$validator->validate(), $mc, $window];
+        $data = $validator->validate();
+        if ($mc?->abw !== null) {
+            $data['avg_dta'] = $mc->abw;
+        }
+
+        return [$data, $mc, $window];
     }
 
     /** Nilai parameter siap simpan. % OK dihitung dari OK / Jumlah Sampling. */
@@ -639,7 +645,9 @@ class DefeatReportController extends Controller
                 continue;
             }
 
-            $v = $data[$key] ?? null;
+            $v = str_ends_with($key, '_not_ok')
+                ? max(0, (int) ($data['sampling_count'] ?? 0) - (int) ($data[substr($key, 0, -7) . '_ok'] ?? 0))
+                : ($data[$key] ?? null);
             $out[$key] = ($v === null || $v === '')
                 ? null
                 : match ($f['kind']) {

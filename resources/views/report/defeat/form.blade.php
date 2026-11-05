@@ -87,8 +87,7 @@
     .manual-time input { height:40px; padding:0 10px; border:1px solid var(--field); border-radius:10px; font-family:inherit; font-size:14px; width:100%; background:#fff; }
     .manual-note { font-size:12px; color:var(--warn); margin-top:8px; display:none; }
     .manual-note.on { display:block; }
-    .rail-actions { display:flex; gap:10px; padding-top:18px; border-top:1px solid var(--line); }
-    .rail-actions .df-btn { flex:1; }
+    .form-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:18px; margin-top:24px; border-top:1px solid var(--line); }
 
     /* kolom input */
     .inp { position:relative; }
@@ -97,6 +96,7 @@
     .inp .unit { position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:12px; color:var(--text-muted); pointer-events:none; }
     .inp input:focus, .ff-sel:focus, .manual-time input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(232,93,47,.14); }
     .inp input:disabled { background:#f1f4f9; color:#94a3b8; cursor:not-allowed; }
+    .inp input:read-only { background:#f1f4f9; }
     .inp input.is-invalid { border-color:#ef4444; background:#fef2f2; }
     .inp input.clamped { border-color:#ef4444; background:#fef2f2; }
     .inp input::placeholder { color:#b6bfce; }
@@ -211,11 +211,6 @@
                             <span class="unit">kg</span>
                         </div>
                     </div>
-
-                    <div class="rail-actions">
-                        <button type="submit" class="df-btn primary" id="submitBtn">Simpan</button>
-                        <a href="{{ $backUrl }}" class="df-btn">Batal</a>
-                    </div>
                 </aside>
 
                 {{-- ============ PANEL KANAN: PARAMETER ============ --}}
@@ -248,7 +243,6 @@
                             <div class="fgroup">
                                 <div>
                                     <div class="fg-name">{{ $group }}</div>
-                                    <div class="fg-sub">OK ÷ Jumlah Sampling</div>
                                 </div>
                                 <div class="qc-grid">
                                     <div class="qc-ok">
@@ -262,7 +256,7 @@
                                         @include('report.defeat.partials.field', [
                                             'key' => $qk . '_not_ok', 'f' => $cols[$qk . '_not_ok'], 'label' => 'Not OK',
                                             'value' => $val($qk . '_not_ok'), 'unit' => 'ekor', 'qc' => true,
-                                            'invalid' => $errors->has($qk . '_not_ok'), 'disabled' => ! $samplingValue,
+                                            'invalid' => $errors->has($qk . '_not_ok'), 'disabled' => ! $samplingValue, 'readonly' => true,
                                         ])
                                     </div>
                                     <div class="qc-res">
@@ -290,6 +284,11 @@
                         @endif
                     @endforeach
                 </section>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="df-btn primary" id="submitBtn">Simpan</button>
+                <a href="{{ $backUrl }}" class="df-btn">Batal</a>
             </div>
         </div>
     </div>
@@ -321,6 +320,7 @@
     const manualNote = $('#manualNote');
     const hint = $('#hint');
     const sampling = $('#f_sampling_count');
+    const avgDta = $('#f_avg_dta');
     const qcLock = $('#qcLock');
     const qcInputs = $$('.qc-in');
     const histInputs = $$('input[data-hist]');
@@ -336,8 +336,18 @@
     }
 
     /* ---------- Size & Waktu otomatis ---------- */
-    function showAuto(opt) {
+    function showAuto(opt, force) {
         sizeText.textContent = opt ? (opt.size_label || '–') : '–';
+
+        if (opt && opt.abw !== null && opt.abw !== undefined && opt.abw !== '') {
+            avgDta.value = String(opt.abw).replace('.', ',');
+            avgDta.readOnly = true;
+        } else if (force) {
+            avgDta.value = '';
+            avgDta.readOnly = false;
+        } else if (opt) {
+            avgDta.readOnly = false;
+        }
 
         const hasTime = !!(opt && opt.time_start && opt.time_end);
         timeText.textContent = hasTime ? opt.time_start.replace(':', '.') + ' - ' + opt.time_end.replace(':', '.') : '–';
@@ -373,11 +383,11 @@
 
     function refresh(force) {
         const opt = findOption();
-        showAuto(opt);
+        showAuto(opt, force);
         applyHistory(opt, force);
     }
 
-    /* ---------- % OK = OK / Jumlah Sampling, plus pengecekan OK + Not OK ---------- */
+    /* ---------- % OK = OK / Jumlah Sampling; Not OK = Sampling - OK ---------- */
     function updateQc() {
         const s = int(sampling.value);
         const has = s !== null && s > 0;
@@ -394,12 +404,13 @@
             const cap = $('#cap_' + k);
 
             const ok = int(okIn.value);
-            const nok = int(nokIn.value);
+            const nok = has && ok !== null ? Math.max(0, s - ok) : null;
+            nokIn.value = nok === null ? '' : String(nok);
             const used = (ok || 0) + (nok || 0);
-            const over = has && used > s;
+            const over = has && ok !== null && ok > s;
 
             // pesan validasi hanya di kolom OK supaya satu pesan saja yang muncul saat Simpan
-            okIn.setCustomValidity(over ? 'OK + Not OK (' + id(used) + ') melebihi Jumlah Sampling (' + id(s) + ').' : '');
+            okIn.setCustomValidity(over ? 'OK (' + id(ok) + ') melebihi Jumlah Sampling (' + id(s) + ').' : '');
             nokIn.setCustomValidity('');
             okIn.classList.toggle('is-invalid', over);
             nokIn.classList.toggle('is-invalid', over);
@@ -421,7 +432,7 @@
                 cap.textContent = '';
             } else if (over) {
                 cap.classList.add('err');
-                cap.textContent = 'OK + Not OK (' + id(used) + ') melebihi Jumlah Sampling (' + id(s) + ').';
+                cap.textContent = 'OK (' + id(ok) + ') melebihi Jumlah Sampling (' + id(s) + ').';
             } else if (ok === null && nok === null) {
                 cap.textContent = '';
             } else if (used < s) {

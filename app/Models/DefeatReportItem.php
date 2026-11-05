@@ -75,8 +75,8 @@ class DefeatReportItem extends Model
     ];
 
     /**
-     * Kelompok pemeriksaan kualitas. Tiap kelompok punya dua input angka (OK & Not OK)
-     * dan satu persentase hasil hitung: % OK = OK / Jumlah Sampling x 100.
+     * Kelompok pemeriksaan kualitas. OK diinput; Not OK = sampling - OK;
+     * persentase hasil hitung: % OK = OK / Jumlah Sampling x 100.
      */
     public const QC = [
         'head_pulling' => 'Head Pulling',

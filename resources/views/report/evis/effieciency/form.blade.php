@@ -54,8 +54,7 @@
     .manual-time input { height:40px; padding:0 10px; border:1px solid var(--field); border-radius:10px; font-family:inherit; font-size:14px; width:100%; background:#fff; }
     .manual-note { font-size:12px; color:var(--warn); margin-top:8px; display:none; }
     .manual-note.on { display:block; }
-    .rail-actions { display:flex; gap:10px; padding-top:18px; border-top:1px solid var(--line); }
-    .rail-actions .df-btn { flex:1; }
+    .form-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:18px; margin-top:24px; border-top:1px solid var(--line); }
 
     /* kolom input */
     .inp { position:relative; }
@@ -166,11 +165,6 @@
                         </div>
                         <div class="manual-note" id="manualNote">Waktu hanging belum tersedia pada Form Hanging farm ini. Isi manual.</div>
                     </div>
-
-                    <div class="rail-actions">
-                        <button type="submit" class="df-btn primary" id="submitBtn">Simpan</button>
-                        <a href="{{ $backUrl }}" class="df-btn">Batal</a>
-                    </div>
                 </aside>
 
                 {{-- ============ PANEL KANAN: PARAMETER ============ --}}
@@ -261,6 +255,11 @@
                         </div>
                     </div>
                 </section>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="df-btn primary" id="submitBtn">Simpan</button>
+                <a href="{{ $backUrl }}" class="df-btn">Batal</a>
             </div>
         </div>
     </div>
