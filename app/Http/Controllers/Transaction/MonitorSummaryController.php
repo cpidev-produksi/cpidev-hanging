@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
 use App\Models\MonitorControl;
+use App\Support\HangingApproval;
 use App\Support\HangingReportBuilder;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -99,16 +100,18 @@ class MonitorSummaryController extends Controller
         $this->assertComplete($monitorControl);
         // $this->assertSigned($monitorControl);
 
-        $form = $monitorControl->hangingForm;
+        // $form = $monitorControl->hangingForm;
+
+        $pdf = HangingApproval::pdf($monitorControl);
 
         // Semua angka (kapasitas shackle kondisional, selisih, total per kolom, dll.)
         // dihitung di HangingReportBuilder supaya view PDF cukup menampilkan.
-        $report = HangingReportBuilder::build($monitorControl, $form);
+        // $report = HangingReportBuilder::build($monitorControl, $form);
 
-        $pdf = Pdf::loadView('transaction.monitor_controls.hanging_report_pdf', [
-            'mc' => $monitorControl,
-            'r'  => $report,
-        ])->setPaper('A4', 'portrait');
+        // $pdf = Pdf::loadView('transaction.monitor_controls.hanging_report_pdf', [
+        //     'mc' => $monitorControl,
+        //     'r'  => $report,
+        // ])->setPaper('A4', 'portrait');
 
         $filename = 'Laporan-' . $monitorControl->report_code . '.pdf';
         return $pdf->download($filename);

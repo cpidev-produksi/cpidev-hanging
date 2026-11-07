@@ -19,6 +19,7 @@ use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\Monitor\LiveMonitorController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Report\DefeatHangingController;
 use App\Http\Controllers\Report\DefeatReportController;
 use App\Http\Controllers\Report\EviscerationEfficiencyController;
 use App\Http\Controllers\Transaction\ConditionController;
@@ -46,6 +47,11 @@ Route::middleware('api.key')->group(function () {
     Route::get('/api/esp32/monitor-sh02', [Esp32MonitorController::class, 'show'])
         ->name('api.esp32.monitor-sh02');
 });
+
+// Tujuan QR "Dibuat oleh" (URL bertanda tangan, bisa dibuka tanpa login)
+Route::get('hanging-forms/{hangingForm}/report.pdf', [DefeatHangingController::class, 'publicPdf'])
+    ->middleware('signed')
+    ->name('hanging-forms.public-pdf');
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
@@ -231,6 +237,29 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::put('/{defeatReport}/farms/{item}', [DefeatReportController::class, 'updateItem'])->name('items.update');
             Route::delete('/{defeatReport}/farms/{item}', [DefeatReportController::class, 'destroyItem'])->name('items.destroy');
         });
+
+    // Form Hanging Ayam (Form > Defeathering): daftar hanging DONE + Review/Approve
+    Route::middleware('role:checker,checker_hanging,foreman,supervisor,manager,admin,superadmin')
+        ->prefix('defeathering/hanging')
+        ->name('defeathering.hanging.')
+        ->group(function () {
+            Route::get('/', [DefeatHangingController::class, 'index'])->name('index');
+            Route::get('/{hangingForm}/pdf', [DefeatHangingController::class, 'pdf'])->name('pdf');
+        });
+    // Review (Diketahui oleh) -> hanya Foreman
+    Route::middleware('role:foreman')
+        ->post('defeathering/hanging/{hangingForm}/review', [DefeatHangingController::class, 'review'])
+        ->name('defeathering.hanging.review');
+    Route::middleware('role:foreman')
+        ->post('defeathering/hanging/bulk-review', [DefeatHangingController::class, 'bulkReview'])
+        ->name('defeathering.hanging.bulk-review');
+    // Approve (Disetujui oleh) -> hanya Supervisor
+    Route::middleware('role:supervisor')
+        ->post('defeathering/hanging/{hangingForm}/approve', [DefeatHangingController::class, 'approve'])
+        ->name('defeathering.hanging.approve');
+    Route::middleware('role:supervisor')
+        ->post('defeathering/hanging/bulk-approve', [DefeatHangingController::class, 'bulkApprove'])
+        ->name('defeathering.hanging.bulk-approve');
 
     // Efficiency Evisceration Report
     Route::middleware('role:checker,checker_hanging,foreman,supervisor,manager,admin,superadmin')

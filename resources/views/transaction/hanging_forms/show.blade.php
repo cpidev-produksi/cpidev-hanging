@@ -106,8 +106,10 @@
         </div>
       @endif
 
-      <form method="POST" action="{{ route('hanging-forms.finish', $form) }}" class="sh-finish-form">
+      <form method="POST" action="{{ route('hanging-forms.finish', $form) }}" class="sh-finish-form"
+            id="finishForm" onsubmit="return !!document.getElementById('creatorNameHidden').value.trim()">
         @csrf
+        <input type="hidden" name="creator_name" id="creatorNameHidden" value="{{ old('creator_name', $form->creator_name) }}">
         <div class="sh-finish-grid">
           @if($previousForm)
             <div class="sh-previous-block" role="status">
@@ -161,8 +163,8 @@
         </div>
 
         <div class="sh-finish-footer">
-          <button type="submit" class="sh-btn-finish" @disabled($isLocked)
-                  onclick="return confirm('Selesaikan proses ini? Status akan menjadi DONE.')">
+          <button type="button" class="sh-btn-finish" id="btnFinish" @disabled($isLocked)
+                  onclick="openCreatorModal()">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/>
             </svg>
@@ -890,5 +892,76 @@ document.addEventListener('DOMContentLoaded', refreshTotals);
 
   .sh-ayam-val { font-weight: 900; color: var(--sh-text); transition: color .3s; }
   .sh-flash { color: var(--sh-success) !important; }
+
+  /* ── MODAL "DIBUAT OLEH" ── */
+  .sh-modal-overlay {
+    position: fixed; inset: 0; z-index: 300; display: none;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(17,24,39,.55);
+  }
+  .sh-modal-overlay.open { display: flex; }
+  .sh-modal {
+    width: min(440px, 100%); background: #fff; border-radius: 16px; padding: 22px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .sh-modal-title { margin: 0 0 4px; font-size: 1.05rem; font-weight: 800; color: var(--sh-text); }
+  .sh-modal-desc  { margin: 0 0 16px; font-size: .82rem; color: var(--sh-muted); line-height: 1.5; }
+  .sh-modal-input {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--sh-border); border-radius: 10px;
+    font: inherit; font-size: .9rem; color: var(--sh-text); box-sizing: border-box;
+  }
+  .sh-modal-input:focus { outline: none; border-color: var(--sh-accent); box-shadow: 0 0 0 3px rgba(232,93,47,.12); }
+  .sh-modal-err { display: none; margin: 6px 0 0; font-size: .76rem; font-weight: 600; color: #B91C1C; }
+  .sh-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 </style>
+
+{{-- Modal: nama pembuat ("Dibuat oleh") setelah menekan Selesai --}}
+<div id="creatorModal" class="sh-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="creatorModalTitle">
+  <div class="sh-modal">
+    <h3 class="sh-modal-title" id="creatorModalTitle">Selesaikan proses ini?</h3>
+    <p class="sh-modal-desc">Status akan menjadi DONE. Isi nama Anda; nama ini akan tampil bersama QR code.</p>
+    <label for="creatorNameInput" class="sh-label">Nama (Dibuat oleh)</label>
+    <input type="text" id="creatorNameInput" class="sh-modal-input" maxlength="120" autocomplete="off" placeholder="Nama lengkap">
+    <p class="sh-modal-err" id="creatorNameErr">Nama wajib diisi.</p>
+    <div class="sh-modal-actions">
+      <button type="button" class="sh-btn-back" onclick="closeCreatorModal()">Batal</button>
+      <button type="button" class="sh-btn-start" onclick="submitCreatorModal()">Simpan &amp; Selesai</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const modal  = document.getElementById('creatorModal');
+  const input  = document.getElementById('creatorNameInput');
+  const err    = document.getElementById('creatorNameErr');
+  const hidden = document.getElementById('creatorNameHidden');
+
+  window.openCreatorModal = function () {
+    input.value = hidden.value || '';
+    err.style.display = 'none';
+    modal.classList.add('open');
+    setTimeout(() => input.focus(), 50);
+  };
+  window.closeCreatorModal = function () { modal.classList.remove('open'); };
+
+  window.submitCreatorModal = function () {
+    const name = input.value.trim();
+    if (!name) { err.style.display = 'block'; input.focus(); return; }
+    hidden.value = name;
+    document.getElementById('finishForm').submit(); // submit() tidak memicu onsubmit
+  };
+
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); submitCreatorModal(); }
+    if (e.key === 'Escape') closeCreatorModal();
+  });
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeCreatorModal(); });
+
+  // Jika validasi server gagal (mis. jam tidak valid), buka lagi modalnya
+  @if($errors->has('creator_name'))
+  openCreatorModal();
+  @endif
+})();
+</script>
 @endsection

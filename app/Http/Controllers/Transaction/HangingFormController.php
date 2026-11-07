@@ -194,28 +194,33 @@ class HangingFormController extends Controller
         $data = $request->validate([
             'unloading_time' => ['nullable', 'date_format:H:i'],
             'finish_time' => ['nullable', 'date_format:H:i'],
+            'creator_name' => ['required', 'string', 'max:120'],
         ], [
             'unloading_time.date_format' => 'Format jam bongkar harus HH:MM.',
             'finish_time.date_format' => 'Format jam selesai harus HH:MM.',
+            'creator_name.required' => 'Nama pembuat (Dibuat oleh) wajib diisi.',
         ]);
 
-        $before = $hangingForm->only(['unloading_time','finish_time','status']);
+        $before = $hangingForm->only(['unloading_time','finish_time','status','creator_name']);
+        $userId = $request->user()?->id;
 
         $roleSlug = $request->user()?->role?->slug;
         $wasDoneBefore = ($hangingForm->status === 'done');
 
-        return DB::transaction(function () use ($hangingForm, $data, $before, $roleSlug, $wasDoneBefore) {
+        return DB::transaction(function () use ($hangingForm, $data, $before, $roleSlug, $wasDoneBefore, $userId) {
             $hangingForm->update([
                 'unloading_time' => $data['unloading_time'] ?? $hangingForm->unloading_time,
                 'finish_time' => $data['finish_time'] ?? $hangingForm->finish_time,
                 'status' => 'done',
+                'creator_name' => trim($data['creator_name']),
+                'creator_user_id' => $hangingForm->creator_user_id ?? $userId,
             ]);
 
             $hangingForm->monitorControl()->update([
                 'status' => 'done',
             ]);
 
-            $after = $hangingForm->only(['unloading_time','finish_time','status']);
+            $after = $hangingForm->only(['unloading_time','finish_time','status','creator_name']);
             $changes = AuditLogger::diff($before, $after);
 
             if ($wasDoneBefore && $roleSlug === 'supervisor') {

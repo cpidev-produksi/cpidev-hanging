@@ -988,6 +988,7 @@
                         <div id="ddSecDefeathering" class="dropdown-section-body {{ request()->routeIs('defeathering.*') || request()->routeIs('retur-mati.rekap*') ? 'open' : '' }}">
                             <a class="dropdown-sub-item {{ request()->routeIs('retur-mati.rekap.*') ? 'active' : '' }}" href="{{ route('retur-mati.rekap') }}">Rekap Ayam Retur-Mati</a>
                             <a class="dropdown-sub-item {{ request()->routeIs('defeathering.efficiency.*') ? 'active' : '' }}" href="{{ route('defeathering.efficiency.index') }}">Efficiency Defeathering Report</a>
+                            <a class="dropdown-sub-item {{ request()->routeIs('defeathering.hanging.*') ? 'active' : '' }}" href="{{ route('defeathering.hanging.index') }}">Form Hanging Ayam</a>
                         </div>
                     </div>
 
@@ -1194,6 +1195,7 @@
                 </button>
                 <div id="accFormDefeathering" class="mobile-sub-acc-body {{ request()->routeIs('defeathering.*') ? 'open' : '' }}">
                     <a class="mobile-sub-leaf {{ request()->routeIs('defeathering.efficiency.*') ? 'active' : '' }}" href="{{ route('defeathering.efficiency.index') }}">Efficiency Defeathering Report</a>
+                    <a class="mobile-sub-leaf {{ request()->routeIs('defeathering.hanging.*') ? 'active' : '' }}" href="{{ route('defeathering.hanging.index') }}">Form Hanging Ayam</a>
                 </div>
 
                 {{-- Evisceration sub-accordion --}}

@@ -288,21 +288,33 @@
   <td class="formcode" style="vertical-align:top; padding-top:3pt;">{{ $r['form_code'] }}</td>
 </tr></table>
 
+@php $sg = $r['signatures'] ?? []; @endphp
 <table class="sign" style="margin-top:14pt">
   <tr>
-    <td style="width:130pt">Dibuat oleh,</td>
-    <td style="width:248pt">Disetujui oleh,</td>
-    <td style="width:131.3pt; padding-left:12.6pt">Diketahui oleh,</td>
+    <td style="width:170pt">Dibuat oleh,</td>
+    <td style="width:170pt">Diketahui oleh,</td>
+    <td style="width:169pt">Disetujui oleh,</td>
   </tr>
   <tr>
-    <td style="height:36pt"></td>
-    <td></td>
-    <td style="vertical-align:middle">@if(!empty($r['sign_image']))<img src="{{ $r['sign_image'] }}" style="height:38pt;width:auto">@endif</td>
+    <td style="height:52pt; vertical-align:middle">
+      @if(!empty($sg['created']['qr']))<img src="{{ $sg['created']['qr'] }}" style="width:48pt;height:48pt">@endif
+    </td>
+    <td style="vertical-align:middle">
+      @if(!empty($sg['known']['qr']))<img src="{{ $sg['known']['qr'] }}" style="width:48pt;height:48pt">@endif
+    </td>
+    <td style="vertical-align:middle">
+      @if(!empty($sg['approved']['qr']))
+        <img src="{{ $sg['approved']['qr'] }}" style="width:48pt;height:48pt">
+      @elseif(!empty($r['sign_image']))
+        {{-- tanda tangan supervisor lama (hasil menu Summary) tetap tampil jika belum di-Approve --}}
+        <img src="{{ $r['sign_image'] }}" style="height:38pt;width:auto">
+      @endif
+    </td>
   </tr>
   <tr>
-    <td>( Checker )</td>
-    <td>( Foreman/lady )</td>
-    <td>( {{ !empty($r['sign_image']) && !empty($r['sign_name']) ? $r['sign_name'] : 'Supervisor' }} )</td>
+    <td>( {{ $sg['created']['name'] ?? 'Checker' }} )</td>
+    <td>( {{ $sg['known']['name'] ?? 'Foreman/lady' }} )</td>
+    <td>( {{ $sg['approved']['name'] ?? (!empty($r['sign_image']) && !empty($r['sign_name']) ? $r['sign_name'] : 'Supervisor') }} )</td>
   </tr>
 </table>
 
