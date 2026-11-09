@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
+use App\Models\HangingForm;
 use App\Models\MonitorControl;
 use App\Support\HangingApproval;
 use App\Support\HangingReportBuilder;
@@ -14,6 +15,18 @@ class MonitorSummaryController extends Controller
 {
     private function assertComplete(MonitorControl $mc): void
     {
+        $form = $this->loadDoneHangingForm($mc);
+
+        // QC kondisi wajib lengkap
+        abort_unless($form->hasCompleteQc(), 403, 'QC kondisi belum lengkap.');
+
+        // Retur & mati: boleh 0 tapi field harus ada (kolom default 0)
+        abort_unless($form->dead_count !== null, 403, 'Input ayam mati belum ada.');
+        abort_unless($form->retur_count !== null && $form->retur_total_kg !== null, 403, 'Input ayam retur belum lengkap.');
+    }
+
+    private function loadDoneHangingForm(MonitorControl $mc): HangingForm
+    {
         $mc->load([
             'farm','expedition','plateNumber',
             'hangingForm.lines.sets',
@@ -24,14 +37,7 @@ class MonitorSummaryController extends Controller
         $form = $mc->hangingForm;
         abort_unless($form && $form->status === 'done', 403, 'Hanging form belum DONE.');
 
-        // QC kondisi wajib lengkap
-        abort_unless(!empty($form->basket_condition), 403, 'QC kondisi (keranjang) belum diisi.');
-        abort_unless(!empty($form->truck_platform_condition), 403, 'QC kondisi (platform truk) belum diisi.');
-        abort_unless(!empty($form->feather_condition), 403, 'QC kondisi (bulu) belum diisi.');
-
-        // Retur & mati: boleh 0 tapi field harus ada (kolom default 0)
-        abort_unless($form->dead_count !== null, 403, 'Input ayam mati belum ada.');
-        abort_unless($form->retur_count !== null && $form->retur_total_kg !== null, 403, 'Input ayam retur belum lengkap.');
+        return $form;
     }
 
     private function assertSigned(MonitorControl $mc): void
@@ -75,9 +81,7 @@ class MonitorSummaryController extends Controller
 
     public function show(Request $request, MonitorControl $monitorControl)
     {
-        $this->assertComplete($monitorControl);
-
-        $form = $monitorControl->hangingForm;
+        $form = $this->loadDoneHangingForm($monitorControl);
         $sets = $form->lines->flatMap->sets;
 
         $totalKosong = (int) $sets->sum(fn ($s) => (int) ($s->empty_count ?? 0));
@@ -92,6 +96,7 @@ class MonitorSummaryController extends Controller
             'totalKosong' => $totalKosong,
             'totalAyamTerima' => $totalAyamTerima,
             'createdBy' => $request->user()->name,
+            'missingQc' => $form->missingQcFields(),
         ]);
     }
 

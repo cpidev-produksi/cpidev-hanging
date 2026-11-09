@@ -9,6 +9,7 @@ use App\Support\HangingApproval;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Validator;
 
 class DefeatHangingController extends Controller
@@ -55,6 +56,19 @@ class DefeatHangingController extends Controller
             })
             ->values();
 
+        $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $groups = new LengthAwarePaginator(
+            $groups->forPage($currentPage, $perPage)->values(),
+            $groups->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
         return view('report.defeat.hanging.index', [
             'groups'   => $groups,
             'summary'  => $this->signOffSummary($forms),
@@ -70,11 +84,16 @@ class DefeatHangingController extends Controller
         $total = $forms->count();
         $reviewed = $forms->filter(fn ($form) => $form->known_at !== null)->count();
         $approved = $forms->filter(fn ($form) => $form->approved_at !== null)->count();
+        $qcReviewPending = $forms->filter(fn ($form) => $form->known_at === null && $form->hasCompleteQc())->count();
+        $qcApprovePending = $forms->filter(fn ($form) => $form->approved_at === null && $form->hasCompleteQc())->count();
 
         return [
             'total' => $total,
             'reviewed' => $reviewed,
             'approved' => $approved,
+            'qcIncomplete' => $forms->filter(fn ($form) => !$form->hasCompleteQc())->count(),
+            'qcReviewPending' => $qcReviewPending,
+            'qcApprovePending' => $qcApprovePending,
             'allReviewed' => $total > 0 && $reviewed === $total,
             'allApproved' => $total > 0 && $approved === $total,
         ];
@@ -104,8 +123,10 @@ class DefeatHangingController extends Controller
         $pendingColumn = $action === 'review' ? 'known_at' : 'approved_at';
         $nameColumn = $action === 'review' ? 'known_name' : 'approved_name';
         $userColumn = $action === 'review' ? 'known_user_id' : 'approved_user_id';
-        $count = $this->filteredDoneForms($filters)
-            ->whereNull($pendingColumn)
+        $pendingForms = $this->filteredDoneForms($filters)->whereNull($pendingColumn);
+        $pendingCount = (clone $pendingForms)->count();
+        $count = (clone $pendingForms)
+            ->qcComplete()
             ->update([
                 $nameColumn => $user->name,
                 $userColumn => $user->id,
@@ -116,6 +137,10 @@ class DefeatHangingController extends Controller
         $message = $count > 0
             ? "{$count} form berhasil {$label} oleh {$user->name}."
             : "Tidak ada form yang perlu {$label} pada periode yang dipilih.";
+        $skipped = $pendingCount - $count;
+        if ($skipped > 0) {
+            $message .= " {$skipped} form dilewati karena QC belum lengkap.";
+        }
 
         return back()->with('status', $message);
     }
@@ -169,6 +194,7 @@ class DefeatHangingController extends Controller
         $user = $request->user();
         abort_unless($user?->role?->slug === 'foreman', 403, 'Hanya Foreman yang boleh melakukan Review.');
         abort_unless($hangingForm->status === 'done', 422, 'Form hanging belum DONE.');
+        abort_unless($hangingForm->hasCompleteQc(), 422, 'QC kondisi belum lengkap. Review tidak dapat dilakukan.');
 
         if ($hangingForm->known_at) {
             return back()->withErrors(['review' => 'Form ini sudah direview oleh ' . $hangingForm->known_name . '.']);
@@ -189,6 +215,7 @@ class DefeatHangingController extends Controller
         $user = $request->user();
         abort_unless($user?->role?->slug === 'supervisor', 403, 'Hanya Supervisor yang boleh melakukan Approve.');
         abort_unless($hangingForm->status === 'done', 422, 'Form hanging belum DONE.');
+        abort_unless($hangingForm->hasCompleteQc(), 422, 'QC kondisi belum lengkap. Approve tidak dapat dilakukan.');
 
         if ($hangingForm->approved_at) {
             return back()->withErrors(['approve' => 'Form ini sudah disetujui oleh ' . $hangingForm->approved_name . '.']);

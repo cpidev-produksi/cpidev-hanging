@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class HangingForm extends Model
@@ -43,4 +44,32 @@ class HangingForm extends Model
     public function lines() { return $this->hasMany(HangingLine::class); }
 
     public function returItems() { return $this->hasMany(HangingReturItem::class); }
+
+    public function missingQcFields(): array
+    {
+        $fields = [
+            'basket_condition' => 'Keranjang',
+            'truck_platform_condition' => 'Platform Truck',
+            'feather_condition' => 'Bulu Ayam',
+        ];
+
+        return array_values(array_filter(
+            $fields,
+            fn ($field) => empty($this->{$field}),
+            ARRAY_FILTER_USE_KEY
+        ));
+    }
+
+    public function hasCompleteQc(): bool
+    {
+        return $this->missingQcFields() === [];
+    }
+
+    public function scopeQcComplete(Builder $query): Builder
+    {
+        return $query
+            ->whereNotNull('basket_condition')->where('basket_condition', '<>', '')
+            ->whereNotNull('truck_platform_condition')->where('truck_platform_condition', '<>', '')
+            ->whereNotNull('feather_condition')->where('feather_condition', '<>', '');
+    }
 }

@@ -3,6 +3,9 @@
 @section('content')
 
 @php
+$hangingModal = request()->boolean('hanging_modal');
+$canReviewHanging = auth()->user()?->role?->slug === 'foreman';
+
 $condColor = function(?string $val): string {
     return match($val) {
         'kering', 'bak_kering'              => 'green',
@@ -89,6 +92,13 @@ $fc = $form->feather_condition;
 @endphp
 
 <div class="sm-page">
+  @if(count($missingQc) > 0)
+    <div class="sm-incomplete-banner" role="status">
+      <strong>Data belum lengkap.</strong>
+      Summary dapat dilihat, tetapi Review dan Approve diblokir sampai QC Kondisi lengkap.
+      <span>Belum diisi: {{ implode(', ', $missingQc) }}.</span>
+    </div>
+  @endif
 
   {{-- ══ HEADER ══ --}}
   <div class="sm-header">
@@ -120,14 +130,24 @@ $fc = $form->feather_condition;
     </div>
 
     <div class="sm-header-actions">
-      <a class="sm-btn-export" target="_blank" href="{{ route('monitor-controls.summary.pdf', $mc) }}">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export PDF
-      </a>
-      <a class="sm-btn-back" href="{{ route('monitor-controls.index') }}">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        Kembali
-      </a>
+      @if(!$hangingModal)
+        <a class="sm-btn-export" target="_blank" href="{{ route('monitor-controls.summary.pdf', $mc) }}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export PDF
+        </a>
+        <a class="sm-btn-back" href="{{ route('monitor-controls.index') }}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Kembali
+        </a>
+      @elseif($canReviewHanging && !$form->known_at && count($missingQc) === 0)
+        <form method="POST" action="{{ route('defeathering.hanging.review', $form) }}"
+              onsubmit="return confirm('Review (Diketahui oleh) form {{ $mc->report_code }} sebagai {{ auth()->user()->name }}?')">
+          @csrf
+          <button type="submit" class="sm-btn-back">Review</button>
+        </form>
+      @elseif($hangingModal && count($missingQc) > 0)
+        <span class="sm-btn-back" aria-disabled="true">Review diblokir</span>
+      @endif
     </div>
   </div>
 
@@ -468,6 +488,19 @@ $fc = $form->feather_condition;
     color: var(--sm-text);
   }
 
+  .sm-incomplete-banner {
+    margin-bottom: 14px;
+    padding: 14px 16px;
+    border: 1px solid #fcd34d;
+    border-radius: 12px;
+    background: #fffbeb;
+    color: #92400e;
+    font-size: .85rem;
+    line-height: 1.5;
+  }
+  .sm-incomplete-banner strong { font-weight: 800; }
+  .sm-incomplete-banner span { display: block; margin-top: 3px; }
+
   /* ══ HEADER ══ */
   .sm-header {
     display: flex;
@@ -544,6 +577,7 @@ $fc = $form->feather_condition;
     background: #fff; color: var(--sm-text2);
     border: 1.5px solid var(--sm-border2);
     text-decoration: none;
+    cursor: pointer;
     transition: border-color .15s, color .15s, background .15s;
     font-family: var(--sm-font);
   }
