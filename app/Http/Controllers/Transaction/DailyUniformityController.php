@@ -271,67 +271,75 @@ class DailyUniformityController extends Controller
             ];
         }
 
-        $records = DailyUniformity::query()
-            ->with(['monitorControl.farm', 'weights'])
+        $baseQuery = fn () => DailyUniformity::query()
             ->where('process_date', '>=', sprintf('%04d-01-01', $year))
             ->where('process_date', '<', sprintf('%04d-01-01', $year + 1))
-            ->when($shift !== 'all', fn ($query) => $query->where('shift', $shift))
-            ->get();
+            ->when($shift !== 'all', fn ($query) => $query->where('shift', $shift));
 
         $total = ['reports' => 0, 'count' => 0, 'below' => 0, 'in_range' => 0, 'above' => 0, 'sum' => 0.0, 'sum_sq' => 0.0];
         $minRow = null;
         $maxRow = null;
         $buckets = [];
 
-        foreach ($records as $du) {
-            $s = $du->summary();
-            $m = (int) $du->process_date->format('n');
-            $mc = $du->monitorControl;
-            $ctx = [
-                'farm' => $mc->farm->name ?? '-',
-                'sppa' => $mc->sppa_no ?? '-',
-                'date' => $du->process_date->format('d/m/Y'),
-            ];
+        // Diproses per 50 laporan supaya memori tidak menumpuk (ratusan ribu baris berat).
+        $baseQuery()
+            ->with(['monitorControl.farm', 'weights'])
+            ->chunkById(50, function ($records) use (&$months, &$total, &$minRow, &$maxRow) {
+                foreach ($records as $du) {
+                    $s = $du->summary();
+                    $m = (int) $du->process_date->format('n');
+                    $mc = $du->monitorControl;
+                    $ctx = [
+                        'farm' => $mc->farm->name ?? '-',
+                        'sppa' => $mc->sppa_no ?? '-',
+                        'date' => $du->process_date->format('d/m/Y'),
+                    ];
 
-            $months[$m]['reports']++;
-            $months[$m]['count'] += $s['count'];
-            $months[$m]['below'] += $s['below']['count'];
-            $months[$m]['in_range'] += $s['in_range']['count'];
-            $months[$m]['above'] += $s['above']['count'];
-            $months[$m]['sum'] += (float) $s['total'];
+                    $months[$m]['reports']++;
+                    $months[$m]['count'] += $s['count'];
+                    $months[$m]['below'] += $s['below']['count'];
+                    $months[$m]['in_range'] += $s['in_range']['count'];
+                    $months[$m]['above'] += $s['above']['count'];
+                    $months[$m]['sum'] += (float) $s['total'];
 
-            $total['reports']++;
-            $total['count'] += $s['count'];
-            $total['below'] += $s['below']['count'];
-            $total['in_range'] += $s['in_range']['count'];
-            $total['above'] += $s['above']['count'];
-            $total['sum'] += (float) $s['total'];
+                    $total['reports']++;
+                    $total['count'] += $s['count'];
+                    $total['below'] += $s['below']['count'];
+                    $total['in_range'] += $s['in_range']['count'];
+                    $total['above'] += $s['above']['count'];
+                    $total['sum'] += (float) $s['total'];
 
-            if ($s['min'] !== null) {
-                $min = (float) $s['min'];
-                if ($months[$m]['min'] === null || $min < $months[$m]['min']) {
-                    $months[$m]['min'] = $min;
+                    if ($s['min'] !== null) {
+                        $min = (float) $s['min'];
+                        if ($months[$m]['min'] === null || $min < $months[$m]['min']) {
+                            $months[$m]['min'] = $min;
+                        }
+                        if ($minRow === null || $min < $minRow['value']) {
+                            $minRow = ['value' => $min] + $ctx;
+                        }
+                    }
+                    if ($s['max'] !== null) {
+                        $max = (float) $s['max'];
+                        if ($months[$m]['max'] === null || $max > $months[$m]['max']) {
+                            $months[$m]['max'] = $max;
+                        }
+                        if ($maxRow === null || $max > $maxRow['value']) {
+                            $maxRow = ['value' => $max] + $ctx;
+                        }
+                    }
                 }
-                if ($minRow === null || $min < $minRow['value']) {
-                    $minRow = ['value' => $min] + $ctx;
-                }
-            }
-            if ($s['max'] !== null) {
-                $max = (float) $s['max'];
-                if ($months[$m]['max'] === null || $max > $months[$m]['max']) {
-                    $months[$m]['max'] = $max;
-                }
-                if ($maxRow === null || $max > $maxRow['value']) {
-                    $maxRow = ['value' => $max] + $ctx;
-                }
-            }
+            });
 
-            foreach ($du->weights as $w) {
-                $kg = (float) $w->weight_kg;
-                $total['sum_sq'] += $kg * $kg;
-                $key = (int) floor(round($kg * 10, 6));
-                $buckets[$key] = ($buckets[$key] ?? 0) + 1;
-            }
+        // Histogram & jumlah kuadrat (untuk CV) dihitung langsung di database, tanpa memuat tiap baris berat.
+        $weightRows = DailyUniformityWeight::query()
+            ->selectRaw('FLOOR(ROUND(weight_kg * 10, 6)) as bucket, COUNT(*) as cnt, SUM(weight_kg * weight_kg) as sum_sq')
+            ->whereIn('daily_uniformity_id', $baseQuery()->select('id'))
+            ->groupBy('bucket')
+            ->get();
+
+        foreach ($weightRows as $row) {
+            $buckets[(int) $row->bucket] = (int) $row->cnt;
+            $total['sum_sq'] += (float) $row->sum_sq;
         }
 
         $pct = fn ($n, $d) => $d > 0 ? round(($n / $d) * 100, 1) : 0.0;
