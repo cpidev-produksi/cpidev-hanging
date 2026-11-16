@@ -246,10 +246,15 @@ class DailyUniformityController extends Controller
     }
 
     // ================= Helper =================
+
+    /**
+     * Ringkasan dashboard satu tahun: total sampling per bulan, % undersize / in range / oversize,
+     * berat terkecil & terbesar, serta distribusi berat (histogram per 0,1 kg).
+     */
     private function buildDashboard(int $year, string $shift): array
     {
-        $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        
+        $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
         $months = [];
         foreach ($monthLabels as $i => $label) {
             $months[$i + 1] = [
@@ -269,7 +274,7 @@ class DailyUniformityController extends Controller
         $records = DailyUniformity::query()
             ->with(['monitorControl.farm', 'weights'])
             ->where('process_date', '>=', sprintf('%04d-01-01', $year))
-            ->where('process_date', '<=', sprintf('%04d-12-31', $year + 1))
+            ->where('process_date', '<', sprintf('%04d-01-01', $year + 1))
             ->when($shift !== 'all', fn ($query) => $query->where('shift', $shift))
             ->get();
 
@@ -311,7 +316,6 @@ class DailyUniformityController extends Controller
                     $minRow = ['value' => $min] + $ctx;
                 }
             }
-
             if ($s['max'] !== null) {
                 $max = (float) $s['max'];
                 if ($months[$m]['max'] === null || $max > $months[$m]['max']) {
@@ -321,7 +325,7 @@ class DailyUniformityController extends Controller
                     $maxRow = ['value' => $max] + $ctx;
                 }
             }
-            
+
             foreach ($du->weights as $w) {
                 $kg = (float) $w->weight_kg;
                 $total['sum_sq'] += $kg * $kg;
@@ -340,13 +344,15 @@ class DailyUniformityController extends Controller
             return $r;
         }, $months));
 
+        // Rata-rata & koefisien variasi (CV) seluruh sampling
         $avg = $total['count'] > 0 ? $total['sum'] / $total['count'] : null;
         $cv = null;
         if ($avg !== null && $avg > 0) {
             $variance = max(0, ($total['sum_sq'] / $total['count']) - ($avg * $avg));
-            $cv = round(sqrt($variance) / $avg * 100, 1);
+            $cv = round((sqrt($variance) / $avg) * 100, 1);
         }
 
+        // Histogram distribusi berat (bucket 0,1 kg, bucket kosong di tengah tetap ditampilkan)
         $histogram = [];
         if ($buckets) {
             ksort($buckets);
@@ -369,8 +375,8 @@ class DailyUniformityController extends Controller
                 'above' => ['count' => $total['above'], 'pct' => $pct($total['above'], $total['count'])],
                 'avg' => $avg,
                 'cv' => $cv,
-                'min_row' => $minRow,
-                'max_row' => $maxRow,
+                'min' => $minRow,
+                'max' => $maxRow,
             ],
             'histogram' => $histogram,
         ];
