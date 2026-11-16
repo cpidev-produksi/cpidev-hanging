@@ -201,13 +201,13 @@
           </div>
           <div class="dd-kpi min">
             <div class="lbl">Size Terkecil</div>
-            <div class="val">{{ $dTot['min_row'] ? number_format($dTot['min_row']['value'], 3) : '-' }}<small>kg</small></div>
-            <div class="sub">{{ $dTot['min_row'] ? $dTot['min_row']['farm'] . ' · ' . $dTot['min_row']['date'] : '' }}</div>
+            <div class="val">{{ $dTot['min'] ? number_format($dTot['min']['value'], 3) : '-' }}<small>kg</small></div>
+            <div class="sub">{{ $dTot['min'] ? $dTot['min']['farm'] . ' · ' . $dTot['min']['date'] : '' }}</div>
           </div>
           <div class="dd-kpi max">
             <div class="lbl">Size Terbesar</div>
-            <div class="val">{{ $dTot['max_row'] ? number_format($dTot['max_row']['value'], 3) : '-' }}<small>kg</small></div>
-            <div class="sub">{{ $dTot['max_row'] ? $dTot['max_row']['farm'] . ' · ' . $dTot['max_row']['date'] : '' }}</div>
+            <div class="val">{{ $dTot['max'] ? number_format($dTot['max']['value'], 3) : '-' }}<small>kg</small></div>
+            <div class="sub">{{ $dTot['max'] ? $dTot['max']['farm'] . ' · ' . $dTot['max']['date'] : '' }}</div>
           </div>
         </div>
 
