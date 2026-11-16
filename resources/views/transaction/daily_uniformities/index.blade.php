@@ -96,6 +96,40 @@
   .du-icon-btn.danger { color:#dc2626; border-color:#fecaca; background:#fef2f2; }
   .du-icon-btn svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; }
 
+  /* ===== Dashboard summary ===== */
+  .dd-section { margin-bottom:28px; }
+  .dd-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:16px; }
+  .dd-kpi { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:16px 18px; border-top:3px solid #1a56db; }
+  .dd-kpi.below { border-top-color:#f59e0b; }
+  .dd-kpi.in { border-top-color:#0d9488; }
+  .dd-kpi.above { border-top-color:#6366f1; }
+  .dd-kpi.min, .dd-kpi.max { border-top-color:#94a3b8; }
+  .dd-kpi .lbl { font-size:12px; font-weight:700; color:#64748b; }
+  .dd-kpi .val { font-size:26px; font-weight:800; color:#0f172a; letter-spacing:-.4px; margin-top:4px; }
+  .dd-kpi .val small { font-size:12px; font-weight:700; color:#94a3b8; margin-left:4px; letter-spacing:0; }
+  .dd-kpi .sub { font-size:11.5px; color:#94a3b8; margin-top:2px; }
+
+  .dd-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(420px,1fr)); gap:16px; }
+  @media (max-width:520px) { .dd-grid { grid-template-columns:1fr; } }
+  .dd-grid .du-card { margin-bottom:0; }
+  .dd-plot { position:relative; display:flex; height:180px; margin-top:22px; border-bottom:1.5px solid #cbd5e1; }
+  .dd-col { position:relative; flex:1; height:100%; }
+  .dd-bar { position:absolute; left:14%; right:14%; bottom:0; background:#93b4f5; border-radius:6px 6px 0 0; }
+  .dd-bar.cur { background:#1a56db; }
+  .dd-val { position:absolute; left:0; right:0; text-align:center; font-size:10.5px; font-weight:800; color:#334155; }
+  .dd-stack { position:absolute; left:14%; right:14%; top:0; bottom:0; display:flex; flex-direction:column-reverse; background:#f1f5f9; border-radius:6px 6px 0 0; overflow:hidden; }
+  .dd-seg.below { background:#f59e0b; }
+  .dd-seg.in { background:#0d9488; }
+  .dd-seg.above { background:#6366f1; }
+  .dd-xlabels { display:flex; margin-top:6px; }
+  .dd-xlabels span { flex:1; text-align:center; font-size:10.5px; font-weight:700; color:#64748b; }
+  .dd-xlabels span.cur { color:#1a56db; }
+  .dd-hist-meta { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; }
+  .dd-chip { background:#f1f5f9; color:#334155; font-size:12px; font-weight:700; padding:4px 10px; border-radius:100px; }
+  .dd-bar.hist { background:#0d9488; left:8%; right:8%; }
+  .dd-table-wrap { overflow-x:auto; }
+  .dd-note { font-size:11.5px; color:#94a3b8; margin-top:10px; }
+
   /* ===== Scroll to top ===== */
   .du-scrolltop {
     position:fixed; right:24px; bottom:24px; width:46px; height:46px; border-radius:50%;
@@ -114,8 +148,8 @@
 
     <div class="du-head">
       <div>
-        <div class="du-title">Laporan Daily Uniformity</div>
-        <div class="du-sub">Trial sampling berat live bird per truk (No. SPPA)</div>
+        <div class="du-title">Dashboard Summary Uniformity</div>
+        <div class="du-sub">Tahun {{ $dashboard['year'] }} &middot; {{ $dashboard['shift'] === 'all' ? 'Semua shift' : 'Shift ' . ucfirst($dashboard['shift']) }} (mengikuti tanggal &amp; shift pada filter di bawah)</div>
       </div>
       <div class="du-head-actions">
         <a href="{{ route('daily-uniformities.export-pdf', ['date' => $date, 'shift' => $shift]) }}" class="du-btn du-btn-ghost" target="_blank">
@@ -131,6 +165,171 @@
     @if (session('status'))
       <div class="du-alert">{{ session('status') }}</div>
     @endif
+
+    {{-- ================= Dashboard Summary ================= --}}
+    @php
+      $dMonths = $dashboard['months'];
+      $dTot = $dashboard['total'];
+      $dMaxCount = max(1, collect($dMonths)->max('count'));
+      $dCurMonth = (int) \Carbon\Carbon::parse($date)->format('n');
+      $dHist = $dashboard['histogram'];
+      $dHistMax = max(1, collect($dHist)->max('count') ?? 1);
+      $dHistStep = count($dHist) > 14 ? 2 : 1;
+    @endphp
+    <div class="dd-section">
+      @if ($dTot['count'] > 0)
+        <div class="dd-kpis">
+          <div class="dd-kpi">
+            <div class="lbl">Total Sampling</div>
+            <div class="val">{{ number_format($dTot['count']) }}<small>ekor</small></div>
+            <div class="sub">{{ number_format($dTot['reports']) }} laporan truk</div>
+          </div>
+          <div class="dd-kpi below">
+            <div class="lbl">Undersize</div>
+            <div class="val">{{ $dTot['below']['pct'] }}%</div>
+            <div class="sub">{{ number_format($dTot['below']['count']) }} ekor</div>
+          </div>
+          <div class="dd-kpi in">
+            <div class="lbl">In Range</div>
+            <div class="val">{{ $dTot['in_range']['pct'] }}%</div>
+            <div class="sub">{{ number_format($dTot['in_range']['count']) }} ekor</div>
+          </div>
+          <div class="dd-kpi above">
+            <div class="lbl">Oversize</div>
+            <div class="val">{{ $dTot['above']['pct'] }}%</div>
+            <div class="sub">{{ number_format($dTot['above']['count']) }} ekor</div>
+          </div>
+          <div class="dd-kpi min">
+            <div class="lbl">Size Terkecil</div>
+            <div class="val">{{ $dTot['min_row'] ? number_format($dTot['min_row']['value'], 3) : '-' }}<small>kg</small></div>
+            <div class="sub">{{ $dTot['min_row'] ? $dTot['min_row']['farm'] . ' · ' . $dTot['min_row']['date'] : '' }}</div>
+          </div>
+          <div class="dd-kpi max">
+            <div class="lbl">Size Terbesar</div>
+            <div class="val">{{ $dTot['max_row'] ? number_format($dTot['max_row']['value'], 3) : '-' }}<small>kg</small></div>
+            <div class="sub">{{ $dTot['max_row'] ? $dTot['max_row']['farm'] . ' · ' . $dTot['max_row']['date'] : '' }}</div>
+          </div>
+        </div>
+
+        <div class="dd-grid" style="margin-bottom:16px;">
+          {{-- Total sampling per bulan --}}
+          <div class="du-card">
+            <div class="du-card-title">Total Sampling per Bulan<small>Jumlah ekor yang di-sampling</small></div>
+            <div class="dd-plot">
+              @foreach ($dMonths as $mo)
+                @php $h = $mo['count'] > 0 ? max(($mo['count'] / $dMaxCount) * 100, 2) : 0; @endphp
+                <div class="dd-col" title="{{ $mo['label'] }}: {{ number_format($mo['count']) }} ekor ({{ $mo['reports'] }} laporan)">
+                  @if ($mo['count'] > 0)
+                    <div class="dd-val" style="bottom:calc({{ $h }}% + 3px);">{{ number_format($mo['count']) }}</div>
+                    <div class="dd-bar {{ $mo['month'] === $dCurMonth ? 'cur' : '' }}" style="height:{{ $h }}%;"></div>
+                  @endif
+                </div>
+              @endforeach
+            </div>
+            <div class="dd-xlabels">
+              @foreach ($dMonths as $mo)
+                <span class="{{ $mo['month'] === $dCurMonth ? 'cur' : '' }}">{{ $mo['label'] }}</span>
+              @endforeach
+            </div>
+          </div>
+
+          {{-- Komposisi uniformity per bulan --}}
+          <div class="du-card">
+            <div class="du-card-title">Komposisi Uniformity per Bulan<small>Persentase undersize, in range, oversize dari total sampling bulan itu</small></div>
+            <div class="du-chart-legend" style="margin:8px 0 0;">
+              <span><span class="dot below"></span> Undersize</span>
+              <span><span class="dot in"></span> In Range</span>
+              <span><span class="dot above"></span> Oversize</span>
+            </div>
+            <div class="dd-plot" style="margin-top:12px;">
+              @foreach ($dMonths as $mo)
+                <div class="dd-col" title="{{ $mo['label'] }} — Undersize {{ $mo['below_pct'] }}% · In Range {{ $mo['in_range_pct'] }}% · Oversize {{ $mo['above_pct'] }}%">
+                  @if ($mo['count'] > 0)
+                    <div class="dd-stack">
+                      <div class="dd-seg below" style="height:{{ $mo['below_pct'] }}%;"></div>
+                      <div class="dd-seg in" style="height:{{ $mo['in_range_pct'] }}%;"></div>
+                      <div class="dd-seg above" style="height:{{ $mo['above_pct'] }}%;"></div>
+                    </div>
+                  @endif
+                </div>
+              @endforeach
+            </div>
+            <div class="dd-xlabels">
+              @foreach ($dMonths as $mo)
+                <span class="{{ $mo['month'] === $dCurMonth ? 'cur' : '' }}">{{ $mo['label'] }}</span>
+              @endforeach
+            </div>
+          </div>
+        </div>
+
+        <div class="dd-grid">
+          {{-- Distribusi berat --}}
+          <div class="du-card">
+            <div class="du-card-title">Distribusi Berat Ayam<small>Jumlah ekor per rentang 0,1 kg</small></div>
+            <div class="dd-hist-meta">
+              <span class="dd-chip">Rata-rata {{ $dTot['avg'] !== null ? number_format($dTot['avg'], 3) . ' kg' : '-' }}</span>
+              <span class="dd-chip">CV {{ $dTot['cv'] !== null ? $dTot['cv'] . '%' : '-' }}</span>
+            </div>
+            <div class="dd-plot">
+              @foreach ($dHist as $b)
+                @php $hh = $b['count'] > 0 ? max(($b['count'] / $dHistMax) * 100, 2) : 0; @endphp
+                <div class="dd-col" title="{{ number_format($b['from'], 1) }} – {{ number_format($b['to'], 1) }} kg: {{ number_format($b['count']) }} ekor">
+                  @if ($b['count'] > 0)
+                    <div class="dd-bar hist" style="height:{{ $hh }}%;"></div>
+                  @endif
+                </div>
+              @endforeach
+            </div>
+            <div class="dd-xlabels">
+              @foreach ($dHist as $i => $b)
+                <span>{{ $i % $dHistStep === 0 ? number_format($b['from'], 1) : '' }}</span>
+              @endforeach
+            </div>
+            <div class="dd-note">Sumbu bawah = berat (kg). Semakin sempit &amp; tinggi sebarannya, semakin seragam ayamnya.</div>
+          </div>
+
+          {{-- Rincian per bulan --}}
+          <div class="du-card table-card">
+            <div style="padding:24px 24px 12px;">
+              <div class="du-card-title">Rincian per Bulan<small>Sampling, persentase, serta berat terkecil / terbesar</small></div>
+            </div>
+            <div class="dd-table-wrap">
+              <table class="du-table">
+                <thead>
+                  <tr>
+                    <th>Bulan</th>
+                    <th class="center">Sampling</th>
+                    <th class="center">Under</th>
+                    <th class="center">In Range</th>
+                    <th class="center">Over</th>
+                    <th class="center">Min (kg)</th>
+                    <th class="center">Max (kg)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach ($dMonths as $mo)
+                    @if ($mo['count'] > 0)
+                      <tr>
+                        <td><strong>{{ $mo['label'] }}</strong></td>
+                        <td class="center">{{ number_format($mo['count']) }}</td>
+                        <td class="center"><span class="du-pct-cell below">{{ $mo['below_pct'] }}%</span></td>
+                        <td class="center"><span class="du-pct-cell in">{{ $mo['in_range_pct'] }}%</span></td>
+                        <td class="center"><span class="du-pct-cell above">{{ $mo['above_pct'] }}%</span></td>
+                        <td class="center">{{ number_format($mo['min'], 3) }}</td>
+                        <td class="center">{{ number_format($mo['max'], 3) }}</td>
+                      </tr>
+                    @endif
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      @else
+        <div class="du-card"><div class="du-empty">Belum ada data sampling pada tahun {{ $dashboard['year'] }}.</div></div>
+      @endif
+    </div>
+    {{-- ================= /Dashboard Summary ================= --}}
 
     <form method="GET" class="du-filter">
       <label for="date">Tanggal</label>

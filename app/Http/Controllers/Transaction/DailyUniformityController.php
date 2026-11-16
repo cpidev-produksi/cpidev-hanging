@@ -7,6 +7,7 @@ use App\Models\DailyUniformity;
 use App\Models\DailyUniformityWeight;
 use App\Models\MonitorControl;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -36,12 +37,14 @@ class DailyUniformityController extends Controller
             });
 
         $aggregate = $this->buildAggregate($items);
+        $dashboard = $this->buildDashboard(Carbon::parse($date)->year, $shift);
 
         return view('transaction.daily_uniformities.index', [
             'items' => $items,
             'date' => $date,
             'shift' => $shift,
             'aggregate' => $aggregate,
+            'dashboard' => $dashboard,
         ]);
     }
 
@@ -243,6 +246,136 @@ class DailyUniformityController extends Controller
     }
 
     // ================= Helper =================
+    private function buildDashboard(int $year, string $shift): array
+    {
+        $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        $months = [];
+        foreach ($monthLabels as $i => $label) {
+            $months[$i + 1] = [
+                'month' => $i + 1,
+                'label' => $label,
+                'reports' => 0,
+                'count' => 0,
+                'below' => 0,
+                'in_range' => 0,
+                'above' => 0,
+                'sum' => 0.0,
+                'min' => null,
+                'max' => null,
+            ];
+        }
+
+        $records = DailyUniformity::query()
+            ->with(['monitorControl.farm', 'weights'])
+            ->where('process_date', '>=', sprintf('%04d-01-01', $year))
+            ->where('process_date', '<=', sprintf('%04d-12-31', $year + 1))
+            ->when($shift !== 'all', fn ($query) => $query->where('shift', $shift))
+            ->get();
+
+        $total = ['reports' => 0, 'count' => 0, 'below' => 0, 'in_range' => 0, 'above' => 0, 'sum' => 0.0, 'sum_sq' => 0.0];
+        $minRow = null;
+        $maxRow = null;
+        $buckets = [];
+
+        foreach ($records as $du) {
+            $s = $du->summary();
+            $m = (int) $du->process_date->format('n');
+            $mc = $du->monitorControl;
+            $ctx = [
+                'farm' => $mc->farm->name ?? '-',
+                'sppa' => $mc->sppa_no ?? '-',
+                'date' => $du->process_date->format('d/m/Y'),
+            ];
+
+            $months[$m]['reports']++;
+            $months[$m]['count'] += $s['count'];
+            $months[$m]['below'] += $s['below']['count'];
+            $months[$m]['in_range'] += $s['in_range']['count'];
+            $months[$m]['above'] += $s['above']['count'];
+            $months[$m]['sum'] += (float) $s['total'];
+
+            $total['reports']++;
+            $total['count'] += $s['count'];
+            $total['below'] += $s['below']['count'];
+            $total['in_range'] += $s['in_range']['count'];
+            $total['above'] += $s['above']['count'];
+            $total['sum'] += (float) $s['total'];
+
+            if ($s['min'] !== null) {
+                $min = (float) $s['min'];
+                if ($months[$m]['min'] === null || $min < $months[$m]['min']) {
+                    $months[$m]['min'] = $min;
+                }
+                if ($minRow === null || $min < $minRow['value']) {
+                    $minRow = ['value' => $min] + $ctx;
+                }
+            }
+
+            if ($s['max'] !== null) {
+                $max = (float) $s['max'];
+                if ($months[$m]['max'] === null || $max > $months[$m]['max']) {
+                    $months[$m]['max'] = $max;
+                }
+                if ($maxRow === null || $max > $maxRow['value']) {
+                    $maxRow = ['value' => $max] + $ctx;
+                }
+            }
+            
+            foreach ($du->weights as $w) {
+                $kg = (float) $w->weight_kg;
+                $total['sum_sq'] += $kg * $kg;
+                $key = (int) floor(round($kg * 10, 6));
+                $buckets[$key] = ($buckets[$key] ?? 0) + 1;
+            }
+        }
+
+        $pct = fn ($n, $d) => $d > 0 ? round(($n / $d) * 100, 1) : 0.0;
+
+        $monthRows = array_values(array_map(function (array $r) use ($pct) {
+            $r['below_pct'] = $pct($r['below'], $r['count']);
+            $r['in_range_pct'] = $pct($r['in_range'], $r['count']);
+            $r['above_pct'] = $pct($r['above'], $r['count']);
+            $r['avg'] = $r['count'] > 0 ? $r['sum'] / $r['count'] : null;
+            return $r;
+        }, $months));
+
+        $avg = $total['count'] > 0 ? $total['sum'] / $total['count'] : null;
+        $cv = null;
+        if ($avg !== null && $avg > 0) {
+            $variance = max(0, ($total['sum_sq'] / $total['count']) - ($avg * $avg));
+            $cv = round(sqrt($variance) / $avg * 100, 1);
+        }
+
+        $histogram = [];
+        if ($buckets) {
+            ksort($buckets);
+            $firstKey = array_key_first($buckets);
+            $lastKey = array_key_last($buckets);
+            for ($k = $firstKey; $k <= $lastKey; $k++) {
+                $histogram[] = ['from' => $k / 10, 'to' => ($k + 1) / 10, 'count' => $buckets[$k] ?? 0];
+            }
+        }
+
+        return [
+            'year' => $year,
+            'shift' => $shift,
+            'months' => $monthRows,
+            'total' => [
+                'reports' => $total['reports'],
+                'count' => $total['count'],
+                'below' => ['count' => $total['below'], 'pct' => $pct($total['below'], $total['count'])],
+                'in_range' => ['count' => $total['in_range'], 'pct' => $pct($total['in_range'], $total['count'])],
+                'above' => ['count' => $total['above'], 'pct' => $pct($total['above'], $total['count'])],
+                'avg' => $avg,
+                'cv' => $cv,
+                'min_row' => $minRow,
+                'max_row' => $maxRow,
+            ],
+            'histogram' => $histogram,
+        ];
+    }
+
     private function buildAggregate($items): array
     {
         $totalCount = 0;
